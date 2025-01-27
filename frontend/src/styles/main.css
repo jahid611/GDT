@@ -1,0 +1,60 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
+.task-card {
+  @apply bg-white rounded-lg shadow-md p-4 transition-all duration-200 ease-in-out;
+}
+
+.task-card:hover {
+  @apply shadow-lg transform -translate-y-1;
+}
+
+.status-todo {
+  @apply bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-sm;
+}
+
+.status-in-progress {
+  @apply bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm;
+}
+
+.status-review {
+  @apply bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-sm;
+}
+
+.status-done {
+  @apply bg-green-100 text-green-800 px-2 py-1 rounded-full text-sm;
+}
+
+.priority-high {
+  @apply border-l-4 border-red-500;
+}
+
+.priority-medium {
+  @apply border-l-4 border-yellow-500;
+}
+
+.priority-low {
+  @apply border-l-4 border-green-500;
+}
+
+/* Animation classes */
+.fade-enter {
+  opacity: 0;
+}
+
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}
+
+.fade-exit {
+  opacity: 1;
+}
+
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+

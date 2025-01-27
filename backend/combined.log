@@ -1,0 +1,623 @@
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:18:19.951Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:18:19.953Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:18:36.237Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:18:36.239Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:32:29.449Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:32:29.451Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:32:35.477Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:32:35.479Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:33:16.130Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:33:16.134Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:33:17.829Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:33:17.832Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:33:43.412Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:33:43.414Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:33:48.601Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:33:48.606Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:47:05.650Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:47:05.653Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:47:30.665Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:47:30.668Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:51:40.512Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:51:40.514Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:53:53.784Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:53:53.787Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:54:00.783Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:54:00.788Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:57:11.211Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:57:11.217Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T20:57:20.578Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T20:57:20.581Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:10:30.961Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:10:30.965Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:10:50.856Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:10:50.859Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:10:57.814Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:10:57.817Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:15:15.960Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:15:15.963Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:15:22.470Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:15:22.473Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:15:25.045Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T21:15:25.072Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:15:25.080Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T21:15:25.089Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:16:11.994Z"}
+{"level":"info","message":"Found 1 tasks","timestamp":"2025-01-26T21:16:12.011Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:16:12.022Z"}
+{"level":"info","message":"Found 1 tasks","timestamp":"2025-01-26T21:16:12.034Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:19:48.518Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:19:48.521Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:19:58.227Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:19:58.230Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:20:01.796Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:20:01.814Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:20:01.824Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:20:01.832Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:20:48.424Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:20:48.445Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:20:48.457Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:20:48.472Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:21:40.512Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:21:40.515Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:21:48.226Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:21:48.229Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:21:56.236Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:21:56.241Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:21:56.254Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:21:56.264Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:21:56.268Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:21:56.273Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:21:56.282Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:21:56.293Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:22:27.007Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:22:27.010Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:22:27.017Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:22:27.020Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:22:27.025Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:22:27.028Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:22:27.030Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:22:27.035Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:43:37.458Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:43:37.460Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:43:37.464Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:43:37.467Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:43:37.471Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:43:37.474Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:43:37.475Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:43:37.481Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:43:39.008Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:43:39.012Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:43:39.018Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:43:39.023Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a1c278935b65901f91a4"},"value":"6796a1c278935b65901f91a4"}},"level":"error","message":"Update task error: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T21:44:01.335Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:01.343Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:01.347Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a1c278935b65901f91a4"},"value":"6796a1c278935b65901f91a4"}},"level":"error","message":"Update task error: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T21:44:02.136Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:02.143Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:02.147Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a1c278935b65901f91a4"},"value":"6796a1c278935b65901f91a4"}},"level":"error","message":"Update task error: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T21:44:02.996Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:03.002Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:03.007Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a53829eb9032763f80ca"},"value":"6796a53829eb9032763f80ca"}},"level":"error","message":"Update task error: Validation failed: status: `6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a53829eb9032763f80ca` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T21:44:05.992Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:05.998Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:06.003Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:09.017Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:09.023Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:09.028Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:09.034Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:29.942Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:44:29.943Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:44:29.946Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:29.948Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:44:29.954Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:44:29.956Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:44:29.958Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:44:29.962Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:23.828Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:45:23.829Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:45:23.832Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:23.834Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:45:23.840Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:23.841Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:45:23.843Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:23.847Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:26.362Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:26.366Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:26.370Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:26.375Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:27.243Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:45:27.245Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:45:27.248Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:27.249Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:45:27.254Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:27.255Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:45:27.256Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:27.260Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:45.762Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:45:45.764Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:45:45.769Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:45.771Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:45:45.778Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:45.779Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:45:45.781Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:45.784Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:48.973Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:48.978Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:48.982Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:48.987Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:50.605Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:50.609Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:50.614Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:50.618Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a1c278935b65901f91a4"},"value":"6796a1c278935b65901f91a4"}},"level":"error","message":"Update task error: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T21:45:52.473Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:45:52.481Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:45:52.484Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:51:18.906Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:51:18.909Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T21:57:47.417Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T21:57:47.420Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:58:14.397Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:58:14.401Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:58:14.410Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T21:58:14.423Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T21:58:14.429Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:58:14.436Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:58:14.447Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:58:14.463Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:59:50.818Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:59:50.824Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:59:50.828Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:59:50.836Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:59:52.033Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:59:52.038Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:59:52.043Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:59:52.048Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a1c278935b65901f91a4"},"value":"6796a1c278935b65901f91a4"}},"level":"error","message":"Update task error: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T21:59:54.303Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:59:54.310Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:59:54.315Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a1c278935b65901f91a4"},"value":"6796a1c278935b65901f91a4"}},"level":"error","message":"Update task error: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T21:59:56.270Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T21:59:56.278Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T21:59:56.283Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:00.093Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:00.095Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:00.099Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:00.102Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:00.107Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:00.110Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:00.113Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:00.119Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:02.589Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:02.594Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:02.599Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:02.607Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:07.099Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:07.101Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:07.104Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:07.106Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:07.114Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:07.116Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:07.118Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:07.123Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:08.548Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:08.553Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:08.558Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:08.563Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:09.282Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:09.283Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:09.287Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:09.289Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:09.295Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:09.297Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:09.299Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:09.305Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:12.786Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:12.791Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:12.796Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:12.800Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:13.979Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:13.981Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:13.984Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:13.986Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:13.992Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:13.993Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:13.995Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:14.000Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:38.948Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:38.953Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:38.957Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:38.963Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a53829eb9032763f80ca"},"value":"6796a53829eb9032763f80ca"}},"level":"error","message":"Update task error: Validation failed: status: `6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a53829eb9032763f80ca` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:00:41.018Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:41.025Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:41.031Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a1c278935b65901f91a4"},"value":"6796a1c278935b65901f91a4"}},"level":"error","message":"Update task error: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a1c278935b65901f91a4` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:00:42.461Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:42.469Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:42.474Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:47.800Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:47.801Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:47.804Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:47.805Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:00:47.811Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:47.813Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:00:47.815Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:47.819Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:49.953Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:49.957Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:49.961Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:49.966Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"67969a95ff9b39eb68772713"},"value":"67969a95ff9b39eb68772713"}},"level":"error","message":"Update task error: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:00:50.781Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:50.788Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:50.792Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"67969a95ff9b39eb68772713"},"value":"67969a95ff9b39eb68772713"}},"level":"error","message":"Update task error: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:00:51.583Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:51.589Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:51.593Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"67969a95ff9b39eb68772713"},"value":"67969a95ff9b39eb68772713"}},"level":"error","message":"Update task error: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:00:52.425Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:52.431Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:52.435Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"67969a95ff9b39eb68772713"},"value":"67969a95ff9b39eb68772713"}},"level":"error","message":"Update task error: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:00:54.327Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:00:54.334Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:00:54.338Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:01:10.735Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:01:10.739Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:01:10.743Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:01:10.748Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:01:11.376Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:01:11.378Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:01:11.380Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:01:11.381Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:01:11.387Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:01:11.388Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:01:11.390Z"}
+{"level":"info","message":"Found 3 tasks","timestamp":"2025-01-26T22:01:11.394Z"}
+{"assignedTo":"67969991ff9b39eb687726e8","description":"oui","level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:01:47.876Z","title":"fizz"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","description":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"description":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969991ff9b39eb687726e8"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969a8aff9b39eb6877270c"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796b0cbeabfbe59c86ff5de","assignedTo":{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"},"comments":[],"createdAt":"2025-01-26T22:01:47.881Z","createdBy":{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"},"description":"oui","notifications":[],"priority":"medium","status":"todo","title":"fizz","updatedAt":"2025-01-26T22:01:47.881Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:01:47.895Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:01:55.563Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:01:55.565Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:01:55.568Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:01:55.570Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:01:55.576Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:01:55.577Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:01:55.579Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:01:55.584Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:11:06.009Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:11:06.014Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:11:06.019Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:11:06.024Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:11:08.055Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:11:08.058Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:11:08.063Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:11:08.068Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:11:10.262Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:11:10.263Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:11:10.266Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:11:10.268Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:11:10.273Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:11:10.275Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:11:10.277Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:11:10.281Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:27.790Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:27.802Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:27.809Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:27.815Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:32.336Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:32.341Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:32.345Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:32.350Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:33.120Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:33.124Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:33.128Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:33.133Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:33.785Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:33.790Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:33.794Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:33.798Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:35.644Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:35.648Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:35.651Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:35.655Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:36.023Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:36.027Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:36.030Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:36.036Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:38.102Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:38.106Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:38.110Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:38.114Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:38.538Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:38.542Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:15:38.546Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:15:38.550Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:16:56.046Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:16:56.057Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:16:56.068Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:16:56.078Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796a53829eb9032763f80ca"},"value":"6796a53829eb9032763f80ca"}},"level":"error","message":"Update task error: Validation failed: status: `6796a53829eb9032763f80ca` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796a53829eb9032763f80ca` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:17:11.962Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:15.732Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"67969a95ff9b39eb68772713"},"value":"67969a95ff9b39eb68772713"}},"level":"error","message":"Update task error: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:17:15.735Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"67969a95ff9b39eb68772713"},"value":"67969a95ff9b39eb68772713"}},"level":"error","message":"Update task error: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `67969a95ff9b39eb68772713` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:17:15.738Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:15.745Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:15.749Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:15.754Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:15.760Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:15.767Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796b0cbeabfbe59c86ff5de` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796b0cbeabfbe59c86ff5de` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796b0cbeabfbe59c86ff5de"},"value":"6796b0cbeabfbe59c86ff5de"}},"level":"error","message":"Update task error: Validation failed: status: `6796b0cbeabfbe59c86ff5de` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796b0cbeabfbe59c86ff5de` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:17:16.567Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:16.575Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:16.581Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:23.962Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:23.966Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:23.970Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:23.974Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:26.761Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:26.765Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:26.769Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:26.773Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:28.714Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:28.719Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:17:28.723Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:17:28.728Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:19:19.190Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:19:19.201Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:19:19.216Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:19:19.228Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:19:20.175Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:19:20.179Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:19:20.183Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:19:20.187Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:19:51.173Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:19:51.176Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:19:51.181Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:19:51.183Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:19:56.495Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:19:56.497Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:19:56.501Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:19:56.503Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:19:56.509Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:19:56.511Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:19:56.512Z"}
+{"level":"info","message":"Found 4 tasks","timestamp":"2025-01-26T22:19:56.518Z"}
+{"assignedTo":"67969991ff9b39eb687726e8","deadline":"2025-05-08T21:26:00.000Z","description":"sss","estimatedTime":33,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:21:16.415Z","title":"sss"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969991ff9b39eb687726e8"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969a8aff9b39eb6877270c"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796b55ceabfbe59c86ff6d4","assignedTo":{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"},"comments":[],"createdAt":"2025-01-26T22:21:16.420Z","createdBy":{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"},"deadline":"2025-05-08T21:26:00.000Z","description":"sss","estimatedTime":33,"notifications":[],"priority":"medium","status":"todo","title":"sss","updatedAt":"2025-01-26T22:21:16.420Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:21:16.427Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:21:56.751Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:21:56.754Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:21:56.761Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:21:56.765Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:21:56.772Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:21:56.774Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:21:56.777Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:21:56.785Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:07.316Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:22:07.318Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:22:07.322Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:07.324Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:22:07.332Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:07.335Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:22:07.338Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:07.347Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:08.857Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:08.864Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:08.872Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:08.881Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:14.637Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:14.642Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:14.649Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:14.654Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:18.808Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:18.815Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:18.827Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:18.838Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:20.133Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:22:20.135Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:22:20.141Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:20.145Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:22:20.154Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:20.157Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:22:20.159Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:20.167Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:20.758Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:20.767Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:20.776Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:20.785Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:22.906Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:22:22.908Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:22:22.912Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:22.915Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:22:22.921Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:22:22.923Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:22:22.925Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:22:22.930Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:25:21.189Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:25:21.191Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:25:21.194Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:25:21.196Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:25:21.200Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:25:21.201Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:25:21.203Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:25:21.207Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T22:26:26.438Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T22:26:26.441Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:28:17.985Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:28:17.998Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:28:18.002Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:28:18.010Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:28:18.013Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:28:18.015Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:28:18.019Z"}
+{"level":"info","message":"Found 5 tasks","timestamp":"2025-01-26T22:28:18.026Z"}
+{"level":"error","message":"Delete task error: task.remove is not a function","stack":"TypeError: task.remove is not a function\n    at deleteTask (file:///C:/Users/jahid/Downloads/GDT/backend/src/controllers/taskController.js:110:16)\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)","timestamp":"2025-01-26T22:29:36.229Z"}
+{"assignedTo":"67969991ff9b39eb687726e8","deadline":"2025-06-10T21:29:00.000Z","description":"ddd","estimatedTime":16,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:29:51.763Z","title":"dd"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969991ff9b39eb687726e8"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969991ff9b39eb687726e8"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796b75f913eb384eb5a1b2d","assignedTo":{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"},"comments":[],"createdAt":"2025-01-26T22:29:51.767Z","createdBy":{"_id":"67969991ff9b39eb687726e8","name":"test user"},"deadline":"2025-06-10T21:29:00.000Z","description":"ddd","estimatedTime":16,"notifications":[],"priority":"medium","status":"todo","title":"dd","updatedAt":"2025-01-26T22:29:51.767Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:29:51.780Z"}
+{"assignedTo":"67969a8aff9b39eb6877270c","deadline":"2025-01-31T22:30:00.000Z","description":"ddd","estimatedTime":5.5,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:30:35.942Z","title":"biensur"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969a8aff9b39eb6877270c","email":"jahid.sayad@vilmar.ro","name":"Jahid SAYAD"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969a8aff9b39eb6877270c"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969991ff9b39eb687726e8"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796b78b913eb384eb5a1b3d","assignedTo":{"_id":"67969a8aff9b39eb6877270c","email":"jahid.sayad@vilmar.ro","name":"Jahid SAYAD"},"comments":[],"createdAt":"2025-01-26T22:30:35.943Z","createdBy":{"_id":"67969991ff9b39eb687726e8","name":"test user"},"deadline":"2025-01-31T22:30:00.000Z","description":"ddd","estimatedTime":5.5,"notifications":[],"priority":"medium","status":"todo","title":"biensur","updatedAt":"2025-01-26T22:30:35.943Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:30:35.951Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T22:34:00.682Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T22:34:00.685Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:34:08.201Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:34:08.205Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:34:08.217Z"}
+{"level":"info","message":"Found 7 tasks","timestamp":"2025-01-26T22:34:08.231Z"}
+{"assignedTo":"67969991ff9b39eb687726e8","deadline":"2025-05-09T21:38:00.000Z","description":"dd","estimatedTime":19.5,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:34:42.046Z","title":"cc"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969991ff9b39eb687726e8"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969991ff9b39eb687726e8"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796b8823e83c333f48709bf","assignedTo":{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"},"comments":[],"createdAt":"2025-01-26T22:34:42.053Z","createdBy":{"_id":"67969991ff9b39eb687726e8","name":"test user"},"deadline":"2025-05-09T21:38:00.000Z","description":"dd","estimatedTime":19.5,"notifications":[],"priority":"medium","status":"todo","title":"cc","updatedAt":"2025-01-26T22:34:42.053Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:34:42.070Z"}
+{"level":"info","message":"Adding comment to task 6796b8823e83c333f48709bf","timestamp":"2025-01-26T22:34:53.217Z"}
+{"level":"info","message":"Comment added successfully","timestamp":"2025-01-26T22:34:53.226Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:34:59.927Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:34:59.935Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:34:59.941Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:34:59.950Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:35:02.269Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:35:02.277Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:35:02.282Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:35:02.293Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:35:02.959Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:35:02.965Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:35:02.970Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:35:02.977Z"}
+{"_message":"Validation failed","errors":{"status":{"kind":"enum","message":"`6796b8823e83c333f48709bf` is not a valid enum value for path `status`.","name":"ValidatorError","path":"status","properties":{"enumValues":["todo","in_progress","review","done"],"fullPath":"status","message":"`6796b8823e83c333f48709bf` is not a valid enum value for path `status`.","path":"status","type":"enum","value":"6796b8823e83c333f48709bf"},"value":"6796b8823e83c333f48709bf"}},"level":"error","message":"Update task error: Validation failed: status: `6796b8823e83c333f48709bf` is not a valid enum value for path `status`.","stack":"ValidationError: Validation failed: status: `6796b8823e83c333f48709bf` is not a valid enum value for path `status`.\n    at _done (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:228:19)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:204:11\n    at schemaPath.doValidate.updateValidator (C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\helpers\\updateValidators.js:162:13)\n    at C:\\Users\\jahid\\Downloads\\GDT\\backend\\node_modules\\mongoose\\lib\\schematype.js:1368:9\n    at process.processTicksAndRejections (node:internal/process/task_queues:77:11)","timestamp":"2025-01-26T22:35:05.394Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:35:05.403Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:35:05.409Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:35:24.054Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:35:24.056Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:35:24.062Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:35:24.068Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:35:24.070Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:35:24.072Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:35:24.078Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:35:24.084Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:40:18.195Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:40:18.198Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:40:18.208Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:40:18.212Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:40:18.221Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:40:18.224Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:40:18.227Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:40:18.235Z"}
+{"assignedTo":"67969a8aff9b39eb6877270c","deadline":"2025-01-26T22:40:00.000Z","description":"dd","estimatedTime":365,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:41:04.849Z","title":"dd"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969a8aff9b39eb6877270c","email":"jahid.sayad@vilmar.ro","name":"Jahid SAYAD"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969a8aff9b39eb6877270c"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969991ff9b39eb687726e8"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796ba003e83c333f4870ab5","assignedTo":{"_id":"67969a8aff9b39eb6877270c","email":"jahid.sayad@vilmar.ro","name":"Jahid SAYAD"},"comments":[],"createdAt":"2025-01-26T22:41:04.850Z","createdBy":{"_id":"67969991ff9b39eb687726e8","name":"test user"},"deadline":"2025-01-26T22:40:00.000Z","description":"dd","estimatedTime":365,"notifications":[],"priority":"medium","status":"todo","title":"dd","updatedAt":"2025-01-26T22:41:04.850Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:41:04.857Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:41:37.703Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:41:37.707Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:41:37.711Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:41:37.715Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:41:37.721Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:41:37.723Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:41:37.725Z"}
+{"level":"info","message":"Found 8 tasks","timestamp":"2025-01-26T22:41:37.732Z"}
+{"assignedTo":"","deadline":"2025-01-26T22:44:00.000Z","description":"d","estimatedTime":1,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:41:52.690Z","title":"dd"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969991ff9b39eb687726e8"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796ba303e83c333f4870b34","comments":[],"createdAt":"2025-01-26T22:41:52.691Z","createdBy":{"_id":"67969991ff9b39eb687726e8","name":"test user"},"deadline":"2025-01-26T22:44:00.000Z","description":"d","estimatedTime":1,"notifications":[],"priority":"medium","status":"todo","title":"dd","updatedAt":"2025-01-26T22:41:52.691Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:41:52.695Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T22:42:38.058Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T22:42:38.061Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T22:42:42.884Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T22:42:42.888Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:44:21.189Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:44:21.193Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:44:21.202Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:44:21.211Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:25.736Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:25.743Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:25.748Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:25.755Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:30.259Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:45:30.262Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:45:30.269Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:30.271Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:45:30.277Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:30.279Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:45:30.281Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:30.288Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:34.680Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:34.686Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:34.691Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:34.697Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:38.665Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:45:38.666Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:45:38.670Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:38.672Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:45:38.677Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:45:38.679Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:45:38.681Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:45:38.688Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:46:06.199Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:46:06.203Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:46:06.207Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:46:06.210Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:46:06.217Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:46:06.218Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:46:06.220Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:46:06.225Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:55:57.621Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:55:57.625Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:55:57.632Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:55:57.638Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:55:57.650Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:55:57.652Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:55:57.656Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:55:57.665Z"}
+{"assignedTo":"67969991ff9b39eb687726e8","deadline":"2025-01-26T22:56:00.000Z","description":"d","estimatedTime":3,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T22:56:17.798Z","title":"d"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969991ff9b39eb687726e8"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969a8aff9b39eb6877270c"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796bd918118dab886626c15","assignedTo":{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"},"comments":[],"createdAt":"2025-01-26T22:56:17.803Z","createdBy":{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"},"deadline":"2025-01-26T22:56:00.000Z","description":"d","estimatedTime":3,"notifications":[],"priority":"medium","status":"todo","title":"d","updatedAt":"2025-01-26T22:56:17.803Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T22:56:17.820Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:56:34.639Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:56:34.644Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:56:34.650Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:56:34.655Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:56:42.220Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:56:42.221Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:56:42.225Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:56:42.227Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:56:42.234Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:56:42.236Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:56:42.238Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:56:42.243Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:57:28.277Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:57:28.279Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:57:28.287Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:57:28.291Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T22:57:28.300Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T22:57:28.302Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T22:57:28.304Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T22:57:28.310Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:16:09.065Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:16:09.069Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:16:09.074Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:16:09.078Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:16:09.084Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:16:09.086Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:16:09.088Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:16:09.094Z"}
+{"assignedTo":"67969991ff9b39eb687726e8","deadline":"2025-01-30T23:16:00.000Z","description":"ss","estimatedTime":12.5,"level":"info","message":"Creating task with data:","timestamp":"2025-01-26T23:16:26.458Z","title":"ss"}
+{"$__":{"activePaths":{"paths":{"__v":"init","_id":"init","assignedTo":"init","comments":"init","createdAt":"init","createdBy":"init","deadline":"init","description":"init","estimatedTime":"init","notifications":"init","priority":"init","status":"init","title":"init","updatedAt":"init"},"states":{"default":{},"init":{"__v":true,"_id":true,"assignedTo":true,"comments":true,"createdAt":true,"createdBy":true,"deadline":true,"description":true,"estimatedTime":true,"notifications":true,"priority":true,"status":true,"title":true,"updatedAt":true},"require":{}}},"populated":{"assignedTo":{"options":{"_childDocs":[{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"}],"_docs":[],"_queryProjection":null,"path":"assignedTo","select":"name email"},"value":"67969991ff9b39eb687726e8"},"comments.user":{"options":{"_childDocs":[],"_docs":[],"_queryProjection":null,"path":"comments.user","select":"name"},"value":[]},"createdBy":{"options":{"_childDocs":[{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"}],"_docs":[],"_queryProjection":null,"path":"createdBy","select":"name"},"value":"67969a8aff9b39eb6877270c"}},"skipId":true},"$isNew":false,"_doc":{"__v":0,"_id":"6796c24a8118dab886626ca0","assignedTo":{"_id":"67969991ff9b39eb687726e8","email":"test@example.com","name":"test user"},"comments":[],"createdAt":"2025-01-26T23:16:26.460Z","createdBy":{"_id":"67969a8aff9b39eb6877270c","name":"Jahid SAYAD"},"deadline":"2025-01-30T23:16:00.000Z","description":"ss","estimatedTime":12.5,"notifications":[],"priority":"medium","status":"todo","title":"ss","updatedAt":"2025-01-26T23:16:26.460Z"},"level":"info","message":"Created task:","timestamp":"2025-01-26T23:16:26.468Z"}
+{"level":"info","message":"Adding comment to task 6796c24a8118dab886626ca0","timestamp":"2025-01-26T23:16:30.351Z"}
+{"level":"info","message":"Comment added successfully","timestamp":"2025-01-26T23:16:30.363Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:16:39.786Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:16:39.788Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:16:39.794Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:16:39.797Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:16:39.807Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:16:39.811Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:16:39.815Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:16:39.824Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:16:44.858Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:16:44.864Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:16:44.870Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:16:44.876Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:17:01.354Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:17:01.359Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:17:01.363Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:17:01.370Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:17:02.528Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:17:02.529Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:17:02.534Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:17:02.536Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:17:02.542Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:17:02.543Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:17:02.545Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:17:02.551Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:21:26.183Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:21:26.185Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:21:26.190Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:21:26.192Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:21:26.202Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:21:26.205Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:21:26.208Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:21:26.218Z"}
+{"level":"info","message":"Getting tasks for user:","timestamp":"2025-01-26T23:21:55.180Z"}
+{"level":"info","message":"Getting users list","timestamp":"2025-01-26T23:21:55.183Z"}
+{"level":"info","message":"Found 2 users","timestamp":"2025-01-26T23:21:55.188Z"}
+{"level":"info","message":"Found 2 tasks","timestamp":"2025-01-26T23:21:55.192Z"}
+{"level":"info","message":"Server running on port 5000","timestamp":"2025-01-26T23:33:01.426Z"}
+{"level":"info","message":"MongoDB URI: mongodb://localhost:27017/taskmanager","timestamp":"2025-01-26T23:33:01.429Z"}
