@@ -28,7 +28,7 @@ const connectDB = async () => {
 
 connectDB();
 
-// Vérifier la base de données et ses collections
+// Vérification des collections dans MongoDB
 mongoose.connection.on('connected', async () => {
   try {
     const dbName = mongoose.connection.name;
@@ -46,15 +46,19 @@ mongoose.connection.on('disconnected', () => {
   connectDB();
 });
 
-// Middlewares
+// Middleware pour CORS
 app.use(
   cors({
     origin: process.env.CLIENT_URL || '*', // Autorise le frontend déployé
     credentials: true, // Permet l'envoi des cookies et des en-têtes d'autorisation
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
+    allowedHeaders: ['Content-Type', 'Authorization'], // Headers autorisés
   })
 );
-app.use(express.json());
-app.use(morgan('dev'));
+
+// Middlewares globaux
+app.use(express.json()); // Pour gérer les requêtes JSON
+app.use(morgan('dev')); // Logger des requêtes HTTP
 
 // Middleware de log pour toutes les requêtes
 app.use((req, res, next) => {
@@ -62,7 +66,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Keep-alive route (utile pour Render)
+// Keep-alive route pour éviter l'inactivité sur Render
 app.get('/keepalive', (req, res) => {
   res.status(200).send('OK');
 });
@@ -88,7 +92,7 @@ import taskRoutes from './routes/taskRoutes.js';
 app.use('/api/auth', authRoutes); // Routes d'authentification
 app.use('/api/tasks', taskRoutes); // Routes des tâches
 
-// Gestion des erreurs générales
+// Gestion des erreurs globales
 app.use((err, req, res, next) => {
   console.error('❌ Erreur détectée :', err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
