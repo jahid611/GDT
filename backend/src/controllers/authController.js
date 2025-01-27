@@ -1,163 +1,167 @@
+import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
-import bcrypt from "bcrypt"
 import User from "../models/User.js"
 
+// Fonction d'inscription
+export const register = async (req, res) => {
+  try {
+    console.log("📝 Tentative d'inscription:", req.body)
+    
+    const { username, email, password } = req.body
+
+    // Validation des champs
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        message: "Tous les champs sont requis",
+        details: {
+          username: !username ? "Le nom d'utilisateur est requis" : null,
+          email: !email ? "L'email est requis" : null,
+          password: !password ? "Le mot de passe est requis" : null
+        }
+      })
+    }
+
+    // Vérification si l'utilisateur existe déjà
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
+    })
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "Un utilisateur avec cet email ou ce nom d'utilisateur existe déjà"
+      })
+    }
+
+    // Hashage du mot de passe
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    // Création de l'utilisateur
+    const user = new User({
+      username,
+      email,
+      password: hashedPassword
+    })
+
+    await user.save()
+
+    // Création du token JWT
+    const token = jwt.sign(
+      { 
+        userId: user._id,
+        username: user.username,
+        role: user.role 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    )
+
+    res.status(201).json({
+      message: "Inscription réussie",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      },
+      token
+    })
+
+  } catch (error) {
+    console.error("❌ Erreur lors de l'inscription:", error)
+    res.status(500).json({
+      message: "Erreur lors de la création du compte",
+      error: error.message
+    })
+  }
+}
+
+// Fonction de connexion
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body
-    console.log("Login attempt with:", { email })
 
+    // Validation des champs
     if (!email || !password) {
-      console.log("Missing credentials")
       return res.status(400).json({
-        error: "L'email et le mot de passe sont requis",
+        message: "L'email et le mot de passe sont requis"
+      })
+    }
+
+    // Recherche de l'utilisateur
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(401).json({
+        message: "Email ou mot de passe incorrect"
+      })
+    }
+
+    // Vérification du mot de passe
+    const isPasswordValid = await user.comparePassword(password)
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        message: "Email ou mot de passe incorrect"
+      })
+    }
+
+    // Création du token JWT
+    const token = jwt.sign(
+      { 
+        userId: user._id,
+        username: user.username,
+        role: user.role 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    )
+
+    res.json({
+      message: "Connexion réussie",
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      },
+      token
+    })
+
+  } catch (error) {
+    console.error("❌ Erreur lors de la connexion:", error)
+    res.status(500).json({
+      message: "Erreur lors de la connexion",
+      error: error.message
+    })
+  }
+}
+
+// Fonction de réinitialisation du mot de passe
+export const resetPassword = async (req, res) => {
+  try {
+    const { email } = req.body
+
+    if (!email) {
+      return res.status(400).json({
+        message: "L'email est requis"
       })
     }
 
     const user = await User.findOne({ email })
-    console.log("User found:", user ? "Yes" : "No")
-
-    if (!user) {
-      console.log("User not found")
-      return res.status(400).json({
-        error: "Email ou mot de passe incorrect",
-      })
-    }
-
-    // Use bcrypt to compare passwords
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-    console.log("Password comparison:", {
-      provided: password,
-      stored: user.password,
-      match: isPasswordValid,
-    })
-
-    if (!isPasswordValid) {
-      console.log("Password mismatch")
-      return res.status(400).json({
-        error: "Email ou mot de passe incorrect",
-      })
-    }
-
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-    )
-
-    console.log("Login successful for:", user.email)
-
-    res.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token,
-    })
-  } catch (error) {
-    console.error("Login error:", error)
-    res.status(500).json({
-      error: "Une erreur est survenue lors de la connexion",
-    })
-  }
-}
-
-export const register = async (req, res) => {
-  try {
-    console.log("Registration attempt with:", { email: req.body.email })
-
-    if (!req.body.email || !req.body.password || !req.body.name) {
-      console.log("Missing registration data")
-      return res.status(400).json({
-        error: "Tous les champs sont requis",
-      })
-    }
-
-    const existingUser = await User.findOne({ email: req.body.email })
-    if (existingUser) {
-      console.log("Email already exists")
-      return res.status(400).json({
-        error: "Cet email est déjà utilisé",
-      })
-    }
-
-    // Hash password before saving
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(req.body.password, salt)
-
-    const user = new User({
-      name: req.body.name,
-      email: req.body.email,
-      password: hashedPassword,
-      role: req.body.role || "user",
-    })
-
-    await user.save()
-    console.log("User registered:", user.email)
-
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-    )
-
-    res.status(201).json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-      token,
-    })
-  } catch (error) {
-    console.error("Registration error:", error)
-    res.status(500).json({
-      error: "Une erreur est survenue lors de l'inscription",
-    })
-  }
-}
-
-// Utility function to reset a user's password (for admin use)
-export const resetPassword = async (req, res) => {
-  try {
-    const { email, newPassword } = req.body
-
-    if (!email || !newPassword) {
-      return res.status(400).json({
-        error: "Email et nouveau mot de passe requis",
-      })
-    }
-
-    const salt = await bcrypt.genSalt(10)
-    const hashedPassword = await bcrypt.hash(newPassword, salt)
-
-    const user = await User.findOneAndUpdate({ email }, { password: hashedPassword }, { new: true })
-
     if (!user) {
       return res.status(404).json({
-        error: "Utilisateur non trouvé",
+        message: "Aucun compte n'est associé à cet email"
       })
     }
 
+    // TODO: Implémenter la logique d'envoi d'email de réinitialisation
     res.json({
-      message: "Mot de passe réinitialisé avec succès",
+      message: "Si un compte existe avec cet email, un lien de réinitialisation sera envoyé"
     })
+
   } catch (error) {
-    console.error("Password reset error:", error)
+    console.error("❌ Erreur lors de la réinitialisation du mot de passe:", error)
     res.status(500).json({
-      error: "Erreur lors de la réinitialisation du mot de passe",
+      message: "Erreur lors de la réinitialisation du mot de passe",
+      error: error.message
     })
   }
 }
-

@@ -6,6 +6,7 @@ import Dashboard from "./components/Dashboard"
 import Login from "./components/Login"
 import UserProfile from "./components/UserProfile"
 import UserManagement from "./components/UserManagement"
+import RegisterForm from "./components/RegisterForm"
 import PrivateRoute from "./components/PrivateRoute"
 import NotificationToast from "./components/NotificationToast"
 
@@ -16,6 +17,7 @@ function App() {
         <NotificationProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<RegisterForm />} />
             <Route
               path="/"
               element={
@@ -49,4 +51,3 @@ function App() {
 }
 
 export default App
-
