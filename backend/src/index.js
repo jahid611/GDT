@@ -34,6 +34,11 @@ mongoose.connection.on('disconnected', () => {
 // Middleware
 app.use(express.json());
 
+// Keep-alive route
+app.get('/keepalive', (req, res) => {
+  res.status(200).send('OK');
+});
+
 // Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Task Manager API' });
