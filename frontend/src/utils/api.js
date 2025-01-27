@@ -2,15 +2,16 @@ import axios from "axios"
 
 const api = axios.create({
   baseURL: process.env.NODE_ENV === 'development'
-    ? 'http://localhost:5000' // Backend local
-    : 'https://gdt-fjmj.onrender.com', // Backend déployé
+    ? 'http://localhost:5000'
+    : 'https://gdt-fjmj.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
   timeout: 10000,
+  withCredentials: true // Ajout de withCredentials pour supporter les cookies CORS
 });
 
-// Enhanced request interceptor with more detailed logging
+// Intercepteur de requête amélioré avec logging détaillé
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token")
@@ -18,7 +19,6 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
-    // Add timestamp to track request duration
     config.metadata = { startTime: new Date() }
 
     console.log("API Request Details:", {
@@ -38,10 +38,10 @@ api.interceptors.request.use(
       timestamp: new Date().toISOString(),
     })
     return Promise.reject(error)
-  },
+  }
 )
 
-// Enhanced response interceptor with timing and detailed error logging
+// Intercepteur de réponse amélioré avec timing et logging d'erreur détaillé
 api.interceptors.response.use(
   (response) => {
     const duration = new Date() - response.config.metadata.startTime
@@ -67,7 +67,7 @@ api.interceptors.response.use(
       timestamp: new Date().toISOString(),
     })
 
-    // Enhanced error handling
+    // Gestion d'erreur améliorée
     if (error.code === "ECONNABORTED") {
       throw new Error("La requête a pris trop de temps à répondre. Veuillez réessayer.")
     }
@@ -84,10 +84,10 @@ api.interceptors.response.use(
     }
 
     throw error.response?.data || error
-  },
+  }
 )
 
-// Enhanced retry functionality with progressive delay
+// Fonction de retry avec délai progressif
 const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
   let lastError
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -102,7 +102,7 @@ const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
 
       const delay = initialDelay * Math.pow(2, attempt)
       console.log(
-        `Échec de la tentative ${attempt + 1}/${retries}. Nouvelle tentative dans ${delay / 1000} secondes...`,
+        `Échec de la tentative ${attempt + 1}/${retries}. Nouvelle tentative dans ${delay / 1000} secondes...`
       )
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
@@ -110,7 +110,7 @@ const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
   throw lastError
 }
 
-// Enhanced task endpoints with better error messages
+// Points d'API pour les tâches avec meilleure gestion d'erreur
 export const fetchTasks = async () => {
   return withRetry(async () => {
     try {
@@ -122,7 +122,6 @@ export const fetchTasks = async () => {
 
       const { data } = await api.get("/api/tasks")
 
-      // Validate response data
       if (!Array.isArray(data)) {
         throw new Error("Format de données invalide reçu du serveur")
       }
@@ -212,7 +211,7 @@ export const addComment = async (taskId, content) => {
   })
 }
 
-// User endpoints with enhanced error handling and retry
+// Points d'API pour les utilisateurs avec gestion d'erreur améliorée
 export const getUsers = async () => {
   return withRetry(async () => {
     try {
@@ -225,7 +224,6 @@ export const getUsers = async () => {
 
       const { data } = await api.get("/api/users")
 
-      // Validate the response data
       if (!Array.isArray(data)) {
         console.error("Invalid users response format:", data)
         throw new Error("Format de réponse invalide")
@@ -238,7 +236,7 @@ export const getUsers = async () => {
       const errorMessage = error.response?.data?.error || error.message || "Impossible de charger les utilisateurs"
       throw new Error(errorMessage)
     }
-  }, 3) // Try up to 3 times
+  }, 3)
 }
 
 export const getUserProfile = async (userId) => {
@@ -277,7 +275,7 @@ export const updateUserProfile = async (userId, userData) => {
   })
 }
 
-// Auth endpoints with enhanced error handling and retry
+// Points d'API pour l'authentification avec gestion d'erreur améliorée
 export const login = async (credentials) => {
   return withRetry(async () => {
     try {
@@ -336,7 +334,7 @@ export const logout = () => {
   }
 }
 
-// Stats endpoints with enhanced error handling and retry
+// Points d'API pour les statistiques avec gestion d'erreur améliorée
 export const getTaskStats = async () => {
   return withRetry(async () => {
     try {
@@ -355,7 +353,7 @@ export const getTaskStats = async () => {
   })
 }
 
-// Notification endpoints with enhanced error handling and retry
+// Points d'API pour les notifications avec gestion d'erreur améliorée
 export const getNotifications = async () => {
   return withRetry(async () => {
     try {
