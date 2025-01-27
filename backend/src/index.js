@@ -4,14 +4,13 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 
-
 // Chargement des variables d'environnement
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Fonction pour se connecter à MongoDB avec gestion de reconnexion
+// Fonction pour se connecter à MongoDB avec gestion des erreurs et reconnexion
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -30,25 +29,40 @@ const connectDB = async () => {
 connectDB();
 
 // Vérifier la base de données et ses collections
-mongoose.connection.on("connected", async () => {
+mongoose.connection.on('connected', async () => {
   try {
     const dbName = mongoose.connection.name;
     const collections = await mongoose.connection.db.listCollections().toArray();
     console.log(`✅ Base de données connectée : ${dbName}`);
-    console.log("📁 Collections disponibles :");
+    console.log('📁 Collections disponibles :');
     collections.forEach((collection) => console.log(`- ${collection.name}`));
   } catch (error) {
-    console.error("❌ Erreur lors de la récupération des collections :", error.message);
+    console.error('❌ Erreur lors de la récupération des collections :', error.message);
   }
 });
 
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB disconnected! Attempting to reconnect...');
+  connectDB();
+});
 
 // Middlewares
-app.use(cors({ origin: process.env.CLIENT_URL || '*', credentials: true }));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || '*', // Autorise le frontend déployé
+    credentials: true, // Permet l'envoi des cookies et des en-têtes d'autorisation
+  })
+);
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Keep-alive route (utile pour éviter l'arrêt automatique sur Render)
+// Middleware de log pour toutes les requêtes
+app.use((req, res, next) => {
+  console.log(`➡️ ${req.method} ${req.url}`);
+  next();
+});
+
+// Keep-alive route (utile pour Render)
 app.get('/keepalive', (req, res) => {
   res.status(200).send('OK');
 });
@@ -56,6 +70,7 @@ app.get('/keepalive', (req, res) => {
 // Middleware pour vérifier la connexion MongoDB avant chaque requête
 app.use((req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
+    console.warn('⚠️ Database connection not ready');
     return res.status(503).json({ error: 'Database connection is not ready' });
   }
   next();
@@ -73,9 +88,9 @@ import taskRoutes from './routes/taskRoutes.js';
 app.use('/api/auth', authRoutes); // Routes d'authentification
 app.use('/api/tasks', taskRoutes); // Routes des tâches
 
-// Gestion des erreurs
+// Gestion des erreurs générales
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  console.error('❌ Erreur détectée :', err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
 });
 

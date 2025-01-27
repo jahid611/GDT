@@ -1,12 +1,13 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: "http://localhost:5000",
+  baseURL: "https://gdt-fjmj.onrender.com", // URL déployée de votre backend
   headers: {
     "Content-Type": "application/json",
   },
   timeout: 10000,
-})
+});
+
 
 // Enhanced request interceptor with more detailed logging
 api.interceptors.request.use(
