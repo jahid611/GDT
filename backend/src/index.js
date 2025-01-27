@@ -49,11 +49,12 @@ mongoose.connection.on('disconnected', () => {
 // Middleware pour CORS
 app.use(
   cors({
-    origin: "https://gdt-mauve.vercel.app", // Remplacez par l'URL de votre frontend Vercel
+    origin: process.env.NODE_ENV === 'development' 
+      ? process.env.CLIENT_URL 
+      : process.env.DEPLOYED_CLIENT_URL,
     credentials: true, // Autorise les cookies et en-têtes d'autorisation
   })
 );
-
 
 // Middlewares globaux
 app.use(express.json()); // Pour gérer les requêtes JSON
@@ -87,9 +88,11 @@ app.get('/', (req, res) => {
 // Importation des routes
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
+import userRoutes from './routes/userRoutes.js'; // Ajout des routes utilisateur
 
 app.use('/api/auth', authRoutes); // Routes d'authentification
 app.use('/api/tasks', taskRoutes); // Routes des tâches
+app.use('/api/users', userRoutes); // Routes des utilisateurs
 
 // Gestion des erreurs globales
 app.use((err, req, res, next) => {

@@ -1,13 +1,14 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: "https://gdt-fjmj.onrender.com", // URL déployée de votre backend
+  baseURL: process.env.NODE_ENV === 'development'
+    ? 'http://localhost:5000' // Backend local
+    : 'https://gdt-fjmj.onrender.com', // Backend déployé
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   timeout: 10000,
 });
-
 
 // Enhanced request interceptor with more detailed logging
 api.interceptors.request.use(
@@ -392,4 +393,3 @@ export const markNotificationAsRead = async (notificationId) => {
 }
 
 export default api
-
