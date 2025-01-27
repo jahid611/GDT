@@ -1,50 +1,59 @@
-import React, { createContext, useContext, useState, useEffect } from "react"
-import { getNotifications, markNotificationAsRead } from "../utils/api"
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { getNotifications, markNotificationAsRead } from '../utils/api'
+import { useAuth } from './AuthContext'
 
-const NotificationContext = createContext(null)
+const NotificationContext = createContext()
 
 export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([])
-  const [currentToast, setCurrentToast] = useState(null)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [currentNotification, setCurrentNotification] = useState(null)
+  const { user } = useAuth()
 
   useEffect(() => {
-    loadNotifications()
-  }, [])
-
-  useEffect(() => {
-    setUnreadCount(notifications.filter((n) => !n.read).length)
-  }, [notifications])
+    if (user) {
+      loadNotifications()
+    }
+  }, [user])
 
   const loadNotifications = async () => {
     try {
       const data = await getNotifications()
       setNotifications(data)
+      setUnreadCount(data.filter(n => !n.read).length)
     } catch (error) {
-      console.error("Erreur lors du chargement des notifications:", error)
+      console.error('Erreur lors du chargement des notifications:', error)
+    }
+  }
+
+  const showToast = (title, message, type = 'default') => {
+    // Garder la fonction showToast existante
+  }
+
+  const addNotification = (notification) => {
+    setNotifications(prev => [notification, ...prev])
+    setUnreadCount(prev => prev + 1)
+    if (notification.userId === user?.id) {
+      setCurrentNotification(notification)
     }
   }
 
   const markAsRead = async (notificationId) => {
     try {
       await markNotificationAsRead(notificationId)
-      setNotifications((prev) => prev.map((n) => (n._id === notificationId ? { ...n, read: true } : n)))
+      setNotifications(prev =>
+        prev.map(n =>
+          n._id === notificationId ? { ...n, read: true } : n
+        )
+      )
+      setUnreadCount(prev => Math.max(0, prev - 1))
     } catch (error) {
-      console.error("Erreur lors du marquage de la notification comme lue:", error)
+      console.error('Erreur lors du marquage de la notification:', error)
     }
   }
 
-  const showToast = (title, message) => {
-    setCurrentToast({ title, message })
-  }
-
-  const hideToast = () => {
-    setCurrentToast(null)
-  }
-
-  const addNotification = (notification) => {
-    setNotifications((prev) => [notification, ...prev])
-    showToast(notification.title, notification.message)
+  const dismissCurrentNotification = () => {
+    setCurrentNotification(null)
   }
 
   return (
@@ -52,11 +61,12 @@ export function NotificationProvider({ children }) {
       value={{
         notifications,
         unreadCount,
-        currentToast,
-        markAsRead,
+        currentNotification,
         showToast,
-        hideToast,
         addNotification,
+        markAsRead,
+        dismissCurrentNotification,
+        loadNotifications
       }}
     >
       {children}
@@ -64,11 +74,4 @@ export function NotificationProvider({ children }) {
   )
 }
 
-export const useNotifications = () => {
-  const context = useContext(NotificationContext)
-  if (!context) {
-    throw new Error("useNotifications doit être utilisé à l'intérieur d'un NotificationProvider")
-  }
-  return context
-}
-
+export const useNotifications = () => useContext(NotificationContext)

@@ -1,8 +1,8 @@
 {
     "compilerOptions": {
-      "baseUrl": ".",
-      "paths": {
-        "@/*": ["./src/*"]
+    "baseUrl": "src",
+    "paths": {
+      "@/*": ["./*"]
       },
       "jsx": "react",
       "target": "es6",

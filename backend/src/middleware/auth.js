@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-export const auth = (req, res, next) => {
+const auth = (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
 
@@ -16,3 +16,5 @@ export const auth = (req, res, next) => {
     res.status(401).json({ error: "Token invalide ou expiré" });
   }
 };
+
+export default auth;

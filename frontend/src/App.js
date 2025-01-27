@@ -1,7 +1,9 @@
 import React from "react"
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { NotificationProvider } from "./contexts/NotificationContext"
+import { ThemeProvider } from "./contexts/ThemeContext"
+import { Toaster } from "./components/ui/toaster"
 import Dashboard from "./components/Dashboard"
 import Login from "./components/Login"
 import UserProfile from "./components/UserProfile"
@@ -12,41 +14,54 @@ import NotificationToast from "./components/NotificationToast"
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <NotificationProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route
-              path="/"
-              element={
-                <PrivateRoute>
-                  <Dashboard />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <UserProfile />
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <PrivateRoute>
-                  <UserManagement />
-                </PrivateRoute>
-              }
-            />
-          </Routes>
-          <NotificationToast />
-        </NotificationProvider>
-      </AuthProvider>
-    </Router>
+    <ThemeProvider defaultTheme="system" storageKey="gdt-theme">
+      <Router>
+        <AuthProvider>
+          <NotificationProvider>
+            <div className="min-h-screen bg-background font-sans antialiased">
+              <Routes>
+                {/* Routes publiques */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<RegisterForm />} />
+
+                {/* Routes protégées */}
+                <Route
+                  path="/"
+                  element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <PrivateRoute>
+                      <UserProfile />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/users"
+                  element={
+                    <PrivateRoute>
+                      <UserManagement />
+                    </PrivateRoute>
+                  }
+                />
+
+                {/* Redirection par défaut */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+
+              {/* Notifications */}
+              <NotificationToast />
+              <Toaster />
+            </div>
+          </NotificationProvider>
+        </AuthProvider>
+      </Router>
+    </ThemeProvider>
   )
 }
 

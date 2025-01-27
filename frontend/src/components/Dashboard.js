@@ -7,11 +7,12 @@ import TaskCalendar from "./TaskCalendar"
 import TaskKanban from "./TaskKanban"
 import UserProfile from "./UserProfile"
 import { useNotifications } from "../contexts/NotificationContext"
-import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus } from "lucide-react"
+import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import NotificationPanel from "./NotificationPanel"
+import NotificationPopup from "./NotificationPopup"
 import { cn } from "@/lib/utils"
 import TaskCreationDialog from "./TaskCreationDialog"
 
@@ -27,11 +28,11 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [selectedView, setSelectedView] = useState("list")
   const [showNotifications, setShowNotifications] = useState(false)
-  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false) // Added state for task creation dialog
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [newTask, setNewTask] = useState(null)
   const navigate = useNavigate()
   const { user, logout } = useAuth()
-  const { unreadCount } = useNotifications()
+  const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
 
   useEffect(() => {
     const handleResize = () => {
@@ -52,6 +53,13 @@ export default function Dashboard() {
       navigate("/login")
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error)
+    }
+  }
+
+  const handleViewNotification = (notification) => {
+    if (notification.taskId) {
+      setSelectedView('list')
+      // Vous pouvez ajouter ici la logique pour faire défiler jusqu'à la tâche spécifique
     }
   }
 
@@ -153,8 +161,6 @@ export default function Dashboard() {
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold">Bienvenue, {user?.name}</h2>
               <Button onClick={() => setIsTaskDialogOpen(true)}>
-                {" "}
-                {/* Updated onClick */}
                 <Plus className="mr-2 h-5 w-5" />
                 Nouvelle tâche
               </Button>
@@ -164,6 +170,7 @@ export default function Dashboard() {
         </div>
       </main>
 
+      {/* Task Creation Dialog */}
       <TaskCreationDialog
         open={isTaskDialogOpen}
         onOpenChange={setIsTaskDialogOpen}
@@ -198,7 +205,13 @@ export default function Dashboard() {
           </SheetContent>
         </Sheet>
       </div>
+
+      {/* Notification Popup */}
+      <NotificationPopup
+        notification={currentNotification}
+        onClose={dismissCurrentNotification}
+        onView={handleViewNotification}
+      />
     </div>
   )
 }
-

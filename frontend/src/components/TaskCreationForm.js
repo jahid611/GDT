@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react"
-import { createTask, getUsers } from "../utils/api"
+import { createTask, updateTask, getUsers, createNotification } from "../utils/api"
 import { useNotifications } from "../contexts/NotificationContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
-export default function TaskCreationForm({ onSuccess, onCancel, onTaskCreated }) {
+export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -21,6 +22,21 @@ export default function TaskCreationForm({ onSuccess, onCancel, onTaskCreated })
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [userError, setUserError] = useState("")
   const { showToast } = useNotifications()
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        status: initialData.status || "todo",
+        priority: initialData.priority || "medium",
+        deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : "",
+        estimatedTime: initialData.estimatedTime || "",
+        assignedTo: initialData.assignedTo?._id || "",
+      })
+    }
+  }, [initialData])
 
   useEffect(() => {
     loadUsers()
@@ -31,7 +47,6 @@ export default function TaskCreationForm({ onSuccess, onCancel, onTaskCreated })
       setLoadingUsers(true)
       setUserError("")
       const fetchedUsers = await getUsers()
-      console.log("Fetched users:", fetchedUsers)
       setUsers(fetchedUsers)
     } catch (err) {
       console.error("Error loading users:", err)
@@ -48,13 +63,51 @@ export default function TaskCreationForm({ onSuccess, onCancel, onTaskCreated })
 
     try {
       setLoading(true)
-      const newTask = await createTask(formData)
-      showToast("Succès", "Tâche créée avec succès")
-      onTaskCreated?.(newTask)
-      onSuccess?.()
+      let result
+
+      // Créer ou modifier la tâche
+      if (mode === "edit" && initialData?._id) {
+        result = await updateTask(initialData._id, formData)
+      } else {
+        result = await createTask({
+          ...formData,
+          createdBy: user.id
+        })
+      }
+
+      // Si une tâche est assignée, créer une notification
+      if (formData.assignedTo) {
+        const assignedUser = users.find(u => u._id === formData.assignedTo)
+        if (assignedUser) {
+          try {
+            await createNotification({
+              userId: assignedUser._id,
+              type: 'TASK_ASSIGNED',
+              message: `${user.name} vous a assigné la tâche "${formData.title}"`,
+              taskId: result._id,
+              read: false
+            })
+          } catch (error) {
+            console.error('Erreur lors de la création de la notification:', error)
+          }
+        }
+      }
+
+      showToast(
+        "Succès", 
+        mode === "edit" ? "Tâche modifiée avec succès" : "Tâche créée avec succès"
+      )
+      
+      if (onSuccess) {
+        onSuccess(result)
+      }
     } catch (err) {
-      console.error("Error creating task:", err)
-      showToast("Erreur", err.message, "destructive")
+      console.error("Error handling task:", err)
+      showToast(
+        "Erreur", 
+        err.message || `Impossible de ${mode === "edit" ? "modifier" : "créer"} la tâche`, 
+        "destructive"
+      )
     } finally {
       setLoading(false)
     }
@@ -168,21 +221,22 @@ export default function TaskCreationForm({ onSuccess, onCancel, onTaskCreated })
       </div>
 
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Annuler
-        </Button>
+        {onCancel && (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annuler
+          </Button>
+        )}
         <Button type="submit" disabled={loading || loadingUsers}>
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Création...
+              {mode === "edit" ? "Modification..." : "Création..."}
             </>
           ) : (
-            "Créer la tâche"
+            mode === "edit" ? "Modifier la tâche" : "Créer la tâche"
           )}
         </Button>
       </div>
     </form>
   )
 }
-

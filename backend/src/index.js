@@ -14,8 +14,6 @@ const PORT = process.env.PORT || 5000;
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
@@ -51,14 +49,12 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://gdt-mauve.vercel.app',
   process.env.CLIENT_URL,
-  process.env.DEPLOYED_CLIENT_URL
+  process.env.DEPLOYED_CLIENT_URL,
 ].filter(Boolean);
 
 app.use(cors({
-  origin: function(origin, callback) {
-    // Permettre les requêtes sans origine (comme les appels API directs)
-    if (!origin) return callback(null, true);
-    
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // Permettre les requêtes sans origine
     if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -70,24 +66,16 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600 // Mettre en cache les résultats du pre-flight pendant 10 minutes
+  maxAge: 600,
 }));
 
 // Middlewares globaux
-app.use(express.json()); // Pour gérer les requêtes JSON
-app.use(morgan('dev')); // Logger des requêtes HTTP
+app.use(express.json());
+app.use(morgan('dev'));
 
 // Middleware de log pour toutes les requêtes
 app.use((req, res, next) => {
   console.log(`➡️ ${req.method} ${req.url}`);
-  // Log des headers CORS pour le débogage
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🔍 Request Headers:', {
-      origin: req.headers.origin,
-      'access-control-request-method': req.headers['access-control-request-method'],
-      'access-control-request-headers': req.headers['access-control-request-headers']
-    });
-  }
   next();
 });
 
@@ -100,9 +88,9 @@ app.get('/keepalive', (req, res) => {
 app.use((req, res, next) => {
   if (mongoose.connection.readyState !== 1) {
     console.warn('⚠️ Database connection not ready');
-    return res.status(503).json({ 
+    return res.status(503).json({
       error: 'Database connection is not ready',
-      details: 'The server is currently trying to establish a database connection. Please try again in a few moments.'
+      details: 'The server is currently trying to establish a database connection. Please try again later.',
     });
   }
   next();
@@ -110,11 +98,11 @@ app.use((req, res, next) => {
 
 // Routes principales
 app.get('/', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'Welcome to the Task Manager API',
     version: '1.0.0',
     status: 'healthy',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -122,50 +110,49 @@ app.get('/', (req, res) => {
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import notificationsRoutes from './routes/notificationsRoutes.js'; // Ajout des notifications
 
 // Application des routes avec préfixes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationsRoutes); // Application des notifications
 
 // Middleware pour les routes non trouvées
 app.use((req, res) => {
   res.status(404).json({
     error: 'Not Found',
     message: `La route ${req.originalUrl} n'existe pas sur ce serveur`,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
-// Gestion des erreurs globales améliorée
+// Gestion des erreurs globales
 app.use((err, req, res, next) => {
   console.error('❌ Erreur détectée :', err);
-  
-  // Gestion spécifique des erreurs CORS
+
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({
       error: 'CORS Error',
       message: 'L\'accès depuis votre origine n\'est pas autorisé',
       origin: req.headers.origin,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  // Gestion des erreurs de validation Mongoose
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Validation Error',
       message: err.message,
-      details: Object.values(err.errors).map(e => e.message),
-      timestamp: new Date().toISOString()
+      details: Object.values(err.errors).map((e) => e.message),
+      timestamp: new Date().toISOString(),
     });
   }
 
-  // Erreur par défaut
   res.status(err.status || 500).json({
     error: err.name || 'Internal Server Error',
     message: err.message || 'Une erreur inattendue s\'est produite',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -185,7 +172,6 @@ process.on('unhandledRejection', (reason, promise) => {
 // Gestion des exceptions non attrapées
 process.on('uncaughtException', (error) => {
   console.error('🚨 Uncaught Exception:', error);
-  // Fermeture propre de l'application
   mongoose.connection.close(() => {
     console.log('🔒 MongoDB connection closed due to error');
     process.exit(1);

@@ -1,6 +1,6 @@
 import express from "express";
 import { getUsers, getUserProfile } from "../controllers/userController.js";
-import { auth } from "../middleware/auth.js";
+import auth from "../middleware/auth.js"; // Sans accolades pour un export par défaut
 
 const router = express.Router();
 

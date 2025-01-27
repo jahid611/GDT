@@ -8,8 +8,8 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000,
-  withCredentials: true // Ajout de withCredentials pour supporter les cookies CORS
-});
+  withCredentials: true
+})
 
 // Intercepteur de requête amélioré avec logging détaillé
 api.interceptors.request.use(
@@ -67,7 +67,6 @@ api.interceptors.response.use(
       timestamp: new Date().toISOString(),
     })
 
-    // Gestion d'erreur améliorée
     if (error.code === "ECONNABORTED") {
       throw new Error("La requête a pris trop de temps à répondre. Veuillez réessayer.")
     }
@@ -211,7 +210,6 @@ export const addComment = async (taskId, content) => {
   })
 }
 
-// Points d'API pour les utilisateurs avec gestion d'erreur améliorée
 export const getUsers = async () => {
   return withRetry(async () => {
     try {
@@ -237,6 +235,24 @@ export const getUsers = async () => {
       throw new Error(errorMessage)
     }
   }, 3)
+}
+
+export const createNotification = async (notificationData) => {
+  return withRetry(async () => {
+    try {
+      console.log("Creating notification:", notificationData)
+      const { data } = await api.post("/api/notifications", notificationData)
+      console.log("Notification created successfully:", data)
+      return data
+    } catch (error) {
+      console.error("Error creating notification:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      })
+      throw error
+    }
+  })
 }
 
 export const getUserProfile = async (userId) => {
@@ -275,7 +291,6 @@ export const updateUserProfile = async (userId, userData) => {
   })
 }
 
-// Points d'API pour l'authentification avec gestion d'erreur améliorée
 export const login = async (credentials) => {
   return withRetry(async () => {
     try {
@@ -334,7 +349,6 @@ export const logout = () => {
   }
 }
 
-// Points d'API pour les statistiques avec gestion d'erreur améliorée
 export const getTaskStats = async () => {
   return withRetry(async () => {
     try {
@@ -353,7 +367,6 @@ export const getTaskStats = async () => {
   })
 }
 
-// Points d'API pour les notifications avec gestion d'erreur améliorée
 export const getNotifications = async () => {
   return withRetry(async () => {
     try {

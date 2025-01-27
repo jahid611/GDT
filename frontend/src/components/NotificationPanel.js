@@ -1,63 +1,65 @@
-import React from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useNotifications } from "../contexts/NotificationContext"
-import { formatDistanceToNow } from "date-fns"
-import { fr } from "date-fns/locale"
-import { Bell, Check } from "lucide-react"
+import React from 'react'
+import { useNotifications } from '../contexts/NotificationContext'
+import { Bell, Check, Clock } from 'lucide-react'
+import { Button } from './ui/button'
+import { ScrollArea } from './ui/scroll-area'
+import { format } from 'date-fns'
+import { fr } from 'date-fns/locale'
 
 export default function NotificationPanel() {
   const { notifications, markAsRead } = useNotifications()
 
+  if (!notifications.length) {
+    return (
+      <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+        <Bell className="h-8 w-8 mb-2" />
+        <p>Aucune notification</p>
+      </div>
+    )
+  }
+
   return (
-    <Card className="w-[380px]">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">Notifications</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[400px] pr-4">
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-              <Bell className="h-8 w-8 mb-2" />
-              <p>Aucune notification</p>
+    <ScrollArea className="h-full">
+      <div className="space-y-4 p-4">
+        {notifications.map((notification) => (
+          <div
+            key={notification._id}
+            className={`
+              flex items-start gap-4 p-4 rounded-lg border
+              ${notification.read ? 'bg-muted' : 'bg-card'}
+            `}
+          >
+            <div className={`
+              rounded-full p-2
+              ${notification.read ? 'bg-muted-foreground/10' : 'bg-primary/10'}
+            `}>
+              {notification.read ? (
+                <Check className="h-4 w-4 text-muted-foreground" />
+              ) : (
+                <Bell className="h-4 w-4 text-primary" />
+              )}
             </div>
-          ) : (
-            <div className="space-y-4">
-              {notifications.map((notification) => (
-                <div
-                  key={notification._id}
-                  className={`p-4 rounded-lg border transition-colors ${
-                    notification.read ? "bg-background" : "bg-muted"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{notification.title}</p>
-                      <p className="text-sm text-muted-foreground">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(notification.createdAt), {
-                          addSuffix: true,
-                          locale: fr,
-                        })}
-                      </p>
-                    </div>
-                    {!notification.read && (
-                      <button
-                        onClick={() => markAsRead(notification._id)}
-                        className="text-primary hover:text-primary/80"
-                        title="Marquer comme lu"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium leading-none">
+                {notification.message}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1 flex items-center">
+                <Clock className="h-3 w-3 mr-1" />
+                {format(new Date(notification.createdAt), 'Pp', { locale: fr })}
+              </p>
             </div>
-          )}
-        </ScrollArea>
-      </CardContent>
-    </Card>
+            {!notification.read && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAsRead(notification._id)}
+              >
+                Marquer comme lu
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+    </ScrollArea>
   )
 }
-

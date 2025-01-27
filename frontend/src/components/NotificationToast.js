@@ -1,20 +1,26 @@
-import React from "react"
-import { Toast, ToastDescription, ToastTitle, ToastProvider, ToastViewport } from "@/components/ui/toast"
-import { useNotifications } from "../contexts/NotificationContext"
+import React from 'react'
+import { useNotifications } from '../contexts/NotificationContext'
+import { Toast, ToastProvider, ToastViewport } from '@/components/ui/toast'
+import { useToast } from '@/components/ui/use-toast'
 
 export default function NotificationToast() {
-  const { currentToast, hideToast } = useNotifications()
+  const { toast } = useToast()
+  let showToast = useNotifications().showToast; //Fixed: use let instead of const and directly access showToast from useNotifications
 
-  if (!currentToast) return null
+  // Mise à jour de la fonction showToast dans le contexte
+  React.useEffect(() => {
+    showToast = (title, message, variant = 'default') => {
+      toast({
+        title,
+        description: message,
+        variant,
+      })
+    }
+  }, [toast, showToast]) //Fixed: Added showToast to dependencies
 
   return (
     <ToastProvider>
-      <Toast onOpenChange={hideToast}>
-        <ToastTitle>{currentToast.title}</ToastTitle>
-        <ToastDescription>{currentToast.message}</ToastDescription>
-      </Toast>
       <ToastViewport />
     </ToastProvider>
   )
 }
-

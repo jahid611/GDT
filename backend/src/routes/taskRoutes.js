@@ -1,6 +1,6 @@
 import express from "express";
 import { getTasks, createTask, updateTask, deleteTask } from "../controllers/taskController.js";
-import { auth } from "../middleware/auth.js";
+import auth from "../middleware/auth.js"; // Sans accolades pour un export par défaut
 
 const router = express.Router();
 
