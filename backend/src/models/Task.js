@@ -1,13 +1,15 @@
-import mongoose from "mongoose"
+import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema({
   title: {
     type: String,
     required: [true, "Le titre est requis"],
+    trim: true,
   },
   description: {
     type: String,
     required: [true, "La description est requise"],
+    trim: true,
   },
   status: {
     type: String,
@@ -22,18 +24,23 @@ const taskSchema = new mongoose.Schema({
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    default: null, // Peut ne pas être assigné au départ
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
+    required: [true, "Un créateur est requis"],
   },
   createdAt: {
     type: Date,
     default: Date.now,
   },
-})
+  deadline: {
+    type: Date,
+    default: null,
+  },
+});
 
-const Task = mongoose.model("Task", taskSchema)
+const Task = mongoose.model("Task", taskSchema);
 
-export default Task
-
+export default Task;
