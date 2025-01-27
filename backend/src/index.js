@@ -49,12 +49,11 @@ mongoose.connection.on('disconnected', () => {
 // Middleware pour CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || '*', // Autorise le frontend déployé
-    credentials: true, // Permet l'envoi des cookies et des en-têtes d'autorisation
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Méthodes HTTP autorisées
-    allowedHeaders: ['Content-Type', 'Authorization'], // Headers autorisés
+    origin: "https://gdt-mauve.vercel.app", // Remplacez par l'URL de votre frontend Vercel
+    credentials: true, // Autorise les cookies et en-têtes d'autorisation
   })
 );
+
 
 // Middlewares globaux
 app.use(express.json()); // Pour gérer les requêtes JSON
