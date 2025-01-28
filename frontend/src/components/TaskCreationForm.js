@@ -113,6 +113,12 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }
 
+  // Fonction utilitaire pour obtenir le nom d'affichage de l'utilisateur
+  const getUserDisplayName = (user) => {
+    // Utilise username s'il existe, sinon utilise name, sinon utilise email
+    return user.username || user.name || user.email
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
@@ -200,7 +206,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             <option value="">Non assigné</option>
             {users.map((user) => (
               <option key={user._id} value={user._id}>
-                {user.name} ({user.email})
+                {getUserDisplayName(user)}
               </option>
             ))}
           </select>
