@@ -6,8 +6,9 @@ import TaskStats from "./TaskStats"
 import TaskCalendar from "./TaskCalendar"
 import TaskKanban from "./TaskKanban"
 import UserProfile from "./UserProfile"
+import AdminPanel from "./AdminPanel"
 import { useNotifications } from "../contexts/NotificationContext"
-import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus } from 'lucide-react'
+import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus, Shield } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -17,12 +18,14 @@ import { cn } from "@/lib/utils"
 import TaskCreationDialog from "./TaskCreationDialog"
 
 const menuItems = [
-  { id: "list", label: "Liste", icon: ListTodo },
+  { id: "list", label: "Tâches", icon: ListTodo },
   { id: "kanban", label: "Kanban", icon: LayoutGrid },
   { id: "calendar", label: "Calendrier", icon: Calendar },
   { id: "stats", label: "Statistiques", icon: BarChart2 },
   { id: "profile", label: "Profil", icon: User },
 ]
+
+const adminMenuItem = { id: "admin", label: "Administration", icon: Shield }
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -33,6 +36,13 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
+
+  const finalMenuItems = React.useMemo(() => {
+    if (user?.role === 'admin') {
+      return [...menuItems, adminMenuItem]
+    }
+    return menuItems
+  }, [user?.role])
 
   useEffect(() => {
     const handleResize = () => {
@@ -59,7 +69,6 @@ export default function Dashboard() {
   const handleViewNotification = (notification) => {
     if (notification.taskId) {
       setSelectedView('list')
-      // Vous pouvez ajouter ici la logique pour faire défiler jusqu'à la tâche spécifique
     }
   }
 
@@ -75,6 +84,8 @@ export default function Dashboard() {
         return <TaskStats />
       case "profile":
         return <UserProfile />
+      case "admin":
+        return user?.role === 'admin' ? <AdminPanel /> : null
       default:
         return <TaskList />
     }
@@ -98,7 +109,7 @@ export default function Dashboard() {
               </Button>
             </div>
             <nav className="space-y-1">
-              {menuItems.map((item) => (
+              {finalMenuItems.map((item) => (
                 <Button
                   key={item.id}
                   onClick={() => setSelectedView(item.id)}
@@ -159,11 +170,22 @@ export default function Dashboard() {
         <div className="container mx-auto p-4 lg:p-8">
           <div className="mb-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold">Bienvenue, {user?.name}</h2>
-              <Button onClick={() => setIsTaskDialogOpen(true)}>
-                <Plus className="mr-2 h-5 w-5" />
-                Nouvelle tâche
-              </Button>
+              <div>
+                <h2 className="text-3xl font-bold">
+                  Bienvenue, {user?.name}
+                  {user?.role === 'admin' && (
+                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+                      Admin
+                    </span>
+                  )}
+                </h2>
+              </div>
+              {selectedView !== 'admin' && (
+                <Button onClick={() => setIsTaskDialogOpen(true)}>
+                  <Plus className="mr-2 h-5 w-5" />
+                  Nouvelle tâche
+                </Button>
+              )}
             </div>
           </div>
           {renderContent()}
