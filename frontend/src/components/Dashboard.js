@@ -6,8 +6,9 @@ import TaskStats from "./TaskStats"
 import TaskCalendar from "./TaskCalendar"
 import TaskKanban from "./TaskKanban"
 import UserProfile from "./UserProfile"
+import AdminPanel from "./AdminPanel"
 import { useNotifications } from "../contexts/NotificationContext"
-import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus } from "lucide-react"
+import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -15,16 +16,16 @@ import NotificationPanel from "./NotificationPanel"
 import NotificationPopup from "./NotificationPopup"
 import { cn } from "@/lib/utils"
 import TaskCreationDialog from "./TaskCreationDialog"
-import { useTranslation } from "../hooks/useTranslation"
-import LanguageToggle from "./LanguageToggle"
 
 const menuItems = [
-  { id: "list", key: "list", icon: ListTodo },
-  { id: "kanban", key: "kanban", icon: LayoutGrid },
-  { id: "calendar", key: "calendar", icon: Calendar },
-  { id: "stats", key: "stats", icon: BarChart2 },
-  { id: "profile", key: "profile", icon: User },
+  { id: "list", label: "Tâches", icon: ListTodo },
+  { id: "kanban", label: "Kanban", icon: LayoutGrid },
+  { id: "calendar", label: "Calendrier", icon: Calendar },
+  { id: "stats", label: "Statistiques", icon: BarChart2 },
+  { id: "profile", label: "Profil", icon: User },
 ]
+
+const adminMenuItem = { id: "admin", label: "Administration", icon: Shield }
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -32,41 +33,17 @@ export default function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
   const [newTask, setNewTask] = useState(null)
-  const [translations, setTranslations] = useState({})
-  const [isLoadingTranslations, setIsLoadingTranslations] = useState(true)
 
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
-  const { t, language } = useTranslation()
 
-  // Charger les traductions au montage et quand la langue change
-  useEffect(() => {
-    async function loadTranslations() {
-      setIsLoadingTranslations(true)
-      try {
-        const translated = {
-          myTasks: await t("myTasks"),
-          list: await t("list"),
-          kanban: await t("kanban"),
-          calendar: await t("calendar"),
-          stats: await t("stats"),
-          profile: await t("profile"),
-          logout: await t("logout"),
-          welcome: await t("welcome"),
-          newTask: await t("newTask"),
-          notifications: await t("notifications"),
-        }
-        setTranslations(translated)
-      } catch (error) {
-        console.error("Error loading translations:", error)
-      } finally {
-        setIsLoadingTranslations(false)
-      }
+  const finalMenuItems = React.useMemo(() => {
+    if (user?.role === "admin") {
+      return [...menuItems, adminMenuItem]
     }
-
-    loadTranslations()
-  }, [t])
+    return menuItems
+  }, [user?.role])
 
   useEffect(() => {
     const handleResize = () => {
@@ -108,17 +85,11 @@ export default function Dashboard() {
         return <TaskStats />
       case "profile":
         return <UserProfile />
+      case "admin":
+        return user?.role === "admin" ? <AdminPanel /> : null
       default:
         return <TaskList />
     }
-  }
-
-  if (isLoadingTranslations) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    )
   }
 
   return (
@@ -133,13 +104,13 @@ export default function Dashboard() {
         <div className="flex flex-col h-full">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold">{t("myTasks")}</h1>
+              <h1 className="text-2xl font-bold">Mes Tâches</h1>
               <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
             <nav className="space-y-1">
-              {menuItems.map((item) => (
+              {finalMenuItems.map((item) => (
                 <Button
                   key={item.id}
                   onClick={() => setSelectedView(item.id)}
@@ -147,20 +118,19 @@ export default function Dashboard() {
                   className="w-full justify-start"
                 >
                   <item.icon className="mr-2 h-5 w-5" />
-                  {t(item.key)}
+                  {item.label}
                 </Button>
               ))}
             </nav>
           </div>
-          <div className="mt-auto p-6 space-y-2">
-            <LanguageToggle />
+          <div className="mt-auto p-6">
             <Button
               onClick={handleLogout}
               variant="ghost"
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100"
             >
               <LogOut className="mr-2 h-5 w-5" />
-              {t("logout")}
+              Déconnexion
             </Button>
           </div>
         </div>
@@ -172,30 +142,27 @@ export default function Dashboard() {
           <Button variant="ghost" onClick={() => setIsSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">{t("myTasks")}</h1>
-          <div className="flex items-center gap-2">
-            <LanguageToggle />
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center bg-primary text-primary-foreground rounded-full">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>{t("notifications")}</SheetTitle>
-                </SheetHeader>
-                <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
-                  <NotificationPanel />
-                </ScrollArea>
-              </SheetContent>
-            </Sheet>
-          </div>
+          <h1 className="text-lg font-semibold">Mes Tâches</h1>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center bg-primary text-primary-foreground rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>Notifications</SheetTitle>
+              </SheetHeader>
+              <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
+                <NotificationPanel />
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
@@ -204,12 +171,10 @@ export default function Dashboard() {
         <div className="container mx-auto p-4 lg:p-8">
           <div className="mb-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold">
-                {t("welcome")}, {user?.name}
-              </h2>
+              <h2 className="text-3xl font-bold">Bienvenue, {user?.name}</h2>
               <Button onClick={() => setIsTaskDialogOpen(true)}>
                 <Plus className="mr-2 h-5 w-5" />
-                {t("newTask")}
+                Nouvelle tâche
               </Button>
             </div>
           </div>
@@ -244,7 +209,7 @@ export default function Dashboard() {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>{t("notifications")}</SheetTitle>
+              <SheetTitle>Notifications</SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
               <NotificationPanel />
@@ -259,7 +224,6 @@ export default function Dashboard() {
         onClose={dismissCurrentNotification}
         onView={handleViewNotification}
       />
-      <LanguageToggle />
     </div>
   )
 }

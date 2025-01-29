@@ -1,56 +1,98 @@
-import User from "../models/User.js";
+import User from "../models/User.js"
 
 // Contrôleur pour obtenir tous les utilisateurs
 export const getUsers = async (req, res) => {
   try {
-    console.log("Fetching all users from database...");
+    console.log("➡️ Récupération de tous les utilisateurs...")
 
-    // Rechercher tous les utilisateurs et sélectionner les champs nécessaires
     const users = await User.find({})
-      .select("_id name email role")
-      .sort({ name: 1 }); // Trier par nom de manière alphabétique
+      .select("_id username email role")
+      .sort({ username: 1 })
 
-    console.log(`Successfully found ${users.length} users`);
+    console.log(`✅ ${users.length} utilisateurs trouvés`)
 
     if (!users || users.length === 0) {
-      console.log("No users found in database");
       return res.status(404).json({
-        error: "Aucun utilisateur trouvé",
-      });
+        error: "Not Found",
+        message: "Aucun utilisateur trouvé"
+      })
     }
 
-    res.status(200).json(users);
+    res.status(200).json(users)
   } catch (error) {
-    console.error("Error in getUsers controller:", error);
+    console.error("❌ Erreur dans getUsers:", error)
     res.status(500).json({
-      error: "Impossible de charger la liste des utilisateurs",
-      details: error.message,
-    });
+      error: "Server Error",
+      message: "Impossible de charger la liste des utilisateurs",
+      details: error.message
+    })
   }
-};
+}
 
-// Contrôleur pour obtenir le profil d'un utilisateur par ID
+// Contrôleur pour obtenir le profil d'un utilisateur
 export const getUserProfile = async (req, res) => {
   try {
-    const { id } = req.params;
-    console.log(`Fetching user profile for ID: ${id}`);
+    console.log(`➡️ Récupération du profil utilisateur ID: ${req.user._id}`)
 
-    // Rechercher un utilisateur par ID et sélectionner les champs nécessaires
-    const user = await User.findById(id).select("_id name email role");
+    const user = await User.findById(req.user._id)
+      .select("_id username email role")
 
     if (!user) {
-      console.log(`No user found with ID: ${id}`);
+      console.log(`❌ Aucun utilisateur trouvé avec l'ID: ${req.user._id}`)
       return res.status(404).json({
-        error: "Utilisateur non trouvé",
-      });
+        error: "Not Found",
+        message: "Utilisateur non trouvé"
+      })
     }
 
-    res.status(200).json(user);
+    res.status(200).json(user)
   } catch (error) {
-    console.error("Error in getUserProfile controller:", error);
+    console.error("❌ Erreur dans getUserProfile:", error)
     res.status(500).json({
-      error: "Impossible de charger le profil utilisateur",
-      details: error.message,
-    });
+      error: "Server Error",
+      message: "Impossible de charger le profil utilisateur",
+      details: error.message
+    })
   }
-};
+}
+
+// Contrôleur pour mettre à jour le profil utilisateur
+export const updateProfile = async (req, res) => {
+  try {
+    console.log(`➡️ Mise à jour du profil utilisateur ID: ${req.user._id}`)
+    
+    const user = await User.findById(req.user._id)
+
+    if (!user) {
+      return res.status(404).json({
+        error: "Not Found",
+        message: "Utilisateur non trouvé"
+      })
+    }
+
+    user.username = req.body.username || user.username
+    user.email = req.body.email || user.email
+
+    if (req.body.password) {
+      user.password = req.body.password
+    }
+
+    const updatedUser = await user.save()
+
+    console.log('✅ Profil utilisateur mis à jour avec succès')
+
+    res.json({
+      _id: updatedUser._id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      role: updatedUser.role
+    })
+  } catch (error) {
+    console.error("❌ Erreur dans updateProfile:", error)
+    res.status(500).json({
+      error: "Update Error",
+      message: "Erreur lors de la mise à jour du profil",
+      details: error.message
+    })
+  }
+}
