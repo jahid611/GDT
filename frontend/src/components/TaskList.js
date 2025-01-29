@@ -202,11 +202,11 @@ export default function TaskList({ newTask }) {
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] h-9">
                   <SortAsc className="w-4 h-4 mr-2" />
                   <SelectValue placeholder={t("sortBy")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="min-w-[180px]">
                   <SelectItem value="deadline">{t("deadline")}</SelectItem>
                   <SelectItem value="priority">{t("priority")}</SelectItem>
                   <SelectItem value="status">{t("status")}</SelectItem>
@@ -216,11 +216,11 @@ export default function TaskList({ newTask }) {
 
             <div className="flex items-center gap-2">
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] h-9">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder={t("filterByStatus")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="min-w-[180px]">
                   <SelectItem value="all">{t("allStatuses")}</SelectItem>
                   <SelectItem value="todo">{t("todo")}</SelectItem>
                   <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
@@ -230,11 +230,11 @@ export default function TaskList({ newTask }) {
               </Select>
 
               <Select value={filterPriority} onValueChange={setFilterPriority}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px] h-9">
                   <Filter className="w-4 h-4 mr-2" />
                   <SelectValue placeholder={t("filterByPriority")} />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="min-w-[180px]">
                   <SelectItem value="all">{t("allPriorities")}</SelectItem>
                   <SelectItem value="high">{t("high")}</SelectItem>
                   <SelectItem value="medium">{t("medium")}</SelectItem>
