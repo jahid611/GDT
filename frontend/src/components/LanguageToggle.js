@@ -8,16 +8,19 @@ const languages = [
     code: "fr",
     name: "Français",
     flag: "🇫🇷",
+    mobileFlag: "FR", // Fallback pour l'application mobile
   },
   {
     code: "en",
     name: "English",
     flag: "🇬🇧",
+    mobileFlag: "GB", // Fallback pour l'application mobile
   },
   {
     code: "ro",
     name: "Română",
     flag: "🇷🇴",
+    mobileFlag: "RO", // Fallback pour l'application mobile
   },
 ]
 
@@ -36,6 +39,7 @@ export default function LanguageToggle() {
         >
           <Globe className="h-4 w-4" />
           <span className="text-base">{currentLanguage.flag}</span>
+          <span className="text-base">{currentLanguage.mobileFlag}</span>
           <span className="font-medium">{currentLanguage.code.toUpperCase()}</span>
         </Button>
       </DropdownMenuTrigger>
@@ -43,6 +47,7 @@ export default function LanguageToggle() {
         {languages.map((lang) => (
           <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code)} className="cursor-pointer">
             <span className="mr-2">{lang.flag}</span>
+            <span className="mr-2">{lang.mobileFlag}</span>
             <span className="flex-1">{lang.name}</span>
             {language === lang.code && <Check className="h-4 w-4 ml-2 text-primary" />}
           </DropdownMenuItem>

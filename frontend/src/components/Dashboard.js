@@ -17,6 +17,7 @@ import NotificationPanel from "./NotificationPanel"
 import NotificationPopup from "./NotificationPopup"
 import { cn } from "@/lib/utils"
 import TaskCreationDialog from "./TaskCreationDialog"
+import LanguageToggle from "./LanguageToggle"
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -136,14 +137,17 @@ export default function Dashboard() {
             </nav>
           </div>
           <div className="mt-auto p-6">
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100"
-            >
-              <LogOut className="mr-2 h-5 w-5" />
-              {t("logout")}
-            </Button>
+            <div className="space-y-2">
+              <LanguageToggle />
+              <Button
+                onClick={handleLogout}
+                variant="ghost"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100"
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                {t("logout")}
+              </Button>
+            </div>
           </div>
         </div>
       </aside>
