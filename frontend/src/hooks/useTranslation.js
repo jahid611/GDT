@@ -485,7 +485,7 @@ const translations = {
 
 const LanguageContext = createContext()
 
-export function LanguageProvider({ children }) {
+function LanguageProvider({ children }) {
   const [language, setLanguage] = useState("fr")
 
   const t = useCallback(
@@ -498,11 +498,14 @@ export function LanguageProvider({ children }) {
   return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>
 }
 
-export function useTranslation() {
+function useTranslation() {
   const context = useContext(LanguageContext)
   if (!context) {
     throw new Error("useTranslation must be used within a LanguageProvider")
   }
   return context
 }
+
+// Un seul export à la fin du fichier
+export { LanguageProvider, useTranslation }
 
