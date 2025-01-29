@@ -8,6 +8,7 @@ import TaskKanban from "./TaskKanban"
 import UserProfile from "./UserProfile"
 import AdminPanel from "./AdminPanel"
 import { useNotifications } from "../contexts/NotificationContext"
+import { useTranslation } from "../hooks/useTranslation"
 import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -16,16 +17,6 @@ import NotificationPanel from "./NotificationPanel"
 import NotificationPopup from "./NotificationPopup"
 import { cn } from "@/lib/utils"
 import TaskCreationDialog from "./TaskCreationDialog"
-
-const menuItems = [
-  { id: "list", label: "Tâches", icon: ListTodo },
-  { id: "kanban", label: "Kanban", icon: LayoutGrid },
-  { id: "calendar", label: "Calendrier", icon: Calendar },
-  { id: "stats", label: "Statistiques", icon: BarChart2 },
-  { id: "profile", label: "Profil", icon: User },
-]
-
-const adminMenuItem = { id: "admin", label: "Administration", icon: Shield }
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -37,13 +28,34 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
+  const { t } = useTranslation()
+
+  const menuItems = React.useMemo(
+    () => [
+      { id: "list", label: t("list"), icon: ListTodo },
+      { id: "kanban", label: t("kanban"), icon: LayoutGrid },
+      { id: "calendar", label: t("calendar"), icon: Calendar },
+      { id: "stats", label: t("stats"), icon: BarChart2 },
+      { id: "profile", label: t("profile"), icon: User },
+    ],
+    [t],
+  )
+
+  const adminMenuItem = React.useMemo(
+    () => ({
+      id: "admin",
+      label: t("admin"),
+      icon: Shield,
+    }),
+    [t],
+  )
 
   const finalMenuItems = React.useMemo(() => {
     if (user?.role === "admin") {
       return [...menuItems, adminMenuItem]
     }
     return menuItems
-  }, [user?.role])
+  }, [user?.role, menuItems, adminMenuItem])
 
   useEffect(() => {
     const handleResize = () => {
@@ -104,7 +116,7 @@ export default function Dashboard() {
         <div className="flex flex-col h-full">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold">Mes Tâches</h1>
+              <h1 className="text-2xl font-bold">{t("myTasks")}</h1>
               <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
@@ -130,7 +142,7 @@ export default function Dashboard() {
               className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100"
             >
               <LogOut className="mr-2 h-5 w-5" />
-              Déconnexion
+              {t("logout")}
             </Button>
           </div>
         </div>
@@ -142,7 +154,7 @@ export default function Dashboard() {
           <Button variant="ghost" onClick={() => setIsSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold">Mes Tâches</h1>
+          <h1 className="text-lg font-semibold">{t("myTasks")}</h1>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="sm" className="relative">
@@ -156,7 +168,7 @@ export default function Dashboard() {
             </SheetTrigger>
             <SheetContent>
               <SheetHeader>
-                <SheetTitle>Notifications</SheetTitle>
+                <SheetTitle>{t("notifications")}</SheetTitle>
               </SheetHeader>
               <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
                 <NotificationPanel />
@@ -171,10 +183,12 @@ export default function Dashboard() {
         <div className="container mx-auto p-4 lg:p-8">
           <div className="mb-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-3xl font-bold">Bienvenue, {user?.name}</h2>
+              <h2 className="text-3xl font-bold">
+                {t("welcome")}, {user?.name}
+              </h2>
               <Button onClick={() => setIsTaskDialogOpen(true)}>
                 <Plus className="mr-2 h-5 w-5" />
-                Nouvelle tâche
+                {t("newTask")}
               </Button>
             </div>
           </div>
@@ -209,7 +223,7 @@ export default function Dashboard() {
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Notifications</SheetTitle>
+              <SheetTitle>{t("notifications")}</SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
               <NotificationPanel />

@@ -1,18 +1,13 @@
-import express from "express"
-import { protect, admin } from '../middleware/authMiddleware.js'
-import { 
-  getUserProfile,
-  getUsers,
-  updateProfile
-} from '../controllers/userController.js'
+import express from "express";
+import { getUsers, getUserProfile } from "../controllers/userController.js";
+import auth from "../middleware/auth.js"; // Sans accolades pour un export par défaut
 
-const router = express.Router()
+const router = express.Router();
 
-// Routes protégées
-router.get('/profile', protect, getUserProfile)
-router.put('/profile', protect, updateProfile)
+// Route pour obtenir tous les utilisateurs
+router.get("/", auth, getUsers);
 
-// Routes admin
-router.get('/', protect, admin, getUsers)
+// Route pour obtenir le profil d'un utilisateur par ID
+router.get("/:id", auth, getUserProfile);
 
-export default router
+export default router;

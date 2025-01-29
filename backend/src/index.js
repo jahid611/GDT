@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import morgan from 'morgan';
 
-
 // Chargement des variables d'environnement
 dotenv.config();
 
@@ -110,23 +109,17 @@ app.get('/', (req, res) => {
 // Importation des routes
 import authRoutes from './routes/authRoutes.js';
 import taskRoutes from './routes/taskRoutes.js';
-import statsRoutes from './routes/statsRoutes.js';
 import userRoutes from './routes/userRoutes.js';
-import adminRoutes from './routes/adminRoutes.js'
 import notificationsRoutes from './routes/notificationsRoutes.js'; // Ajout des notifications
 
 // Application des routes avec préfixes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', taskRoutes);
-app.use('/api/stats', statsRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/admin', adminRoutes);
-console.log('Route "/api/admin" correctement ajoutée.');
 app.use('/api/notifications', notificationsRoutes); // Application des notifications
 
 // Middleware pour les routes non trouvées
 app.use((req, res) => {
-  console.log(`Route non trouvée : ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     error: 'Not Found',
     message: `La route ${req.originalUrl} n'existe pas sur ce serveur`,

@@ -1,181 +1,233 @@
-import React, { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle2, Clock, AlertCircle, Activity, RefreshCcw } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { format } from "date-fns"
-import { fr } from "date-fns/locale"
-import { getTaskStats } from "../utils/api"
+import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
+import TaskList from "./TaskList"
+import TaskStats from "./TaskStats"
+import TaskCalendar from "./TaskCalendar"
+import TaskKanban from "./TaskKanban"
+import UserProfile from "./UserProfile"
+import AdminPanel from "./AdminPanel"
+import { useNotifications } from "../contexts/NotificationContext"
+import { useTranslation } from "../hooks/useTranslation"
+import { LayoutGrid, Calendar, ListTodo, BarChart2, User, LogOut, Menu, X, Bell, Plus, Shield } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import NotificationPanel from "./NotificationPanel"
+import NotificationPopup from "./NotificationPopup"
+import { cn } from "@/lib/utils"
+import TaskCreationDialog from "./TaskCreationDialog"
 
-export default function TaskStats() {
-  const [stats, setStats] = useState({
-    completed: { value: 0, trend: 0 },
-    inProgress: { value: 0, trend: 0 },
-    overdue: { value: 0, trend: 0 },
-    averageCompletionTime: { value: 0, trend: 0 },
-    lastUpdated: null,
-  })
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [updating, setUpdating] = useState(false)
+export default function Dashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [selectedView, setSelectedView] = useState("list")
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false)
+  const [newTask, setNewTask] = useState(null)
 
-  const fetchStats = useCallback(async () => {
-    try {
-      setUpdating(true)
-      setError(null)
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
+  const { t } = useTranslation()
 
-      const data = await getTaskStats()
-
-      setStats((prevStats) => ({
-        completed: {
-          value: data.completed,
-          trend: prevStats.completed.value !== 0 ? data.completed - prevStats.completed.value : 0,
-        },
-        inProgress: {
-          value: data.inProgress,
-          trend: prevStats.inProgress.value !== 0 ? data.inProgress - prevStats.inProgress.value : 0,
-        },
-        overdue: {
-          value: data.overdue,
-          trend: prevStats.overdue.value !== 0 ? data.overdue - prevStats.overdue.value : 0,
-        },
-        averageCompletionTime: {
-          value: data.averageCompletionTime,
-          trend:
-            prevStats.averageCompletionTime.value !== 0
-              ? data.averageCompletionTime - prevStats.averageCompletionTime.value
-              : 0,
-        },
-        lastUpdated: data.lastUpdated,
-      }))
-    } catch (error) {
-      console.error("Error fetching stats:", error)
-      setError(error.message)
-    } finally {
-      setLoading(false)
-      setUpdating(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchStats()
-    const interval = setInterval(fetchStats, 30000)
-    return () => clearInterval(interval)
-  }, [fetchStats])
-
-  const statCards = [
-    {
-      title: "Tâches terminées",
-      value: stats.completed.value,
-      trend: stats.completed.trend,
-      description: "Tâches complétées ce mois",
-      icon: CheckCircle2,
-      color: "text-green-500",
-      bgColor: "bg-green-500/10",
-    },
-    {
-      title: "En cours",
-      value: stats.inProgress.value,
-      trend: stats.inProgress.trend,
-      description: "Tâches en progression",
-      icon: Activity,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
-    },
-    {
-      title: "En retard",
-      value: stats.overdue.value,
-      trend: stats.overdue.trend,
-      description: "Tâches dépassant la deadline",
-      icon: AlertCircle,
-      color: "text-red-500",
-      bgColor: "bg-red-500/10",
-    },
-    {
-      title: "Temps moyen",
-      value: `${stats.averageCompletionTime.value}j`,
-      trend: stats.averageCompletionTime.trend,
-      description: "Temps moyen de complétion",
-      icon: Clock,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
-    },
+  const menuItems = [
+    { id: "list", label: t("list"), icon: ListTodo },
+    { id: "kanban", label: t("kanban"), icon: LayoutGrid },
+    { id: "calendar", label: t("calendar"), icon: Calendar },
+    { id: "stats", label: t("stats"), icon: BarChart2 },
+    { id: "profile", label: t("profile"), icon: User },
   ]
 
-  if (loading) {
-    return (
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader className="pb-2">
-              <div className="h-4 bg-muted rounded w-2/3"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-muted rounded w-1/3 mb-2"></div>
-              <div className="h-3 bg-muted rounded w-1/2"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
+  const adminMenuItem = { id: "admin", label: t("admin"), icon: Shield }
+
+  const finalMenuItems = React.useMemo(() => {
+    if (user?.role === "admin") {
+      return [...menuItems, adminMenuItem]
+    }
+    return menuItems
+  }, [user?.role])
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener("resize", handleResize)
+    handleResize()
+
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigate("/login")
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error)
+    }
   }
 
-  if (error) {
-    return (
-      <div className="rounded-lg border border-destructive/50 p-4 text-destructive">
-        <p>{error}</p>
-        <button onClick={fetchStats} className="mt-2 inline-flex items-center text-sm hover:underline">
-          <RefreshCcw className="mr-2 h-4 w-4" />
-          Réessayer
-        </button>
-      </div>
-    )
+  const handleViewNotification = (notification) => {
+    if (notification.taskId) {
+      setSelectedView("list")
+    }
+  }
+
+  const renderContent = () => {
+    switch (selectedView) {
+      case "list":
+        return <TaskList newTask={newTask} />
+      case "kanban":
+        return <TaskKanban />
+      case "calendar":
+        return <TaskCalendar />
+      case "stats":
+        return <TaskStats />
+      case "profile":
+        return <UserProfile />
+      case "admin":
+        return user?.role === "admin" ? <AdminPanel /> : null
+      default:
+        return <TaskList />
+    }
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <AnimatePresence mode="wait">
-          {statCards.map((stat, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2, delay: index * 0.1 }}
+    <div className="min-h-screen bg-background">
+      {/* Sidebar pour desktop */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transition-transform duration-300 ease-in-out lg:translate-x-0",
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+      >
+        <div className="flex flex-col h-full">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h1 className="text-2xl font-bold">{t("myTasks")}</h1>
+              <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <nav className="space-y-1">
+              {finalMenuItems.map((item) => (
+                <Button
+                  key={item.id}
+                  onClick={() => setSelectedView(item.id)}
+                  variant={selectedView === item.id ? "secondary" : "ghost"}
+                  className="w-full justify-start"
+                >
+                  <item.icon className="mr-2 h-5 w-5" />
+                  {item.label}
+                </Button>
+              ))}
+            </nav>
+          </div>
+          <div className="mt-auto p-6">
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100"
             >
-              <Card className={`relative overflow-hidden ${updating ? "opacity-80" : ""}`}>
-                <div
-                  className={`absolute inset-0 opacity-10 ${stat.bgColor}`}
-                  style={{
-                    clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 85%)",
-                  }}
-                />
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-baseline space-x-2">
-                    <div className="text-2xl font-bold">{stat.value}</div>
-                    {stat.trend !== 0 && (
-                      <span className={`text-xs ${stat.trend > 0 ? "text-green-500" : "text-red-500"}`}>
-                        {stat.trend > 0 ? "+" : ""}
-                        {stat.trend}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              <LogOut className="mr-2 h-5 w-5" />
+              {t("logout")}
+            </Button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Header mobile */}
+      <div className="sticky top-0 z-40 lg:hidden">
+        <div className="flex items-center justify-between px-4 py-2 bg-background border-b">
+          <Button variant="ghost" onClick={() => setIsSidebarOpen(true)}>
+            <Menu className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold">{t("myTasks")}</h1>
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center bg-primary text-primary-foreground rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent>
+              <SheetHeader>
+                <SheetTitle>{t("notifications")}</SheetTitle>
+              </SheetHeader>
+              <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
+                <NotificationPanel />
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
-      {stats.lastUpdated && (
-        <p className="text-xs text-muted-foreground text-right">
-          Dernière mise à jour : {format(new Date(stats.lastUpdated), "PPp", { locale: fr })}
-        </p>
-      )}
+
+      {/* Main content */}
+      <main className={cn("min-h-screen transition-all duration-300 ease-in-out", isSidebarOpen ? "lg:pl-64" : "")}>
+        <div className="container mx-auto p-4 lg:p-8">
+          <div className="mb-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-3xl font-bold">
+                {t("welcome")}, {user?.name}
+              </h2>
+              <Button onClick={() => setIsTaskDialogOpen(true)}>
+                <Plus className="mr-2 h-5 w-5" />
+                {t("newTask")}
+              </Button>
+            </div>
+          </div>
+          {renderContent()}
+        </div>
+      </main>
+
+      {/* Task Creation Dialog */}
+      <TaskCreationDialog
+        open={isTaskDialogOpen}
+        onOpenChange={setIsTaskDialogOpen}
+        onSuccess={() => {
+          setIsTaskDialogOpen(false)
+        }}
+        onTaskCreated={(task) => {
+          setNewTask(task)
+        }}
+      />
+
+      {/* Notification button (desktop) */}
+      <div className="fixed bottom-4 right-4 hidden lg:block">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button size="lg" className="rounded-full relative shadow-lg">
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 text-xs flex items-center justify-center bg-primary text-primary-foreground rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>{t("notifications")}</SheetTitle>
+            </SheetHeader>
+            <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
+              <NotificationPanel />
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Notification Popup */}
+      <NotificationPopup
+        notification={currentNotification}
+        onClose={dismissCurrentNotification}
+        onView={handleViewNotification}
+      />
     </div>
   )
 }
