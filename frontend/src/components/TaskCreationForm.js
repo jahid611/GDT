@@ -4,8 +4,9 @@ import { useNotifications } from "../contexts/NotificationContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { Loader2 } from "lucide-react"
+import { useAuth } from "../contexts/AuthContext"
+import { useTranslation } from "../hooks/useTranslation"
 
 export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
   const [formData, setFormData] = useState({
@@ -23,6 +24,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   const [userError, setUserError] = useState("")
   const { showToast } = useNotifications()
   const { user } = useAuth()
+  const { t } = useTranslation()
 
   useEffect(() => {
     if (initialData) {
@@ -51,7 +53,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     } catch (err) {
       console.error("Error loading users:", err)
       setUserError(err.message)
-      showToast("Erreur", err.message, "destructive")
+      showToast(t("error"), t("errorLoadingUsers"), "destructive")
     } finally {
       setLoadingUsers(false)
     }
@@ -65,64 +67,60 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       setLoading(true)
       let result
 
-      // Créer ou modifier la tâche
       if (mode === "edit" && initialData?._id) {
         result = await updateTask(initialData._id, formData)
       } else {
         result = await createTask({
           ...formData,
-          createdBy: user.id
+          createdBy: user.id,
         })
       }
 
-      // Si une tâche est assignée, créer une notification
       if (formData.assignedTo) {
-        const assignedUser = users.find(u => u._id === formData.assignedTo)
+        const assignedUser = users.find((u) => u._id === formData.assignedTo)
         if (assignedUser) {
           try {
             await createNotification({
               userId: assignedUser._id,
-              type: 'TASK_ASSIGNED',
-              message: `${user.name} vous a assigné la tâche "${formData.title}"`,
+              type: "TASK_ASSIGNED",
+              message: t("taskAssignedNotification", {
+                userName: user.name,
+                taskTitle: formData.title,
+              }),
               taskId: result._id,
-              read: false
+              read: false,
             })
           } catch (error) {
-            console.error('Erreur lors de la création de la notification:', error)
+            console.error("Notification creation error:", error)
           }
         }
       }
 
-      showToast(
-        "Succès", 
-        mode === "edit" ? "Tâche modifiée avec succès" : "Tâche créée avec succès"
-      )
-      
+      showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
+
       if (onSuccess) {
         onSuccess(result)
       }
     } catch (err) {
       console.error("Error handling task:", err)
       showToast(
-        "Erreur", 
-        err.message || `Impossible de ${mode === "edit" ? "modifier" : "créer"} la tâche`, 
-        "destructive"
+        t("error"),
+        err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
+        "destructive",
       )
     } finally {
       setLoading(false)
     }
   }
 
-  // Fonction utilitaire pour obtenir le nom d'affichage de l'utilisateur
   const getUserDisplayName = (user) => {
-    // Utilise username s'il existe, sinon utilise name, sinon utilise email
     return user.username || user.name || user.email
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="title">Titre</Label>
+        <Label htmlFor="title">{t("title")}</Label>
         <Input
           id="title"
           value={formData.title}
@@ -132,7 +130,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor="description">{t("description")}</Label>
         <textarea
           id="description"
           value={formData.description}
@@ -144,36 +142,36 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Priorité</Label>
+          <Label>{t("priority")}</Label>
           <select
             value={formData.priority}
             onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="low">Basse</option>
-            <option value="medium">Moyenne</option>
-            <option value="high">Haute</option>
+            <option value="low">{t("low")}</option>
+            <option value="medium">{t("medium")}</option>
+            <option value="high">{t("high")}</option>
           </select>
         </div>
 
         <div className="space-y-2">
-          <Label>Statut</Label>
+          <Label>{t("status")}</Label>
           <select
             value={formData.status}
             onChange={(e) => setFormData({ ...formData, status: e.target.value })}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="todo">À faire</option>
-            <option value="in_progress">En cours</option>
-            <option value="review">En révision</option>
-            <option value="done">Terminé</option>
+            <option value="todo">{t("todo")}</option>
+            <option value="in_progress">{t("in_progress")}</option>
+            <option value="review">{t("review")}</option>
+            <option value="done">{t("done")}</option>
           </select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Date limite</Label>
+          <Label>{t("deadline")}</Label>
           <Input
             type="datetime-local"
             value={formData.deadline}
@@ -182,7 +180,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="estimatedTime">Temps estimé (heures)</Label>
+          <Label htmlFor="estimatedTime">{t("estimatedTime")}</Label>
           <Input
             id="estimatedTime"
             type="number"
@@ -195,7 +193,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       </div>
 
       <div className="space-y-2">
-        <Label>Assigné à</Label>
+        <Label>{t("assignedTo")}</Label>
         <div className="relative">
           <select
             value={formData.assignedTo}
@@ -203,7 +201,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             disabled={loadingUsers}
           >
-            <option value="">Non assigné</option>
+            <option value="">{t("unassigned")}</option>
             {users.map((user) => (
               <option key={user._id} value={user._id}>
                 {getUserDisplayName(user)}
@@ -220,7 +218,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           <p className="text-sm text-destructive mt-1">
             {userError}
             <button type="button" onClick={loadUsers} className="ml-2 underline hover:no-underline">
-              Réessayer
+              {t("retry")}
             </button>
           </p>
         )}
@@ -229,20 +227,23 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       <div className="flex justify-end gap-2">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Annuler
+            {t("cancel")}
           </Button>
         )}
         <Button type="submit" disabled={loading || loadingUsers}>
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {mode === "edit" ? "Modification..." : "Création..."}
+              {mode === "edit" ? t("modifying") : t("creating")}
             </>
+          ) : mode === "edit" ? (
+            t("editTask")
           ) : (
-            mode === "edit" ? "Modifier la tâche" : "Créer la tâche"
+            t("createTask")
           )}
         </Button>
       </div>
     </form>
   )
 }
+

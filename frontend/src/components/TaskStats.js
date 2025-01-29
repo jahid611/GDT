@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { CheckCircle2, Clock, AlertCircle, Activity } from "lucide-react"
+import { useTranslation } from "../hooks/useTranslation"
 
 export default function TaskStats() {
   const [stats, setStats] = useState({
@@ -10,6 +11,7 @@ export default function TaskStats() {
     averageCompletionTime: 0,
   })
   const [loading, setLoading] = useState(true)
+  const { t } = useTranslation()
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -36,41 +38,41 @@ export default function TaskStats() {
 
   const statCards = [
     {
-      title: "Tâches terminées",
+      title: t("completedTasks"),
       value: stats.completed,
-      description: "Tâches complétées",
+      description: t("completedTasksDesc"),
       icon: CheckCircle2,
       color: "text-green-500",
-      trend: "Ce mois",
+      trend: t("thisMonth"),
     },
     {
-      title: "En cours",
+      title: t("tasksInProgress"),
       value: stats.inProgress,
-      description: "Tâches en progression",
+      description: t("tasksInProgressDesc"),
       icon: Activity,
       color: "text-blue-500",
-      trend: "Actuellement",
+      trend: t("currently"),
     },
     {
-      title: "En retard",
+      title: t("overdueTasks"),
       value: stats.overdue,
-      description: "Tâches dépassant la deadline",
+      description: t("overdueTasksDesc"),
       icon: AlertCircle,
       color: "text-red-500",
-      trend: "À traiter",
+      trend: t("toProcess"),
     },
     {
-      title: "Temps moyen",
+      title: t("averageTime"),
       value: `${stats.averageCompletionTime}j`,
-      description: "Temps moyen de complétion",
+      description: t("averageCompletionTimeDesc"),
       icon: Clock,
       color: "text-orange-500",
-      trend: "Par tâche",
+      trend: t("perTask"),
     },
   ]
 
   if (loading) {
-    return <div>Chargement des statistiques...</div>
+    return <div>{t("loadingStats")}</div>
   }
 
   return (

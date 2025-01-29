@@ -1,11 +1,25 @@
 import React, { useState, useEffect } from "react"
 import { fetchTasks, updateTask, deleteTask } from "../utils/api"
-import { Loader2, Calendar, Clock, MoreVertical, MessageSquare, Edit, Trash2, CheckCircle, User2, RefreshCw, Filter, SortAsc } from 'lucide-react'
+import {
+  Loader2,
+  Calendar,
+  Clock,
+  MoreVertical,
+  MessageSquare,
+  Edit,
+  Trash2,
+  CheckCircle,
+  User2,
+  RefreshCw,
+  Filter,
+  SortAsc,
+} from "lucide-react"
 import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { fr, enUS } from "date-fns/locale" // Added enUS locale
 import { Button } from "@/components/ui/button"
 import { useNotifications } from "../contexts/NotificationContext"
-import TaskEditDialog from './TaskEditDialog'
+import TaskEditDialog from "./TaskEditDialog"
+import { useTranslation } from "../hooks/useTranslation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,13 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "./ui/dropdown-menu"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 export default function TaskList({ newTask }) {
   const [tasks, setTasks] = useState([])
@@ -28,10 +36,12 @@ export default function TaskList({ newTask }) {
   const [error, setError] = useState(null)
   const [selectedTask, setSelectedTask] = useState(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [sortBy, setSortBy] = useState("deadline") // deadline, priority, status
-  const [filterStatus, setFilterStatus] = useState("all") // all, todo, in_progress, review, done
-  const [filterPriority, setFilterPriority] = useState("all") // all, low, medium, high
+  const [sortBy, setSortBy] = useState("deadline")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [filterPriority, setFilterPriority] = useState("all")
+
   const { showToast } = useNotifications()
+  const { t, language } = useTranslation()
 
   useEffect(() => {
     loadTasks()
@@ -49,11 +59,11 @@ export default function TaskList({ newTask }) {
       setError(null)
       const data = await fetchTasks()
       setTasks(data)
-      showToast("Succès", "Liste des tâches mise à jour")
+      showToast(t("success"), t("taskListUpdated"))
     } catch (err) {
-      console.error("Erreur détaillée:", err)
-      setError(err.message || "Impossible de charger les tâches")
-      showToast("Erreur", "Impossible de charger les tâches", "destructive")
+      console.error("Detailed error:", err)
+      setError(err.message || t("cannotLoadTasks"))
+      showToast(t("error"), t("cannotLoadTasks"), "destructive")
     } finally {
       setLoading(false)
     }
@@ -71,10 +81,10 @@ export default function TaskList({ newTask }) {
 
       const updatedTask = await updateTask(taskId, { status: newStatus })
       setTasks(tasks.map((task) => (task._id === taskId ? updatedTask : task)))
-      showToast("Statut mis à jour", `La tâche a été déplacée vers ${newStatus}`)
+      showToast(t("statusUpdated"), t("taskMovedTo", { status: t(newStatus) }))
     } catch (err) {
-      console.error("Erreur lors de la mise à jour du statut:", err)
-      showToast("Erreur", "Impossible de mettre à jour le statut", "destructive")
+      console.error("Status update error:", err)
+      showToast(t("error"), t("cannotUpdateStatus"), "destructive")
     }
   }
 
@@ -82,10 +92,10 @@ export default function TaskList({ newTask }) {
     try {
       await deleteTask(taskId)
       setTasks(tasks.filter((task) => task._id !== taskId))
-      showToast("Tâche supprimée", "La tâche a été supprimée avec succès")
+      showToast(t("taskDeleted"), t("taskDeletedSuccess"))
     } catch (err) {
-      console.error("Erreur lors de la suppression:", err)
-      showToast("Erreur", "Impossible de supprimer la tâche", "destructive")
+      console.error("Delete error:", err)
+      showToast(t("error"), t("cannotDeleteTask"), "destructive")
     }
   }
 
@@ -95,14 +105,10 @@ export default function TaskList({ newTask }) {
   }
 
   const handleTaskUpdated = (updatedTask) => {
-    setTasks(prevTasks => 
-      prevTasks.map(task => 
-        task._id === updatedTask._id ? updatedTask : task
-      )
-    )
+    setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
     setIsEditDialogOpen(false)
     setSelectedTask(null)
-    showToast("Succès", "La tâche a été modifiée avec succès")
+    showToast(t("success"), t("taskUpdatedSuccess"))
   }
 
   const sortTasks = (tasksToSort) => {
@@ -125,7 +131,7 @@ export default function TaskList({ newTask }) {
   }
 
   const filterTasks = (tasksToFilter) => {
-    return tasksToFilter.filter(task => {
+    return tasksToFilter.filter((task) => {
       const statusMatch = filterStatus === "all" || task.status === filterStatus
       const priorityMatch = filterPriority === "all" || task.priority === filterPriority
       return statusMatch && priorityMatch
@@ -143,13 +149,7 @@ export default function TaskList({ newTask }) {
   }
 
   const getStatusLabel = (status) => {
-    const labels = {
-      todo: "À faire",
-      in_progress: "En cours",
-      review: "En révision",
-      done: "Terminé"
-    }
-    return labels[status] || status
+    return t(status)
   }
 
   const getPriorityColor = (priority) => {
@@ -162,19 +162,14 @@ export default function TaskList({ newTask }) {
   }
 
   const getPriorityLabel = (priority) => {
-    const labels = {
-      low: "Basse",
-      medium: "Moyenne",
-      high: "Haute"
-    }
-    return labels[priority] || priority
+    return t(priority)
   }
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2 text-gray-600">Chargement des tâches...</span>
+        <span className="ml-2 text-gray-600">{t("loadingTasks")}</span>
       </div>
     )
   }
@@ -184,7 +179,7 @@ export default function TaskList({ newTask }) {
       <div className="bg-red-50 text-red-600 p-4 rounded-md m-4">
         {error}
         <button onClick={loadTasks} className="ml-2 underline hover:no-underline">
-          Réessayer
+          {t("tryAgain")}
         </button>
       </div>
     )
@@ -197,28 +192,24 @@ export default function TaskList({ newTask }) {
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex flex-col gap-4 p-4 border-b">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Liste des tâches</h2>
-            <Button 
-              onClick={loadTasks}
-              className="bg-emerald-500 hover:bg-emerald-600 text-white"
-              disabled={loading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-              Rafraîchir
+            <h2 className="text-lg font-semibold">{t("taskList")}</h2>
+            <Button onClick={loadTasks} className="bg-emerald-500 hover:bg-emerald-600 text-white" disabled={loading}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              {t("refresh")}
             </Button>
           </div>
-          
+
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-[180px]">
                   <SortAsc className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Trier par..." />
+                  <SelectValue placeholder={t("sortBy")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="deadline">Date limite</SelectItem>
-                  <SelectItem value="priority">Priorité</SelectItem>
-                  <SelectItem value="status">Statut</SelectItem>
+                  <SelectItem value="deadline">{t("deadline")}</SelectItem>
+                  <SelectItem value="priority">{t("priority")}</SelectItem>
+                  <SelectItem value="status">{t("status")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -227,27 +218,27 @@ export default function TaskList({ newTask }) {
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-[180px]">
                   <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Filtrer par statut" />
+                  <SelectValue placeholder={t("filterByStatus")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="todo">À faire</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                  <SelectItem value="review">En révision</SelectItem>
-                  <SelectItem value="done">Terminé</SelectItem>
+                  <SelectItem value="all">{t("allStatuses")}</SelectItem>
+                  <SelectItem value="todo">{t("todo")}</SelectItem>
+                  <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
+                  <SelectItem value="review">{t("review")}</SelectItem>
+                  <SelectItem value="done">{t("done")}</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={filterPriority} onValueChange={setFilterPriority}>
                 <SelectTrigger className="w-[180px]">
                   <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Filtrer par priorité" />
+                  <SelectValue placeholder={t("filterByPriority")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les priorités</SelectItem>
-                  <SelectItem value="high">Haute</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                  <SelectItem value="low">Basse</SelectItem>
+                  <SelectItem value="all">{t("allPriorities")}</SelectItem>
+                  <SelectItem value="high">{t("high")}</SelectItem>
+                  <SelectItem value="medium">{t("medium")}</SelectItem>
+                  <SelectItem value="low">{t("low")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -258,16 +249,16 @@ export default function TaskList({ newTask }) {
       <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredAndSortedTasks.length === 0 ? (
           <div className="col-span-full p-8 text-center text-gray-500">
-            <p>Aucune tâche trouvée</p>
+            <p>{t("noTasksFound")}</p>
           </div>
         ) : (
           filteredAndSortedTasks.map((task) => (
-            <div 
-              key={task._id} 
+            <div
+              key={task._id}
               className={`
                 bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow
-                ${task.priority === 'high' ? 'border-l-4 border-l-red-500' : ''}
-                ${task.deadline && new Date(task.deadline) < new Date() ? 'border-red-200' : ''}
+                ${task.priority === "high" ? "border-l-4 border-l-red-500" : ""}
+                ${task.deadline && new Date(task.deadline) < new Date() ? "border-red-200" : ""}
               `}
             >
               <div className="flex items-start justify-between mb-2">
@@ -288,21 +279,18 @@ export default function TaskList({ newTask }) {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleEditTask(task)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        Modifier
+                        {t("edit")}
                       </DropdownMenuItem>
                       {task.status !== "done" && (
                         <DropdownMenuItem onClick={() => handleStatusUpdate(task._id, task.status)}>
                           <CheckCircle className="mr-2 h-4 w-4" />
-                          Avancer le statut
+                          {t("advanceStatus")}
                         </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteTask(task._id)}
-                        className="text-red-600"
-                      >
+                      <DropdownMenuItem onClick={() => handleDeleteTask(task._id)} className="text-red-600">
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Supprimer
+                        {t("delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -322,12 +310,10 @@ export default function TaskList({ newTask }) {
                 {task.deadline && (
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-2" />
-                    <span className={
-                      new Date(task.deadline) < new Date() 
-                        ? 'text-red-500 font-medium' 
-                        : ''
-                    }>
-                      {format(new Date(task.deadline), "Pp", { locale: fr })}
+                    <span className={new Date(task.deadline) < new Date() ? "text-red-500 font-medium" : ""}>
+                      {format(new Date(task.deadline), "Pp", {
+                        locale: language === "fr" ? fr : enUS,
+                      })}
                     </span>
                   </div>
                 )}
@@ -335,7 +321,9 @@ export default function TaskList({ newTask }) {
                 {task.estimatedTime && (
                   <div className="flex items-center">
                     <Clock className="h-4 w-4 mr-2" />
-                    <span>{task.estimatedTime}h estimées</span>
+                    <span>
+                      {task.estimatedTime}h {t("estimated")}
+                    </span>
                   </div>
                 )}
               </div>
@@ -353,3 +341,4 @@ export default function TaskList({ newTask }) {
     </div>
   )
 }
+
