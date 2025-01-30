@@ -1,0 +1,109 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 220 10% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 15%;
+
+    /* Couleur principale verte optimisée */
+    --primary: 162 100% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Variations secondaires verdâtres subtiles */
+    --secondary: 160 30% 96%;
+    --secondary-foreground: 162 50% 20%;
+
+    /* Tons mutés avec une teinte verte */
+    --muted: 160 20% 96%;
+    --muted-foreground: 162 20% 40%;
+
+    /* Accents verdâtres pour les interactions */
+    --accent: 162 40% 96%;
+    --accent-foreground: 162 60% 20%;
+
+    /* États d'erreur plus doux */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Bordures et inputs avec teinte verte subtile */
+    --border: 160 15% 92%;
+    --input: 160 15% 92%;
+    --ring: 162 100% 45%;
+
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 215 17% 15%; /* #212830 */
+    --foreground: 160 10% 98%;
+    --card: 215 17% 15%;
+    --card-foreground: 160 10% 98%;
+    --popover: 215 17% 15%;
+    --popover-foreground: 160 10% 98%;
+
+    /* Même couleur principale pour la cohérence */
+    --primary: 162 100% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Variations sombres avec teinte verte */
+    --secondary: 215 17% 20%;
+    --secondary-foreground: 160 10% 98%;
+
+    /* Tons mutés adaptés au mode sombre */
+    --muted: 215 17% 20%;
+    --muted-foreground: 160 10% 75%;
+
+    /* Accents verdâtres subtils */
+    --accent: 162 30% 20%;
+    --accent-foreground: 160 10% 98%;
+
+    /* États d'erreur adaptés au mode sombre */
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+
+    /* Bordures et inputs avec teinte verte subtile */
+    --border: 215 17% 25%;
+    --input: 215 17% 25%;
+    --ring: 162 100% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+
+  /* Améliorations des interactions */
+  button,
+  a {
+    @apply transition-all duration-200;
+  }
+
+  /* Amélioration des focus pour l'accessibilité */
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer utilities {
+  /* Effets de hover améliorés */
+  .hover-lift {
+    @apply hover:-translate-y-0.5 transition-transform duration-200;
+  }
+
+  /* Ombres avec teinte verte */
+  .shadow-soft {
+    @apply shadow-[0_4px_12px_rgba(0,200,170,0.1)];
+  }
+}
+

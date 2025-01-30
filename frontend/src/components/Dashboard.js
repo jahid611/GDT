@@ -22,6 +22,9 @@ import {
   Plus,
   Shield,
   ChevronLeft,
+  Sun,
+  Moon,
+  Laptop,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -33,6 +36,8 @@ import { cn } from "@/lib/utils"
 import TaskCreationDialog from "./TaskCreationDialog"
 import LanguageToggle from "./LanguageToggle"
 import { motion, AnimatePresence } from "framer-motion"
+import { useTheme } from "../contexts/ThemeContext" // Updated import
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -46,6 +51,7 @@ export default function Dashboard() {
   const { user, logout } = useAuth()
   const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
   const { t } = useTranslation()
+  const { theme, setTheme } = useTheme() // Updated destructuring
 
   const menuItems = React.useMemo(
     () => [
@@ -150,7 +156,7 @@ export default function Dashboard() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background transition-colors duration-300">
         {/* Sidebar pour desktop */}
         <AnimatePresence mode="wait">
           {isSidebarOpen && (
@@ -159,10 +165,7 @@ export default function Dashboard() {
               animate={{ x: 0 }}
               exit={{ x: -256 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className={cn(
-                "fixed inset-y-0 left-0 z-50 w-64 bg-card border-r lg:translate-x-0",
-                "backdrop-blur-md bg-opacity-90",
-              )}
+              className="fixed inset-y-0 left-0 z-50 w-64 bg-card border-r lg:translate-x-0 backdrop-blur-md bg-opacity-90"
             >
               <div className="flex flex-col h-full">
                 <div className="p-6">
@@ -200,11 +203,43 @@ export default function Dashboard() {
                 </div>
                 <div className="mt-auto p-6 space-y-4">
                   <div className="space-y-2">
-                    <LanguageToggle />
+                    <div className="flex items-center gap-2">
+                      <LanguageToggle />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon">
+                            <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                            <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                            <span className="sr-only">Toggle theme</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setTheme("light")}>
+                            <Sun className="h-4 w-4 mr-2" />
+                            Light
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => setTheme("dark")}>
+                            <Moon className="h-4 w-4 mr-2" />
+                            Dark
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+                              setTheme(prefersDark ? "dark" : "light")
+                            }}
+                          >
+                            {" "}
+                            {/* Updated system theme toggle */}
+                            <Laptop className="h-4 w-4 mr-2" />
+                            System
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                     <Button
                       onClick={handleLogout}
                       variant="ghost"
-                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 transition-colors"
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <LogOut className="mr-2 h-5 w-5" />
                       {t("logout")}
@@ -231,6 +266,34 @@ export default function Dashboard() {
             </div>
             <div className="flex items-center gap-2">
               <LanguageToggle />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-8 w-8">
+                    <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                    <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                    <span className="sr-only">Toggle theme</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setTheme("light")}>
+                    <Sun className="h-4 w-4 mr-2" />
+                    Light
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setTheme("dark")}>
+                    <Moon className="h-4 w-4 mr-2" />
+                    Dark
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+                      setTheme(prefersDark ? "dark" : "light")
+                    }}
+                  >
+                    <Laptop className="h-4 w-4 mr-2" />
+                    System
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
@@ -272,7 +335,7 @@ export default function Dashboard() {
                     </Button>
                   )}
                   <h2 className="text-2xl font-bold lg:text-3xl">
-                    {t("welcome")}, {user?.name}
+                    {t("welcome")}, {user?.email ? user.email.split("@")[0].replace(/\./g, " ") : user?.name}
                   </h2>
                 </div>
                 <Button onClick={() => setIsTaskDialogOpen(true)} className="bg-primary hover:bg-primary/90">

@@ -1,14 +1,12 @@
 import axios from "axios"
 
 const api = axios.create({
-  baseURL: process.env.NODE_ENV === 'development'
-    ? 'http://localhost:5000'
-    : 'https://gdt-fjmj.onrender.com',
+  baseURL: process.env.NODE_ENV === "development" ? "http://localhost:5000" : "https://gdt-fjmj.onrender.com",
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
   timeout: 10000,
-  withCredentials: true
+  withCredentials: true,
 })
 
 // Intercepteur de requête amélioré avec logging détaillé
@@ -38,7 +36,7 @@ api.interceptors.request.use(
       timestamp: new Date().toISOString(),
     })
     return Promise.reject(error)
-  }
+  },
 )
 
 // Intercepteur de réponse amélioré avec timing et logging d'erreur détaillé
@@ -83,7 +81,7 @@ api.interceptors.response.use(
     }
 
     throw error.response?.data || error
-  }
+  },
 )
 
 // Fonction de retry avec délai progressif
@@ -101,7 +99,7 @@ const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
 
       const delay = initialDelay * Math.pow(2, attempt)
       console.log(
-        `Échec de la tentative ${attempt + 1}/${retries}. Nouvelle tentative dans ${delay / 1000} secondes...`
+        `Échec de la tentative ${attempt + 1}/${retries}. Nouvelle tentative dans ${delay / 1000} secondes...`,
       )
       await new Promise((resolve) => setTimeout(resolve, delay))
     }
@@ -276,8 +274,14 @@ export const getUserProfile = async (userId) => {
 export const updateUserProfile = async (userId, userData) => {
   return withRetry(async () => {
     try {
-      console.log("Updating user profile:", { userId, userData })
-      const { data } = await api.put(`/api/users/${userId}`, userData)
+      if (!userId) {
+        throw new Error("User ID is required")
+      }
+
+      const cleanUserId = userId.toString().trim()
+
+      console.log("Updating user profile:", { userId: cleanUserId, userData })
+      const { data } = await api.put(`/api/users/${cleanUserId}`, userData)
       console.log("User profile updated successfully:", data)
       return data
     } catch (error) {
@@ -285,6 +289,8 @@ export const updateUserProfile = async (userId, userData) => {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
+        userId,
+        userData,
       })
       throw error
     }
@@ -297,19 +303,19 @@ export const login = async (credentials) => {
       console.log("Attempting login...")
       const { data } = await api.post("/api/auth/login", credentials)
       if (data.token) {
-        console.log("Login successful, token received")
+        console.log("Login response:", data) // Log complet de la réponse
         localStorage.setItem("token", data.token)
-        localStorage.setItem("user", JSON.stringify(data.user))
-      } else {
-        console.error("No token received in login response")
+        // S'assurer que le rôle est explicitement stocké
+        const userData = {
+          ...data.user,
+          role: data.user.role || "user", // Utiliser "user" comme fallback
+        }
+        localStorage.setItem("user", JSON.stringify(userData))
+        console.log("Stored user data:", userData)
       }
       return data
     } catch (error) {
-      console.error("Login error:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
+      console.error("Login error:", error)
       throw error
     }
   })
@@ -318,12 +324,25 @@ export const login = async (credentials) => {
 export const register = async (userData) => {
   return withRetry(async () => {
     try {
-      console.log("Attempting registration...")
-      const { data } = await api.post("/api/auth/register", userData)
+      // Force le rôle à "user" pour tous les nouveaux comptes
+      const dataToSend = {
+        ...userData,
+        role: "user",
+      }
+
+      console.log("Registering new user")
+      const { data } = await api.post("/api/auth/register", dataToSend)
+
       if (data.token) {
-        console.log("Registration successful, token received")
+        console.log("Registration successful")
         localStorage.setItem("token", data.token)
-        localStorage.setItem("user", JSON.stringify(data.user))
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            ...data.user,
+            role: data.user.role,
+          }),
+        )
       }
       return data
     } catch (error) {
@@ -403,4 +422,30 @@ export const markNotificationAsRead = async (notificationId) => {
   })
 }
 
+export const deleteUser = async (userId) => {
+  return withRetry(async () => {
+    try {
+      if (!userId) {
+        throw new Error("User ID is required")
+      }
+
+      const cleanUserId = userId.toString().trim()
+
+      console.log("Deleting user:", { userId: cleanUserId })
+      const { data } = await api.delete(`/api/users/${cleanUserId}`)
+      console.log("User deleted successfully")
+      return data
+    } catch (error) {
+      console.error("Error deleting user:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        userId,
+      })
+      throw error
+    }
+  })
+}
+
 export default api
+

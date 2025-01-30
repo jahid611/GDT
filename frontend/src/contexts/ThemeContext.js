@@ -2,61 +2,67 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react"
 
-const initialState = {
-  theme: "system",
-  setTheme: () => null,
-}
+const ThemeContext = createContext()
 
-const ThemeProviderContext = createContext(initialState)
+export function ThemeProvider({ children, defaultTheme = "system", storageKey = "gdt-theme" }) {
+  // Initialize theme from localStorage or default
+  const [theme, setTheme] = useState(() => {
+    const storedTheme = localStorage.getItem(storageKey)
+    if (storedTheme) return storedTheme
 
-export function ThemeProvider({
-  children,
-  defaultTheme = "system",
-  storageKey = "ui-theme",
-  ...props
-}) {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem(storageKey) || defaultTheme
-  )
+    // If no stored theme, check system preference
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      return "dark"
+    }
+    return defaultTheme
+  })
 
-  useEffect(() => {
+  // Update theme class and localStorage
+  const updateTheme = (newTheme) => {
     const root = window.document.documentElement
 
+    // Remove existing theme classes
     root.classList.remove("light", "dark")
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light"
-
+    // Apply new theme
+    if (newTheme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
       root.classList.add(systemTheme)
-      return
+    } else {
+      root.classList.add(newTheme)
     }
 
-    root.classList.add(theme)
-  }, [theme])
-
-  const value = {
-    theme,
-    setTheme: (theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
-    },
+    // Store theme preference
+    localStorage.setItem(storageKey, newTheme)
+    setTheme(newTheme)
   }
 
-  return (
-    <ThemeProviderContext.Provider {...props} value={value}>
-      {children}
-    </ThemeProviderContext.Provider>
-  )
+  // Initial theme setup
+  useEffect(() => {
+    updateTheme(theme)
+  }, [theme, updateTheme]) // Added updateTheme to dependencies
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+    const handleChange = () => {
+      if (theme === "system") {
+        updateTheme("system")
+      }
+    }
+
+    mediaQuery.addEventListener("change", handleChange)
+    return () => mediaQuery.removeEventListener("change", handleChange)
+  }, [theme, updateTheme]) // Added updateTheme to dependencies
+
+  return <ThemeContext.Provider value={{ theme, setTheme: updateTheme }}>{children}</ThemeContext.Provider>
 }
 
 export const useTheme = () => {
-  const context = useContext(ThemeProviderContext)
-
-  if (context === undefined)
+  const context = useContext(ThemeContext)
+  if (!context) {
     throw new Error("useTheme must be used within a ThemeProvider")
-
+  }
   return context
 }
+

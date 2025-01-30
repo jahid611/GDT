@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useTranslation } from "../hooks/useTranslation"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
   const [formData, setFormData] = useState({
@@ -120,67 +122,77 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="title">{t("title")}</Label>
+        <Label htmlFor="title" className="text-foreground">
+          {t("title")}
+        </Label>
         <Input
           id="title"
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           required
+          className="bg-background border-input text-foreground"
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">{t("description")}</Label>
-        <textarea
+        <Label htmlFor="description" className="text-foreground">
+          {t("description")}
+        </Label>
+        <Textarea
           id="description"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           required
-          className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          className="min-h-[100px] bg-background border-input text-foreground resize-y"
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{t("priority")}</Label>
-          <select
-            value={formData.priority}
-            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="low">{t("low")}</option>
-            <option value="medium">{t("medium")}</option>
-            <option value="high">{t("high")}</option>
-          </select>
+          <Label className="text-foreground">{t("priority")}</Label>
+          <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
+            <SelectTrigger className="bg-background border-input text-foreground">
+              <SelectValue placeholder={t("selectPriority")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">{t("low")}</SelectItem>
+              <SelectItem value="medium">{t("medium")}</SelectItem>
+              <SelectItem value="high">{t("high")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
-          <Label>{t("status")}</Label>
-          <select
-            value={formData.status}
-            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="todo">{t("todo")}</option>
-            <option value="in_progress">{t("in_progress")}</option>
-            <option value="review">{t("review")}</option>
-            <option value="done">{t("done")}</option>
-          </select>
+          <Label className="text-foreground">{t("status")}</Label>
+          <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+            <SelectTrigger className="bg-background border-input text-foreground">
+              <SelectValue placeholder={t("selectStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todo">{t("todo")}</SelectItem>
+              <SelectItem value="in_progress">{t("in_progress")}</SelectItem>
+              <SelectItem value="review">{t("review")}</SelectItem>
+              <SelectItem value="done">{t("done")}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>{t("deadline")}</Label>
+          <Label className="text-foreground">{t("deadline")}</Label>
           <Input
             type="datetime-local"
             value={formData.deadline}
             onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+            className="bg-background border-input text-foreground"
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="estimatedTime">{t("estimatedTime")}</Label>
+          <Label htmlFor="estimatedTime" className="text-foreground">
+            {t("estimatedTime")}
+          </Label>
           <Input
             id="estimatedTime"
             type="number"
@@ -188,26 +200,31 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             step="0.5"
             value={formData.estimatedTime}
             onChange={(e) => setFormData({ ...formData, estimatedTime: e.target.value })}
+            className="bg-background border-input text-foreground"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label>{t("assignedTo")}</Label>
+        <Label className="text-foreground">{t("assignedTo")}</Label>
         <div className="relative">
-          <select
+          <Select
             value={formData.assignedTo}
-            onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            onValueChange={(value) => setFormData({ ...formData, assignedTo: value })}
             disabled={loadingUsers}
           >
-            <option value="">{t("unassigned")}</option>
-            {users.map((user) => (
-              <option key={user._id} value={user._id}>
-                {getUserDisplayName(user)}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full bg-background border-input text-foreground">
+              <SelectValue placeholder={t("selectAssignee")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="unassigned">{t("unassigned")}</SelectItem>
+              {users.map((user) => (
+                <SelectItem key={user._id} value={user._id}>
+                  {getUserDisplayName(user)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {loadingUsers && (
             <div className="absolute right-3 top-2">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -226,11 +243,16 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
       <div className="flex justify-end gap-2">
         {onCancel && (
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="bg-background border-input text-foreground hover:bg-accent"
+          >
             {t("cancel")}
           </Button>
         )}
-        <Button type="submit" disabled={loading || loadingUsers}>
+        <Button type="submit" disabled={loading || loadingUsers} className="bg-primary text-primary-foreground">
           {loading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -13,6 +13,7 @@ import RegisterForm from "./components/RegisterForm"
 import PrivateRoute from "./components/PrivateRoute"
 import NotificationToast from "./components/NotificationToast"
 import LanguageToggle from "./components/LanguageToggle"
+import "./index.css"
 
 function App() {
   return (

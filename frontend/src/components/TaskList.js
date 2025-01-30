@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react"
 import { fetchTasks, updateTask, deleteTask } from "../utils/api"
+import { motion, AnimatePresence } from "framer-motion"
 import {
   Loader2,
   Calendar,
@@ -13,9 +14,10 @@ import {
   RefreshCw,
   Filter,
   SortAsc,
+  AlertCircle,
 } from "lucide-react"
 import { format } from "date-fns"
-import { fr, enUS } from "date-fns/locale" // Added enUS locale
+import { fr, enUS } from "date-fns/locale"
 import { Button } from "@/components/ui/button"
 import { useNotifications } from "../contexts/NotificationContext"
 import TaskEditDialog from "./TaskEditDialog"
@@ -26,11 +28,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from "./ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export default function TaskList({ newTask }) {
+const TaskList = ({ newTask }) => {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -189,147 +192,222 @@ export default function TaskList({ newTask }) {
 
   return (
     <div className="space-y-6">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex flex-col gap-4 p-4 border-b">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">{t("taskList")}</h2>
-            <Button onClick={loadTasks} className="bg-emerald-500 hover:bg-emerald-600 text-white" disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              {t("refresh")}
-            </Button>
-          </div>
-
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-[180px] h-9">
-                  <SortAsc className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder={t("sortBy")} />
-                </SelectTrigger>
-                <SelectContent className="min-w-[180px]">
-                  <SelectItem value="deadline">{t("deadline")}</SelectItem>
-                  <SelectItem value="priority">{t("priority")}</SelectItem>
-                  <SelectItem value="status">{t("status")}</SelectItem>
-                </SelectContent>
-              </Select>
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b"
+      >
+        <div className="container mx-auto p-6">
+          <div className="flex flex-col gap-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-2xl font-bold tracking-tight">{t("taskList")}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {filteredAndSortedTasks.length} {t("tasks")} {t("total")}
+                </p>
+              </div>
+              <Button
+                onClick={loadTasks}
+                variant="outline"
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 hover:opacity-90"
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+                {t("refresh")}
+              </Button>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-[180px] h-9">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder={t("filterByStatus")} />
-                </SelectTrigger>
-                <SelectContent className="min-w-[180px]">
-                  <SelectItem value="all">{t("allStatuses")}</SelectItem>
-                  <SelectItem value="todo">{t("todo")}</SelectItem>
-                  <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
-                  <SelectItem value="review">{t("review")}</SelectItem>
-                  <SelectItem value="done">{t("done")}</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="relative z-20">
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-[180px] h-10 bg-background">
+                    <SortAsc className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder={t("sortBy")} />
+                  </SelectTrigger>
+                  <SelectContent className="z-50">
+                    <SelectItem value="deadline">{t("deadline")}</SelectItem>
+                    <SelectItem value="priority">{t("priority")}</SelectItem>
+                    <SelectItem value="status">{t("status")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-              <Select value={filterPriority} onValueChange={setFilterPriority}>
-                <SelectTrigger className="w-[180px] h-9">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder={t("filterByPriority")} />
-                </SelectTrigger>
-                <SelectContent className="min-w-[180px]">
-                  <SelectItem value="all">{t("allPriorities")}</SelectItem>
-                  <SelectItem value="high">{t("high")}</SelectItem>
-                  <SelectItem value="medium">{t("medium")}</SelectItem>
-                  <SelectItem value="low">{t("low")}</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative z-20">
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-[180px] h-10 bg-background">
+                    <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder={t("filterByStatus")} />
+                  </SelectTrigger>
+                  <SelectContent className="z-50">
+                    <SelectItem value="all">{t("allStatuses")}</SelectItem>
+                    <SelectItem value="todo">{t("todo")}</SelectItem>
+                    <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
+                    <SelectItem value="review">{t("review")}</SelectItem>
+                    <SelectItem value="done">{t("done")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="relative z-20">
+                <Select value={filterPriority} onValueChange={setFilterPriority}>
+                  <SelectTrigger className="w-[180px] h-10 bg-background">
+                    <AlertCircle className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder={t("filterByPriority")} />
+                  </SelectTrigger>
+                  <SelectContent className="z-50">
+                    <SelectItem value="all">{t("allPriorities")}</SelectItem>
+                    <SelectItem value="high">{t("high")}</SelectItem>
+                    <SelectItem value="medium">{t("medium")}</SelectItem>
+                    <SelectItem value="low">{t("low")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredAndSortedTasks.length === 0 ? (
-          <div className="col-span-full p-8 text-center text-gray-500">
-            <p>{t("noTasksFound")}</p>
-          </div>
-        ) : (
-          filteredAndSortedTasks.map((task) => (
-            <div
-              key={task._id}
-              className={`
-                bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow
-                ${task.priority === "high" ? "border-l-4 border-l-red-500" : ""}
-                ${task.deadline && new Date(task.deadline) < new Date() ? "border-red-200" : ""}
-              `}
+      <div className="container mx-auto p-6">
+        <AnimatePresence mode="popLayout">
+          {loading ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex items-center justify-center p-8"
             >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-medium text-lg">{task.title}</h3>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                    {getStatusLabel(task.status)}
-                  </span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}>
-                    {getPriorityLabel(task.priority)}
-                  </span>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                        <Edit className="mr-2 h-4 w-4" />
-                        {t("edit")}
-                      </DropdownMenuItem>
-                      {task.status !== "done" && (
-                        <DropdownMenuItem onClick={() => handleStatusUpdate(task._id, task.status)}>
-                          <CheckCircle className="mr-2 h-4 w-4" />
-                          {t("advanceStatus")}
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleDeleteTask(task._id)} className="text-red-600">
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        {t("delete")}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </div>
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <span className="ml-2 text-muted-foreground">{t("loadingTasks")}</span>
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="bg-destructive/10 text-destructive p-4 rounded-lg"
+            >
+              {error}
+              <Button variant="link" onClick={loadTasks} className="ml-2 text-destructive">
+                {t("tryAgain")}
+              </Button>
+            </motion.div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredAndSortedTasks.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="col-span-full p-8 text-center"
+                >
+                  <p className="text-muted-foreground">{t("noTasksFound")}</p>
+                </motion.div>
+              ) : (
+                filteredAndSortedTasks.map((task, index) => (
+                  <motion.div
+                    key={task._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`
+                      group relative overflow-hidden rounded-xl bg-gradient-to-br from-card to-card/50
+                      border shadow-md hover:shadow-xl transition-all duration-300
+                      ${task.priority === "high" ? "border-l-4 border-l-red-500" : ""}
+                      ${task.deadline && new Date(task.deadline) < new Date() ? "border-red-200" : ""}
+                    `}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-              <p className="text-gray-600 mb-4">{task.description}</p>
+                    <div className="relative p-6 space-y-4">
+                      <div className="flex items-start justify-between">
+                        <h3 className="font-semibold text-lg tracking-tight line-clamp-2">{task.title}</h3>
+                        <div className="flex items-center gap-2 ml-4">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditTask(task)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                {t("edit")}
+                              </DropdownMenuItem>
+                              {task.status !== "done" && (
+                                <DropdownMenuItem onClick={() => handleStatusUpdate(task._id, task.status)}>
+                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                  {t("advanceStatus")}
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => handleDeleteTask(task._id)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                {t("delete")}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
 
-              <div className="space-y-2 text-sm text-gray-500">
-                {task.assignedTo && (
-                  <div className="flex items-center">
-                    <User2 className="h-4 w-4 mr-2" />
-                    <span>{task.assignedTo.name}</span>
-                  </div>
-                )}
+                      <p className="text-muted-foreground text-sm line-clamp-3">{task.description}</p>
 
-                {task.deadline && (
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span className={new Date(task.deadline) < new Date() ? "text-red-500 font-medium" : ""}>
-                      {format(new Date(task.deadline), "Pp", {
-                        locale: language === "fr" ? fr : enUS,
-                      })}
-                    </span>
-                  </div>
-                )}
+                      <div className="absolute top-4 right-4 flex items-center gap-2">
+                        <Badge variant="secondary" className={getStatusColor(task.status)}>
+                          {getStatusLabel(task.status)}
+                        </Badge>
+                        <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                          {getPriorityLabel(task.priority)}
+                        </Badge>
+                      </div>
 
-                {task.estimatedTime && (
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-2" />
-                    <span>
-                      {task.estimatedTime}h {t("estimated")}
-                    </span>
-                  </div>
-                )}
-              </div>
+                      <div className="pt-4 border-t space-y-3">
+                        {task.assignedTo && (
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={`https://avatar.vercel.sh/${task.assignedTo?.email || "default"}`} />
+                              <AvatarFallback>
+                                {task.assignedTo?.name ? task.assignedTo.name.charAt(0) : "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{task.assignedTo?.name || t("unassigned")}</span>
+                              <span className="text-xs text-muted-foreground">{task.assignedTo?.email || "-"}</span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          {task.deadline && (
+                            <div className="flex items-center gap-1">
+                              <Calendar className="h-3.5 w-3.5" />
+                              <span
+                                className={new Date(task.deadline) < new Date() ? "text-destructive font-medium" : ""}
+                              >
+                                {format(new Date(task.deadline), "Pp", {
+                                  locale: language === "fr" ? fr : enUS,
+                                })}
+                              </span>
+                            </div>
+                          )}
+
+                          {task.estimatedTime && (
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3.5 w-3.5" />
+                              <span>
+                                {task.estimatedTime}h {t("estimated")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
-          ))
-        )}
+          )}
+        </AnimatePresence>
       </div>
 
       <TaskEditDialog
@@ -341,4 +419,5 @@ export default function TaskList({ newTask }) {
     </div>
   )
 }
+export default TaskList
 
