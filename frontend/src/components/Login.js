@@ -1,3 +1,5 @@
+"use client"
+
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
@@ -6,11 +8,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, Mail, Lock, LogIn } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2, Mail, Lock, LogIn, AlertCircle } from "lucide-react"
 import { useTranslation } from "../hooks/useTranslation"
 import AuthLayout from "./AuthLayout"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -26,15 +28,32 @@ export default function Login() {
     try {
       setError("")
       setLoading(true)
+
+      if (!email || !password) {
+        setError("Aucun compte existant")
+        return
+      }
+
       const response = await login({ email, password })
-      authLogin(response.user)
-      navigate("/")
+
+      if (response?.user) {
+        authLogin(response.user)
+        navigate("/")
+      } else {
+        // Pour toute erreur de réponse, on affiche le même message
+        setError("Aucun compte existant")
+      }
     } catch (err) {
       console.error("Login error:", err)
-      setError(err.message || t("loginError"))
+      // Pour toute erreur, on affiche le même message
+      setError("Aucun compte existant")
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleInputChange = () => {
+    if (error) setError("") // Efface l'erreur quand l'utilisateur commence à taper
   }
 
   return (
@@ -65,13 +84,23 @@ export default function Login() {
             </CardHeader>
             <form onSubmit={handleSubmit}>
               <CardContent className="space-y-6">
-                {error && (
-                  <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-                    <Alert variant="destructive">
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  </motion.div>
-                )}
+                <AnimatePresence mode="wait">
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    >
+                      <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
+                        <AlertCircle className="h-5 w-5" />
+                        <AlertTitle className="mb-1 font-medium">Erreur de connexion</AlertTitle>
+                        <AlertDescription className="text-sm">{error}</AlertDescription>
+                      </Alert>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-sm font-medium">
                     {t("email")}
@@ -83,7 +112,10 @@ export default function Login() {
                       type="email"
                       placeholder={t("emailPlaceholder")}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value)
+                        handleInputChange()
+                      }}
                       required
                       className="pl-10 bg-background dark:bg-background/50"
                     />
@@ -99,7 +131,10 @@ export default function Login() {
                       id="password"
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value)
+                        handleInputChange()
+                      }}
                       required
                       className="pl-10 bg-background dark:bg-background/50"
                     />

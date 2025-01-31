@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import { fetchTasks, updateTask, deleteTask } from "../utils/api"
 import { motion, AnimatePresence } from "framer-motion"
@@ -26,15 +28,37 @@ import {
 import { format } from "date-fns"
 import { enUS, fr } from "date-fns/locale"
 import { Loader2 } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useToast } from "@/hooks/useToast"
 import TaskEditDialog from "./TaskEditDialog"
-import emailjs from "@emailjs/browser";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
+const DEFAULT_AVATARS = {
+  user1: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+  user2: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+  user3: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
+  user4: "https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie",
+}
 
-function TaskList({ newTask }) {
+const getRandomAvatar = () => {
+  const avatars = Object.values(DEFAULT_AVATARS)
+  return avatars[Math.floor(Math.random() * avatars.length)]
+}
+
+const DEFAULT_AVATAR = "https://github.com/shadcn.png"
+
+export default function TaskList({ newTask }) {
   const { t, language } = useTranslation()
   const { showToast } = useToast()
   const [tasks, setTasks] = useState([])
@@ -45,6 +69,7 @@ function TaskList({ newTask }) {
   const [filterPriority, setFilterPriority] = useState("all")
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false)
 
   const loadTasks = async () => {
     setLoading(true)
@@ -54,6 +79,7 @@ function TaskList({ newTask }) {
       setTasks(fetchedTasks)
     } catch (error) {
       setError(error)
+      showToast("error", t("errorLoadingTasks"))
     } finally {
       setLoading(false)
     }
@@ -72,6 +98,22 @@ function TaskList({ newTask }) {
     } catch (error) {
       console.error("Error deleting task:", error)
       showToast("error", t("taskDeleteError"))
+    }
+  }
+
+  const handleDeleteAllTasks = async () => {
+    try {
+      setLoading(true)
+      // Supprimer toutes les tâches une par une
+      await Promise.all(tasks.map((task) => deleteTask(task._id)))
+      setTasks([])
+      showToast("success", t("allTasksDeleted"))
+    } catch (error) {
+      console.error("Error deleting all tasks:", error)
+      showToast("error", t("errorDeletingAllTasks"))
+    } finally {
+      setLoading(false)
+      setIsDeleteAllDialogOpen(false)
     }
   }
 
@@ -216,76 +258,14 @@ function TaskList({ newTask }) {
     }
   }
 
-  const filteredAndSortedTasks = sortedTasks
-
   useEffect(() => {
     loadTasks()
-  }, [newTask, sortBy, filterStatus, filterPriority, language]) // Added language to dependencies
-
-  
-  
-  const sendAssignmentEmail = async (task, users) => {
-    try {
-        // Vérifie que la liste des utilisateurs est correcte
-        if (!users || users.length === 0) {
-            console.error("La liste des utilisateurs est vide.");
-            return;
-        }
-
-        // Trouve l'utilisateur assigné dans la liste
-        const assignedUser = users.find((u) => u._id === task.assignedTo);
-        if (!assignedUser || !assignedUser.email) {
-            console.error("Utilisateur assigné non trouvé ou pas d'e-mail.");
-            return;
-        }
-
-        console.log("Préparation de l'envoi à :", assignedUser.email);
-
-        const templateParams = {
-            to_email: assignedUser.email, // Adresse e-mail correcte
-            task_title: task.title,
-            task_description: task.description,
-            task_deadline: task.deadline
-                ? new Date(task.deadline).toISOString()
-                : "Non spécifiée",
-            task_priority: task.priority,
-            task_status: task.status,
-        };
-
-        // Envoie l'e-mail via EmailJS
-        const response = await emailjs.send(
-            "service_jhd", // Ton Service ID
-            "template_jhd", // Ton Template ID
-            templateParams,
-            "FiWAOQdkaG34q5-hc" // Ton User ID
-        );
-
-        console.log("E-mail envoyé avec succès :", response);
-    } catch (error) {
-        console.error("Erreur lors de l'envoi de l'e-mail :", error);
-    }
-};
-
+  }, [newTask, sortBy, filterStatus, filterPriority])
 
   const handleTaskUpdated = (updatedTask) => {
-    setTasks((prevTasks) => {
-      const oldTask = prevTasks.find((task) => task._id === updatedTask._id)
-      const wasReassigned = oldTask?.assignedTo?.email !== updatedTask.assignedTo?.email
-
-      if (wasReassigned && updatedTask.assignedTo?.email) {
-        sendAssignmentEmail(updatedTask)
-      }
-
-      return prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
-    })
+    setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
     setIsEditDialogOpen(false)
   }
-
-  useEffect(() => {
-    if (newTask?.assignedTo?.email) {
-      sendAssignmentEmail(newTask)
-    }
-  }, [newTask])
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -299,19 +279,31 @@ function TaskList({ newTask }) {
             <div className="space-y-1">
               <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{t("taskList")}</h2>
               <p className="text-sm text-muted-foreground">
-                {filteredAndSortedTasks.length} {t("tasks")} {t("total")}
+                {sortedTasks.length} {t("tasks")} {t("total")}
               </p>
             </div>
-            <Button
-              onClick={loadTasks}
-              variant="outline"
-              size="sm"
-              className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 hover:opacity-90"
-              disabled={loading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              {t("refresh")}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={loadTasks}
+                variant="outline"
+                size="sm"
+                className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 hover:opacity-90"
+                disabled={loading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+                {t("refresh")}
+              </Button>
+              <Button
+                onClick={() => setIsDeleteAllDialogOpen(true)}
+                variant="destructive"
+                size="sm"
+                disabled={tasks.length === 0 || loading}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                {t("deleteAll")}
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-4">
@@ -459,6 +451,10 @@ function TaskList({ newTask }) {
                         <div className="grid gap-3">
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={task.createdBy?.avatar || getRandomAvatar()}
+                                alt={`Avatar de ${task.createdBy?.email || "utilisateur"}`}
+                              />
                               <AvatarFallback className="bg-primary/10 dark:bg-primary/20">
                                 {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
                               </AvatarFallback>
@@ -471,6 +467,10 @@ function TaskList({ newTask }) {
 
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8">
+                              <AvatarImage
+                                src={task.assignedTo?.avatar || getRandomAvatar()}
+                                alt={`Avatar de ${task.assignedTo?.email || "utilisateur"}`}
+                              />
                               <AvatarFallback className="bg-secondary/10 dark:bg-secondary/20">
                                 {task.assignedTo?.email?.charAt(0).toUpperCase() || "?"}
                               </AvatarFallback>
@@ -525,13 +525,26 @@ function TaskList({ newTask }) {
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         onTaskUpdated={handleTaskUpdated}
-        language={language}
-        t={t}
-        showToast={showToast}
       />
+
+      <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("deleteAllTasks")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("deleteAllTasksConfirmation")}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAllTasks}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t("delete")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
-
-export default TaskList
 

@@ -13,7 +13,6 @@ import RegisterForm from "./components/RegisterForm";
 import PrivateRoute from "./components/PrivateRoute";
 import NotificationToast from "./components/NotificationToast";
 import LanguageToggle from "./components/LanguageToggle";
-import { SocketTest } from "./components/SocketTest";
 import EmailSender from "./components/EmailSender"; // Ajout du module d'envoi d'e-mails
 import "./index.css";
 
@@ -59,7 +58,6 @@ function App() {
                   <LanguageToggle />
                   <NotificationToast />
                   <Toaster />
-                  <SocketTest />
 
                   {/* 📩 Ajout du module d'envoi d'e-mails */}
                   <EmailSender />

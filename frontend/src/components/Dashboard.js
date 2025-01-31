@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
@@ -82,7 +84,7 @@ export default function Dashboard() {
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth
-      setIsMobile(width < 1024) // Changed from 768 to 1024 for better tablet support
+      setIsMobile(width < 1024)
       setIsSidebarOpen(width >= 1024)
       setIsSearchVisible(width >= 640)
     }
@@ -130,7 +132,6 @@ export default function Dashboard() {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-background transition-colors duration-300">
-        {/* Sidebar */}
         <AnimatePresence mode="wait">
           {isSidebarOpen && (
             <motion.aside
@@ -214,7 +215,6 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Header mobile */}
         <div className="sticky top-0 z-40 lg:hidden">
           <div className="flex items-center justify-between px-3 py-2 sm:px-4 bg-background/80 backdrop-blur-md border-b">
             <div className="flex items-center gap-2">
@@ -232,12 +232,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Main content */}
         <main
           className={cn(
             "min-h-screen transition-all duration-300 ease-in-out pb-16 lg:pb-0",
             isSidebarOpen ? "lg:pl-72" : "",
-            "pt-[60px] lg:pt-0", // Add top padding for mobile header
+            "pt-[60px] lg:pt-0",
           )}
         >
           <div className="container mx-auto px-3 py-4 sm:p-4 lg:p-8">
@@ -294,7 +293,6 @@ export default function Dashboard() {
           </div>
         </main>
 
-        {/* Sheets and Dialogs */}
         <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
           <SheetContent className="w-full sm:max-w-md">
             <SheetHeader>
@@ -307,15 +305,16 @@ export default function Dashboard() {
         </Sheet>
 
         <TaskCreationDialog
-          open={isTaskDialogOpen}
-          onOpenChange={setIsTaskDialogOpen}
-          onSuccess={() => {
-            setIsTaskDialogOpen(false)
-          }}
-          onTaskCreated={(task) => {
-            setNewTask(task)
-          }}
-        />
+  open={isTaskDialogOpen}
+  onOpenChange={setIsTaskDialogOpen}
+  onSuccess={() => {
+    setIsTaskDialogOpen(false);
+  }}
+  onTaskCreated={(task) => {
+    setNewTask(task);
+  }}
+/>
+
 
         <NotificationPopup
           notification={currentNotification}

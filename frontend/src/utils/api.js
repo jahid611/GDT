@@ -36,7 +36,7 @@ api.interceptors.request.use(
       stack: error.stack,
       timestamp: new Date().toISOString(),
     })
-    return Promise.reject(error)
+    return Promise.reject(new Error("Erreur lors de la préparation de la requête"))
   },
 )
 
@@ -67,7 +67,7 @@ api.interceptors.response.use(
     })
 
     if (error.code === "ECONNABORTED") {
-      throw new Error("La requête a pris trop de temps à répondre. Veuillez réessayer.")
+      throw new Error("La requête a pris trop de temps. Veuillez réessayer.")
     }
 
     if (!error.response) {
@@ -77,7 +77,6 @@ api.interceptors.response.use(
     if (error.response.status === 401) {
       localStorage.removeItem("token")
       localStorage.removeItem("user")
-      window.location.href = "/login"
       throw new Error("Session expirée. Veuillez vous reconnecter.")
     }
 
@@ -108,14 +107,115 @@ const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
   throw lastError
 }
 
-// Points d'API pour les tâches avec meilleure gestion d'erreur
+// Authentification
+export const login = async (credentials) => {
+  return withRetry(async () => {
+    try {
+      console.log("Tentative de connexion...")
+      const { data } = await api.post("/api/auth/login", credentials)
+
+      if (!data || !data.token) {
+        throw new Error("Réponse invalide du serveur")
+      }
+
+      localStorage.setItem("token", data.token)
+      const userData = {
+        ...data.user,
+        role: data.user?.role || "user",
+      }
+      localStorage.setItem("user", JSON.stringify(userData))
+
+      console.log("Connexion réussie:", { user: userData })
+      return data
+    } catch (error) {
+      console.error("Erreur de connexion:", error)
+
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            throw new Error("Email ou mot de passe incorrect")
+          case 404:
+            throw new Error("Compte non trouvé")
+          case 429:
+            throw new Error("Trop de tentatives de connexion. Veuillez réessayer plus tard.")
+          default:
+            throw new Error(error.response.data?.message || "Une erreur est survenue lors de la connexion")
+        }
+      }
+
+      if (error.code === "ECONNABORTED") {
+        throw new Error("La connexion a pris trop de temps. Veuillez réessayer.")
+      }
+
+      throw new Error("Impossible de se connecter. Vérifiez votre connexion internet.")
+    }
+  }, 2)
+}
+
+export const register = async (userData) => {
+  return withRetry(async () => {
+    try {
+      const dataToSend = {
+        ...userData,
+        role: "user",
+      }
+
+      console.log("Création d'un nouveau compte...")
+      const { data } = await api.post("/api/auth/register", dataToSend)
+
+      if (!data || !data.token) {
+        throw new Error("Réponse invalide du serveur")
+      }
+
+      localStorage.setItem("token", data.token)
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...data.user,
+          role: data.user.role || "user",
+        }),
+      )
+
+      return data
+    } catch (error) {
+      console.error("Erreur d'inscription:", error)
+
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            throw new Error("Données d'inscription invalides")
+          case 409:
+            throw new Error("Cette adresse email est déjà utilisée")
+          default:
+            throw new Error(error.response.data?.message || "Erreur lors de l'inscription")
+        }
+      }
+
+      throw new Error("Impossible de créer le compte. Veuillez réessayer.")
+    }
+  })
+}
+
+export const logout = () => {
+  try {
+    console.log("Déconnexion...")
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    console.log("Déconnexion réussie")
+  } catch (error) {
+    console.error("Erreur de déconnexion:", error)
+    throw new Error("Erreur lors de la déconnexion")
+  }
+}
+
+// Gestion des tâches
 export const fetchTasks = async () => {
   return withRetry(async () => {
     try {
-      console.log("Début du chargement des tâches...")
+      console.log("Chargement des tâches...")
       const token = localStorage.getItem("token")
       if (!token) {
-        throw new Error("Token d'authentification manquant. Veuillez vous reconnecter.")
+        throw new Error("Session expirée. Veuillez vous reconnecter.")
       }
 
       const { data } = await api.get("/api/tasks")
@@ -127,12 +227,8 @@ export const fetchTasks = async () => {
       console.log(`${data.length} tâches chargées avec succès`)
       return data
     } catch (error) {
-      console.error("Erreur lors du chargement des tâches:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw new Error(error.message || "Impossible de charger les tâches. Veuillez réessayer.")
+      console.error("Erreur lors du chargement des tâches:", error)
+      throw new Error(error.message || "Impossible de charger les tâches")
     }
   })
 }
@@ -140,17 +236,13 @@ export const fetchTasks = async () => {
 export const createTask = async (taskData) => {
   return withRetry(async () => {
     try {
-      console.log("Creating task:", taskData)
+      console.log("Création d'une nouvelle tâche...")
       const { data } = await api.post("/api/tasks", taskData)
-      console.log("Task created successfully:", data)
+      console.log("Tâche créée avec succès")
       return data
     } catch (error) {
-      console.error("Error creating task:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors de la création de la tâche:", error)
+      throw new Error(error.response?.data?.message || "Impossible de créer la tâche")
     }
   })
 }
@@ -158,17 +250,13 @@ export const createTask = async (taskData) => {
 export const updateTask = async (taskId, taskData) => {
   return withRetry(async () => {
     try {
-      console.log("Updating task:", { taskId, taskData })
+      console.log("Mise à jour de la tâche...")
       const { data } = await api.put(`/api/tasks/${taskId}`, taskData)
-      console.log("Task updated successfully:", data)
+      console.log("Tâche mise à jour avec succès")
       return data
     } catch (error) {
-      console.error("Error updating task:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors de la mise à jour de la tâche:", error)
+      throw new Error(error.response?.data?.message || "Impossible de mettre à jour la tâche")
     }
   })
 }
@@ -176,81 +264,54 @@ export const updateTask = async (taskId, taskData) => {
 export const deleteTask = async (taskId) => {
   return withRetry(async () => {
     try {
-      console.log("Deleting task:", taskId)
+      console.log("Suppression de la tâche...")
       const { data } = await api.delete(`/api/tasks/${taskId}`)
-      console.log("Task deleted successfully:", data)
+      console.log("Tâche supprimée avec succès")
       return data
     } catch (error) {
-      console.error("Error deleting task:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors de la suppression de la tâche:", error)
+      throw new Error(error.response?.data?.message || "Impossible de supprimer la tâche")
     }
   })
 }
 
+// Gestion des commentaires
 export const addComment = async (taskId, content) => {
   return withRetry(async () => {
     try {
-      console.log("Adding comment:", { taskId, content })
+      console.log("Ajout d'un commentaire...")
       const { data } = await api.post(`/api/tasks/${taskId}/comments`, { content })
-      console.log("Comment added successfully:", data)
+      console.log("Commentaire ajouté avec succès")
       return data
     } catch (error) {
-      console.error("Error adding comment:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors de l'ajout du commentaire:", error)
+      throw new Error(error.response?.data?.message || "Impossible d'ajouter le commentaire")
     }
   })
 }
 
+// Gestion des utilisateurs
 export const getUsers = async () => {
   return withRetry(async () => {
     try {
-      console.log("📡 Fetching users from API...");
-      const token = localStorage.getItem("token");
+      console.log("Chargement des utilisateurs...")
+      const token = localStorage.getItem("token")
 
       if (!token) {
-        throw new Error("❌ Token d'authentification manquant");
+        throw new Error("Session expirée")
       }
 
-      const { data } = await api.get("/api/users");
+      const { data } = await api.get("/api/users")
 
       if (!Array.isArray(data)) {
-        console.error("❌ Format de réponse invalide :", data);
-        throw new Error("Format de réponse invalide");
+        throw new Error("Format de données invalide")
       }
 
-      console.log(`✅ Successfully fetched ${data.length} users`, data);
-      return data;
-    } catch (error) {
-      console.error("❌ Error fetching users:", error);
-      const errorMessage = error.response?.data?.error || error.message || "Impossible de charger les utilisateurs";
-      throw new Error(errorMessage);
-    }
-  }, 3);
-};
-
-
-export const createNotification = async (notificationData) => {
-  return withRetry(async () => {
-    try {
-      console.log("Creating notification:", notificationData)
-      const { data } = await api.post("/api/notifications", notificationData)
-      console.log("Notification created successfully:", data)
+      console.log(`${data.length} utilisateurs chargés avec succès`)
       return data
     } catch (error) {
-      console.error("Error creating notification:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors du chargement des utilisateurs:", error)
+      throw new Error(error.response?.data?.message || "Impossible de charger les utilisateurs")
     }
   })
 }
@@ -258,17 +319,13 @@ export const createNotification = async (notificationData) => {
 export const getUserProfile = async (userId) => {
   return withRetry(async () => {
     try {
-      console.log("Fetching user profile:", userId)
+      console.log("Chargement du profil utilisateur...")
       const { data } = await api.get(`/api/users/${userId}`)
-      console.log("User profile fetched successfully:", data)
+      console.log("Profil chargé avec succès")
       return data
     } catch (error) {
-      console.error("Error fetching user profile:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors du chargement du profil:", error)
+      throw new Error(error.response?.data?.message || "Impossible de charger le profil")
     }
   })
 }
@@ -277,149 +334,16 @@ export const updateUserProfile = async (userId, userData) => {
   return withRetry(async () => {
     try {
       if (!userId) {
-        throw new Error("User ID is required")
+        throw new Error("ID utilisateur requis")
       }
 
-      const cleanUserId = userId.toString().trim()
-
-      console.log("Updating user profile:", { userId: cleanUserId, userData })
-      const { data } = await api.put(`/api/users/${cleanUserId}`, userData)
-      console.log("User profile updated successfully:", data)
+      console.log("Mise à jour du profil...")
+      const { data } = await api.put(`/api/users/${userId}`, userData)
+      console.log("Profil mis à jour avec succès")
       return data
     } catch (error) {
-      console.error("Error updating user profile:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        userId,
-        userData,
-      })
-      throw error
-    }
-  })
-}
-
-export const login = async (credentials) => {
-  return withRetry(async () => {
-    try {
-      console.log("Attempting login...")
-      const { data } = await api.post("/api/auth/login", credentials)
-      if (data.token) {
-        console.log("Login response:", data) // Log complet de la réponse
-        localStorage.setItem("token", data.token)
-        // S'assurer que le rôle est explicitement stocké
-        const userData = {
-          ...data.user,
-          role: data.user.role || "user", // Utiliser "user" comme fallback
-        }
-        localStorage.setItem("user", JSON.stringify(userData))
-        console.log("Stored user data:", userData)
-      }
-      return data
-    } catch (error) {
-      console.error("Login error:", error)
-      throw error
-    }
-  })
-}
-
-export const register = async (userData) => {
-  return withRetry(async () => {
-    try {
-      // Force le rôle à "user" pour tous les nouveaux comptes
-      const dataToSend = {
-        ...userData,
-        role: "user",
-      }
-
-      console.log("Registering new user")
-      const { data } = await api.post("/api/auth/register", dataToSend)
-
-      if (data.token) {
-        console.log("Registration successful")
-        localStorage.setItem("token", data.token)
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            ...data.user,
-            role: data.user.role,
-          }),
-        )
-      }
-      return data
-    } catch (error) {
-      console.error("Registration error:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
-    }
-  })
-}
-
-export const logout = () => {
-  try {
-    console.log("Logging out...")
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
-    console.log("Logout successful")
-  } catch (error) {
-    console.error("Logout error:", error)
-    throw error
-  }
-}
-
-export const getTaskStats = async () => {
-  return withRetry(async () => {
-    try {
-      console.log("Fetching task statistics...")
-      const { data } = await api.get("/api/tasks/stats")
-      console.log("Task statistics fetched successfully:", data)
-      return data
-    } catch (error) {
-      console.error("Error fetching task statistics:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
-    }
-  })
-}
-
-export const getNotifications = async () => {
-  return withRetry(async () => {
-    try {
-      console.log("Fetching notifications...")
-      const { data } = await api.get("/api/notifications")
-      console.log("Notifications fetched successfully:", data)
-      return data
-    } catch (error) {
-      console.error("Error fetching notifications:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
-    }
-  })
-}
-
-export const markNotificationAsRead = async (notificationId) => {
-  return withRetry(async () => {
-    try {
-      console.log("Marking notification as read:", notificationId)
-      const { data } = await api.put(`/api/notifications/${notificationId}/read`)
-      console.log("Notification marked as read successfully:", data)
-      return data
-    } catch (error) {
-      console.error("Error marking notification as read:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors de la mise à jour du profil:", error)
+      throw new Error(error.response?.data?.message || "Impossible de mettre à jour le profil")
     }
   })
 }
@@ -428,42 +352,89 @@ export const deleteUser = async (userId) => {
   return withRetry(async () => {
     try {
       if (!userId) {
-        throw new Error("User ID is required")
+        throw new Error("ID utilisateur requis")
       }
 
-      const cleanUserId = userId.toString().trim()
-
-      console.log("Deleting user:", { userId: cleanUserId })
-      const { data } = await api.delete(`/api/users/${cleanUserId}`)
-      console.log("User deleted successfully")
+      console.log("Suppression de l'utilisateur...")
+      const { data } = await api.delete(`/api/users/${userId}`)
+      console.log("Utilisateur supprimé avec succès")
       return data
     } catch (error) {
-      console.error("Error deleting user:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        userId,
-      })
-      throw error
+      console.error("Erreur lors de la suppression de l'utilisateur:", error)
+      throw new Error(error.response?.data?.message || "Impossible de supprimer l'utilisateur")
     }
   })
 }
 
-// Nouvelles fonctions pour la messagerie en utilisant la structure users/:userId/messages
+// Gestion des notifications
+export const createNotification = async (notificationData) => {
+  return withRetry(async () => {
+    try {
+      console.log("Création d'une notification...")
+      const { data } = await api.post("/api/notifications", notificationData)
+      console.log("Notification créée avec succès")
+      return data
+    } catch (error) {
+      console.error("Erreur lors de la création de la notification:", error)
+      throw new Error(error.response?.data?.message || "Impossible de créer la notification")
+    }
+  })
+}
+
+export const getNotifications = async () => {
+  return withRetry(async () => {
+    try {
+      console.log("Chargement des notifications...")
+      const { data } = await api.get("/api/notifications")
+      console.log("Notifications chargées avec succès")
+      return data
+    } catch (error) {
+      console.error("Erreur lors du chargement des notifications:", error)
+      throw new Error(error.response?.data?.message || "Impossible de charger les notifications")
+    }
+  })
+}
+
+export const markNotificationAsRead = async (notificationId) => {
+  return withRetry(async () => {
+    try {
+      console.log("Marquage de la notification comme lue...")
+      const { data } = await api.put(`/api/notifications/${notificationId}/read`)
+      console.log("Notification marquée comme lue avec succès")
+      return data
+    } catch (error) {
+      console.error("Erreur lors du marquage de la notification:", error)
+      throw new Error(error.response?.data?.message || "Impossible de marquer la notification comme lue")
+    }
+  })
+}
+
+// Statistiques
+export const getTaskStats = async () => {
+  return withRetry(async () => {
+    try {
+      console.log("Chargement des statistiques...")
+      const { data } = await api.get("/api/tasks/stats")
+      console.log("Statistiques chargées avec succès")
+      return data
+    } catch (error) {
+      console.error("Erreur lors du chargement des statistiques:", error)
+      throw new Error(error.response?.data?.message || "Impossible de charger les statistiques")
+    }
+  })
+}
+
+// Messagerie
 export const getMessages = async (userId) => {
   return withRetry(async () => {
     try {
-      console.log("Fetching messages...", { userId })
+      console.log("Chargement des messages...")
       const { data } = await api.get(`/api/users/${userId}/messages`)
-      console.log("Messages fetched successfully:", data)
+      console.log("Messages chargés avec succès")
       return data
     } catch (error) {
-      console.error("Error fetching messages:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors du chargement des messages:", error)
+      throw new Error(error.response?.data?.message || "Impossible de charger les messages")
     }
   })
 }
@@ -471,17 +442,13 @@ export const getMessages = async (userId) => {
 export const addMessage = async (userId, messageData) => {
   return withRetry(async () => {
     try {
-      console.log("Sending message:", { userId, messageData })
+      console.log("Envoi du message...")
       const { data } = await api.post(`/api/users/${userId}/messages`, messageData)
-      console.log("Message sent successfully:", data)
+      console.log("Message envoyé avec succès")
       return data
     } catch (error) {
-      console.error("Error sending message:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors de l'envoi du message:", error)
+      throw new Error(error.response?.data?.message || "Impossible d'envoyer le message")
     }
   })
 }
@@ -489,17 +456,13 @@ export const addMessage = async (userId, messageData) => {
 export const markMessageAsRead = async (userId, messageId) => {
   return withRetry(async () => {
     try {
-      console.log("Marking message as read:", { userId, messageId })
+      console.log("Marquage du message comme lu...")
       const { data } = await api.put(`/api/users/${userId}/messages/${messageId}/read`)
-      console.log("Message marked as read successfully:", data)
+      console.log("Message marqué comme lu avec succès")
       return data
     } catch (error) {
-      console.error("Error marking message as read:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors du marquage du message:", error)
+      throw new Error(error.response?.data?.message || "Impossible de marquer le message comme lu")
     }
   })
 }
@@ -507,17 +470,13 @@ export const markMessageAsRead = async (userId, messageId) => {
 export const getUnreadMessagesCount = async (userId) => {
   return withRetry(async () => {
     try {
-      console.log("Fetching unread messages count...", { userId })
+      console.log("Chargement du nombre de messages non lus...")
       const { data } = await api.get(`/api/users/${userId}/messages/unread/count`)
-      console.log("Unread messages count fetched successfully:", data)
+      console.log("Nombre de messages non lus chargé avec succès")
       return data.count
     } catch (error) {
-      console.error("Error fetching unread messages count:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      })
-      throw error
+      console.error("Erreur lors du chargement du nombre de messages non lus:", error)
+      throw new Error(error.response?.data?.message || "Impossible de charger le nombre de messages non lus")
     }
   })
 }
