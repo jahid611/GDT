@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { login } from "../utils/api"
@@ -46,21 +46,21 @@ export default function Login() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
-          <Card className="backdrop-blur-sm bg-white/90 shadow-xl border-neutral-200/50">
+          <Card className="backdrop-blur-sm bg-background/95 dark:bg-background/80 shadow-xl border-border/50 dark:border-border/20">
             <CardHeader className="space-y-4 pb-8">
               <div className="flex justify-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className="rounded-full bg-gradient-to-tr from-primary/80 to-primary p-3"
+                  className="rounded-full bg-gradient-to-tr from-primary/90 to-primary dark:from-primary/70 dark:to-primary/90 p-3"
                 >
-                  <LogIn className="h-6 w-6 text-white" />
+                  <LogIn className="h-6 w-6 text-primary-foreground" />
                 </motion.div>
               </div>
               <div className="space-y-2 text-center">
                 <CardTitle className="text-2xl font-bold tracking-tight">{t("login")}</CardTitle>
-                <CardDescription className="text-muted-foreground">{t("loginDescription")}</CardDescription>
+                <CardDescription>{t("loginDescription")}</CardDescription>
               </div>
             </CardHeader>
             <form onSubmit={handleSubmit}>
@@ -85,7 +85,7 @@ export default function Login() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="pl-10"
+                      className="pl-10 bg-background dark:bg-background/50"
                     />
                   </div>
                 </div>
@@ -101,7 +101,7 @@ export default function Login() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="pl-10"
+                      className="pl-10 bg-background dark:bg-background/50"
                     />
                   </div>
                 </div>
@@ -109,7 +109,7 @@ export default function Login() {
               <CardFooter className="flex flex-col space-y-4 pt-4">
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary dark:from-primary/80 dark:to-primary hover:dark:from-primary/70 hover:dark:to-primary/90 text-primary-foreground"
                   size="lg"
                   disabled={loading}
                 >
@@ -126,7 +126,7 @@ export default function Login() {
                   <span className="text-muted-foreground">{t("noAccount")}</span>{" "}
                   <Link
                     to="/register"
-                    className="font-medium text-primary hover:text-primary/90 transition-colors underline-offset-4 hover:underline"
+                    className="font-medium text-primary hover:text-primary/90 dark:text-primary/90 dark:hover:text-primary transition-colors underline-offset-4 hover:underline"
                   >
                     {t("createAccountLink")}
                   </Link>

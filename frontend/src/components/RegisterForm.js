@@ -20,7 +20,7 @@ function RegisterForm() {
     email: "",
     password: "",
     confirmPassword: "",
-    role: "user", // Changed from "admin" to "user"
+    role: "user",
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -28,23 +28,19 @@ function RegisterForm() {
   const validateForm = () => {
     const newErrors = {}
 
-    // Username validation - minimum 3 characters
     if (!formData.username || formData.username.trim().length < 3) {
       newErrors.username = t("usernameMinLength", "Le nom d'utilisateur doit contenir au moins 3 caractères")
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!formData.email || !emailRegex.test(formData.email)) {
       newErrors.email = t("invalidEmail", "Veuillez entrer une adresse email valide")
     }
 
-    // Password validation - minimum 6 characters
     if (!formData.password || formData.password.length < 6) {
       newErrors.password = t("passwordMinLength", "Le mot de passe doit contenir au moins 6 caractères")
     }
 
-    // Password confirmation validation
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = t("passwordMismatch")
     }
@@ -59,7 +55,6 @@ function RegisterForm() {
       ...prev,
       [id]: id === "username" ? value.trim() : value,
     }))
-    // Clear error when field is modified
     if (errors[id]) {
       setErrors((prev) => ({
         ...prev,
@@ -115,21 +110,21 @@ function RegisterForm() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
-          <Card className="backdrop-blur-sm bg-white/90 shadow-xl border-neutral-200/50">
+          <Card className="backdrop-blur-sm bg-background/95 dark:bg-background/80 shadow-xl border-border/50 dark:border-border/20">
             <CardHeader className="space-y-4 pb-8">
               <div className="flex justify-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className="rounded-full bg-gradient-to-tr from-primary/80 to-primary p-3"
+                  className="rounded-full bg-gradient-to-tr from-primary/90 to-primary dark:from-primary/70 dark:to-primary/90 p-3"
                 >
-                  <UserPlus className="h-6 w-6 text-white" />
+                  <UserPlus className="h-6 w-6 text-primary-foreground" />
                 </motion.div>
               </div>
               <div className="space-y-2 text-center">
                 <CardTitle className="text-2xl font-bold tracking-tight">{t("createAccount")}</CardTitle>
-                <CardDescription className="text-muted-foreground">{t("registerDescription")}</CardDescription>
+                <CardDescription>{t("registerDescription")}</CardDescription>
               </div>
             </CardHeader>
 
@@ -156,10 +151,13 @@ function RegisterForm() {
                       value={formData.username}
                       onChange={handleChange}
                       placeholder={t("usernamePlaceholder")}
-                      className={cn("pl-10", errors.username && "border-red-500")}
+                      className={cn(
+                        "pl-10 bg-background dark:bg-background/50",
+                        errors.username && "border-destructive dark:border-destructive",
+                      )}
                     />
                   </div>
-                  {errors.username && <p className="text-sm text-red-500 mt-1">{errors.username}</p>}
+                  {errors.username && <p className="text-sm text-destructive mt-1">{errors.username}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -175,10 +173,13 @@ function RegisterForm() {
                       value={formData.email}
                       onChange={handleChange}
                       placeholder={t("emailPlaceholder")}
-                      className={cn("pl-10", errors.email && "border-red-500")}
+                      className={cn(
+                        "pl-10 bg-background dark:bg-background/50",
+                        errors.email && "border-destructive dark:border-destructive",
+                      )}
                     />
                   </div>
-                  {errors.email && <p className="text-sm text-red-500 mt-1">{errors.email}</p>}
+                  {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -194,10 +195,13 @@ function RegisterForm() {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder={t("passwordPlaceholder")}
-                      className={cn("pl-10", errors.password && "border-red-500")}
+                      className={cn(
+                        "pl-10 bg-background dark:bg-background/50",
+                        errors.password && "border-destructive dark:border-destructive",
+                      )}
                     />
                   </div>
-                  {errors.password && <p className="text-sm text-red-500 mt-1">{errors.password}</p>}
+                  {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
                 </div>
 
                 <div className="space-y-2">
@@ -213,15 +217,18 @@ function RegisterForm() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       placeholder={t("confirmPasswordPlaceholder")}
-                      className={cn("pl-10", errors.confirmPassword && "border-red-500")}
+                      className={cn(
+                        "pl-10 bg-background dark:bg-background/50",
+                        errors.confirmPassword && "border-destructive dark:border-destructive",
+                      )}
                     />
                   </div>
-                  {errors.confirmPassword && <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>}
+                  {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
                 </div>
 
                 <Button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary"
+                  className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary dark:from-primary/80 dark:to-primary hover:dark:from-primary/70 hover:dark:to-primary/90 text-primary-foreground"
                   size="lg"
                   disabled={isSubmitting}
                 >
@@ -239,13 +246,13 @@ function RegisterForm() {
                   <span className="text-muted-foreground">{t("alreadyHaveAccount")}</span>{" "}
                   <Link
                     to="/login"
-                    className="font-medium text-primary hover:text-primary/90 transition-colors underline-offset-4 hover:underline"
+                    className="font-medium text-primary hover:text-primary/90 dark:text-primary/90 dark:hover:text-primary transition-colors underline-offset-4 hover:underline"
                   >
                     {t("loginLink")}
                   </Link>
                 </div>
               </form>
-              <div className="mt-4 p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+              <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded-lg text-sm text-muted-foreground">
                 <p>
                   {t(
                     "adminPrivilegeInfo",

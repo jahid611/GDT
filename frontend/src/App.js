@@ -1,8 +1,8 @@
-import React from "react"
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { NotificationProvider } from "./contexts/NotificationContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
+import { SocketProvider } from "./contexts/SocketContext"
 import { LanguageProvider } from "./hooks/useTranslation"
 import { Toaster } from "./components/ui/toaster"
 import Dashboard from "./components/Dashboard"
@@ -13,6 +13,7 @@ import RegisterForm from "./components/RegisterForm"
 import PrivateRoute from "./components/PrivateRoute"
 import NotificationToast from "./components/NotificationToast"
 import LanguageToggle from "./components/LanguageToggle"
+import { SocketTest } from "./components/SocketTest"
 import "./index.css"
 
 function App() {
@@ -21,43 +22,46 @@ function App() {
       <Router>
         <AuthProvider>
           <NotificationProvider>
-            <LanguageProvider>
-              <div className="min-h-screen bg-background font-sans antialiased">
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<RegisterForm />} />
-                  <Route
-                    path="/"
-                    element={
-                      <PrivateRoute>
-                        <Dashboard />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/profile"
-                    element={
-                      <PrivateRoute>
-                        <UserProfile />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route
-                    path="/users"
-                    element={
-                      <PrivateRoute>
-                        <UserManagement />
-                      </PrivateRoute>
-                    }
-                  />
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
+            <SocketProvider>
+              <LanguageProvider>
+                <div className="min-h-screen bg-background font-sans antialiased">
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/register" element={<RegisterForm />} />
+                    <Route
+                      path="/"
+                      element={
+                        <PrivateRoute>
+                          <Dashboard />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/profile"
+                      element={
+                        <PrivateRoute>
+                          <UserProfile />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route
+                      path="/users"
+                      element={
+                        <PrivateRoute>
+                          <UserManagement />
+                        </PrivateRoute>
+                      }
+                    />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
 
-                <LanguageToggle />
-                <NotificationToast />
-                <Toaster />
-              </div>
-            </LanguageProvider>
+                  <LanguageToggle />
+                  <NotificationToast />
+                  <Toaster />
+                  <SocketTest />
+                </div>
+              </LanguageProvider>
+            </SocketProvider>
           </NotificationProvider>
         </AuthProvider>
       </Router>

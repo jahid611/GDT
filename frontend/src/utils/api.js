@@ -1,5 +1,6 @@
 import axios from "axios"
 
+// Configuration de l'instance axios
 const api = axios.create({
   baseURL: process.env.NODE_ENV === "development" ? "http://localhost:5000" : "https://gdt-fjmj.onrender.com",
   headers: {
@@ -441,6 +442,79 @@ export const deleteUser = async (userId) => {
         response: error.response?.data,
         status: error.response?.status,
         userId,
+      })
+      throw error
+    }
+  })
+}
+
+// Nouvelles fonctions pour la messagerie en utilisant la structure users/:userId/messages
+export const getMessages = async (userId) => {
+  return withRetry(async () => {
+    try {
+      console.log("Fetching messages...", { userId })
+      const { data } = await api.get(`/api/users/${userId}/messages`)
+      console.log("Messages fetched successfully:", data)
+      return data
+    } catch (error) {
+      console.error("Error fetching messages:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      })
+      throw error
+    }
+  })
+}
+
+export const addMessage = async (userId, messageData) => {
+  return withRetry(async () => {
+    try {
+      console.log("Sending message:", { userId, messageData })
+      const { data } = await api.post(`/api/users/${userId}/messages`, messageData)
+      console.log("Message sent successfully:", data)
+      return data
+    } catch (error) {
+      console.error("Error sending message:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      })
+      throw error
+    }
+  })
+}
+
+export const markMessageAsRead = async (userId, messageId) => {
+  return withRetry(async () => {
+    try {
+      console.log("Marking message as read:", { userId, messageId })
+      const { data } = await api.put(`/api/users/${userId}/messages/${messageId}/read`)
+      console.log("Message marked as read successfully:", data)
+      return data
+    } catch (error) {
+      console.error("Error marking message as read:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      })
+      throw error
+    }
+  })
+}
+
+export const getUnreadMessagesCount = async (userId) => {
+  return withRetry(async () => {
+    try {
+      console.log("Fetching unread messages count...", { userId })
+      const { data } = await api.get(`/api/users/${userId}/messages/unread/count`)
+      console.log("Unread messages count fetched successfully:", data)
+      return data.count
+    } catch (error) {
+      console.error("Error fetching unread messages count:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
       })
       throw error
     }

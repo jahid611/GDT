@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { createTask, updateTask, getUsers, createNotification } from "../utils/api"
 import { useNotifications } from "../contexts/NotificationContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2 } from "lucide-react"
+import { Loader2, User } from "lucide-react"
 import { useAuth } from "../contexts/AuthContext"
 import { useTranslation } from "../hooks/useTranslation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { ScrollArea } from "@/components/ui/scroll-area"
+
+const DEFAULT_AVATAR =
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
 
 export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
   const [formData, setFormData] = useState({
@@ -116,7 +121,8 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   }
 
   const getUserDisplayName = (user) => {
-    return user.username || user.name || user.email
+    if (!user) return ""
+    return user.name || user.username || user.email.split("@")[0]
   }
 
   return (
@@ -214,15 +220,54 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             disabled={loadingUsers}
           >
             <SelectTrigger className="w-full bg-background border-input text-foreground">
-              <SelectValue placeholder={t("selectAssignee")} />
+              <SelectValue>
+                {formData.assignedTo ? (
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage
+                        src={users.find((u) => u._id === formData.assignedTo)?.avatar || DEFAULT_AVATAR}
+                        alt={getUserDisplayName(users.find((u) => u._id === formData.assignedTo))}
+                      />
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{getUserDisplayName(users.find((u) => u._id === formData.assignedTo))}</span>
+                  </div>
+                ) : (
+                  t("selectAssignee")
+                )}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="unassigned">{t("unassigned")}</SelectItem>
-              {users.map((user) => (
-                <SelectItem key={user._id} value={user._id}>
-                  {getUserDisplayName(user)}
+              <ScrollArea className="h-[200px]">
+                <SelectItem value="unassigned">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarFallback>
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span>{t("unassigned")}</span>
+                  </div>
                 </SelectItem>
-              ))}
+                {users.map((user) => (
+                  <SelectItem key={user._id} value={user._id}>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={user.avatar || DEFAULT_AVATAR} alt={getUserDisplayName(user)} />
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{getUserDisplayName(user)}</span>
+                        <span className="text-xs text-muted-foreground dark:text-white/70">{user.email}</span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </ScrollArea>
             </SelectContent>
           </Select>
           {loadingUsers && (

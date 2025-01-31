@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
-import { getNotifications, markNotificationAsRead } from '../utils/api'
-import { useAuth } from './AuthContext'
+import { createContext, useContext, useState, useEffect } from "react"
+import { getNotifications, markNotificationAsRead } from "../utils/api"
+import { useAuth } from "./AuthContext"
 
 const NotificationContext = createContext()
 
@@ -20,40 +20,60 @@ export function NotificationProvider({ children }) {
     try {
       const data = await getNotifications()
       setNotifications(data)
-      setUnreadCount(data.filter(n => !n.read).length)
+      updateUnreadCount(data)
     } catch (error) {
-      console.error('Erreur lors du chargement des notifications:', error)
+      console.error("Error loading notifications:", error)
     }
   }
 
-  const showToast = (title, message, type = 'default') => {
-    // Garder la fonction showToast existante
-  }
-
-  const addNotification = (notification) => {
-    setNotifications(prev => [notification, ...prev])
-    setUnreadCount(prev => prev + 1)
-    if (notification.userId === user?.id) {
-      setCurrentNotification(notification)
-    }
+  const updateUnreadCount = (notifs) => {
+    const count = notifs.filter((n) => !n.read).length
+    setUnreadCount(count)
   }
 
   const markAsRead = async (notificationId) => {
     try {
       await markNotificationAsRead(notificationId)
-      setNotifications(prev =>
-        prev.map(n =>
-          n._id === notificationId ? { ...n, read: true } : n
-        )
-      )
-      setUnreadCount(prev => Math.max(0, prev - 1))
+      setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)))
+      updateUnreadCount(notifications)
     } catch (error) {
-      console.error('Erreur lors du marquage de la notification:', error)
+      console.error("Error marking notification as read:", error)
     }
+  }
+
+  const showToast = (title, description, variant = "default") => {
+    // For chat notifications, we want more control
+    if (variant === "chat") {
+      setCurrentNotification({
+        id: Date.now(),
+        title,
+        description,
+        type: "chat",
+        actionLabel: "View conversation",
+        conversationId: description.conversationId,
+      })
+    } else {
+      setCurrentNotification({
+        id: Date.now(),
+        title,
+        message: description,
+        type: variant,
+      })
+    }
+
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+      dismissCurrentNotification()
+    }, 5000)
   }
 
   const dismissCurrentNotification = () => {
     setCurrentNotification(null)
+  }
+
+  const addNotification = (notification) => {
+    setNotifications((prev) => [notification, ...prev])
+    updateUnreadCount([notification, ...notifications])
   }
 
   return (
@@ -63,10 +83,10 @@ export function NotificationProvider({ children }) {
         unreadCount,
         currentNotification,
         showToast,
-        addNotification,
-        markAsRead,
         dismissCurrentNotification,
-        loadNotifications
+        markAsRead,
+        addNotification,
+        loadNotifications,
       }}
     >
       {children}
@@ -74,4 +94,11 @@ export function NotificationProvider({ children }) {
   )
 }
 
-export const useNotifications = () => useContext(NotificationContext)
+export function useNotifications() {
+  const context = useContext(NotificationContext)
+  if (!context) {
+    throw new Error("useNotifications must be used within a NotificationProvider")
+  }
+  return context
+}
+
