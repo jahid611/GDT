@@ -1,25 +1,25 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { fetchTasks, updateTask } from "../utils/api"
-import { 
-  DndContext, 
-  closestCenter, 
-  KeyboardSensor, 
-  PointerSensor, 
-  useSensor, 
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
   useSensors,
-  useDroppable
+  useDroppable,
 } from "@dnd-kit/core"
-import { 
-  SortableContext, 
-  sortableKeyboardCoordinates, 
-  verticalListSortingStrategy 
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
 } from "@dnd-kit/sortable"
-import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Clock, AlertCircle, RotateCcw, Info, GripVertical } from 'lucide-react'
+import { Calendar, AlertCircle, RotateCcw, ArrowLeftRight, X } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { motion, AnimatePresence } from "framer-motion"
@@ -62,9 +62,9 @@ function DroppableColumn({ id, column, tasks, activeId }) {
   const { setNodeRef, isOver } = useDroppable({
     id: id,
     data: {
-      type: 'column',
-      accepts: ['task']
-    }
+      type: "column",
+      accepts: ["task"],
+    },
   })
 
   return (
@@ -78,25 +78,37 @@ function DroppableColumn({ id, column, tasks, activeId }) {
           </Badge>
         </div>
       </div>
-      <motion.div 
+      <motion.div
         ref={setNodeRef}
         animate={{
-          backgroundColor: isOver ? 'rgba(var(--primary) / 0.1)' : 'transparent',
+          backgroundColor: isOver ? "rgba(var(--primary) / 0.1)" : "transparent",
         }}
         transition={{ duration: 0.2 }}
         className={`min-h-[200px] p-4 rounded-lg ${column.className} transition-all duration-200
-          ${isOver ? 'ring-2 ring-primary ring-offset-2 scale-[1.02]' : ''}`}
+          ${isOver ? "ring-2 ring-primary ring-offset-2 scale-[1.02]" : ""}
+          ${tasks.length === 0 ? "flex items-center justify-center" : ""}`}
       >
-        <SortableContext items={tasks.map(task => task._id)} strategy={verticalListSortingStrategy}>
-          <AnimatePresence>
-            {tasks.map((task) => (
-              <DraggableTask key={task._id} task={task} isDragging={task._id === activeId} />
-            ))}
-          </AnimatePresence>
-        </SortableContext>
-        {tasks.length === 0 && (
-          <div className="h-24 flex items-center justify-center text-muted-foreground text-sm border-2 border-dashed rounded-lg">
-            Aucune tâche
+        {tasks.length === 0 ? (
+          <div
+            className={`w-full h-full min-h-[200px] flex items-center justify-center 
+            border-2 border-dashed rounded-lg
+            ${isOver ? "border-primary bg-primary/5" : "border-muted-foreground/20"}
+            transition-colors duration-200`}
+          >
+            <p className="text-sm text-muted-foreground">{isOver ? "Déposer ici" : "Aucune tâche"}</p>
+          </div>
+        ) : (
+          <div
+            className={`space-y-3 h-full min-h-[200px] 
+            ${isOver ? "bg-primary/5 rounded-lg border-2 border-dashed border-primary" : ""}`}
+          >
+            <SortableContext items={tasks.map((task) => task._id)} strategy={verticalListSortingStrategy}>
+              <AnimatePresence>
+                {tasks.map((task) => (
+                  <DraggableTask key={task._id} task={task} isDragging={task._id === activeId} />
+                ))}
+              </AnimatePresence>
+            </SortableContext>
           </div>
         )}
       </motion.div>
@@ -105,18 +117,12 @@ function DroppableColumn({ id, column, tasks, activeId }) {
 }
 
 function DraggableTask({ task, isDragging }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ 
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: task._id,
     data: {
-      type: 'task',
-      task: task
-    }
+      type: "task",
+      task: task,
+    },
   })
 
   const style = {
@@ -131,29 +137,22 @@ function DraggableTask({ task, isDragging }) {
       exit={{ opacity: 0, y: -20 }}
       ref={setNodeRef}
       style={style}
+      {...attributes}
+      {...listeners}
       className="touch-none"
     >
-      <Card 
-        className={`mb-2 group ${
-          isDragging 
-            ? 'shadow-lg scale-105 rotate-3 cursor-grabbing' 
-            : 'hover:shadow-md transition-all duration-200'
+      <Card
+        className={`mb-2 group cursor-grab active:cursor-grabbing ${
+          isDragging ? "shadow-lg scale-105 rotate-3" : "hover:shadow-md transition-all duration-200"
         }`}
       >
         <CardContent className="p-4">
           <div className="flex items-start gap-2">
-            <div 
-              {...attributes} 
-              {...listeners}
-              className="mt-1 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing"
-            >
-              <GripVertical className="h-4 w-4 text-muted-foreground" />
-            </div>
             <div className="flex-1">
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-medium flex-1">{task.title}</h3>
                 <Badge className={PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}>
-                  {(task.priority || 'medium').charAt(0).toUpperCase() + (task.priority || 'medium').slice(1)}
+                  {(task.priority || "medium").charAt(0).toUpperCase() + (task.priority || "medium").slice(1)}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{task.description}</p>
@@ -196,7 +195,7 @@ export default function TaskKanban() {
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   )
 
   const loadTasks = useCallback(async () => {
@@ -211,7 +210,7 @@ export default function TaskKanban() {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Impossible de charger les tâches. Veuillez réessayer."
+        description: "Impossible de charger les tâches. Veuillez réessayer.",
       })
     } finally {
       setLoading(false)
@@ -225,25 +224,25 @@ export default function TaskKanban() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowHint(false)
-    }, 5000)
+    }, 8000) // 8 secondes au lieu de 5
     return () => clearTimeout(timer)
   }, [])
 
   const handleDragStart = (event) => {
     const { active } = event
     setActiveId(active.id)
-    document.body.style.cursor = 'grabbing'
-    setShowHint(false) // Cache le message d'aide dès qu'on commence à drag
+    document.body.style.cursor = "grabbing"
+    setShowHint(false)
   }
 
   const handleDragEnd = async (event) => {
     const { active, over } = event
     setActiveId(null)
-    document.body.style.cursor = ''
+    document.body.style.cursor = ""
 
     if (!over || !active) return
 
-    const activeTask = tasks.find(task => task._id === active.id)
+    const activeTask = tasks.find((task) => task._id === active.id)
     if (!activeTask) return
 
     const newStatus = over.id
@@ -251,25 +250,21 @@ export default function TaskKanban() {
     if (!COLUMNS[newStatus] || activeTask.status === newStatus) return
 
     try {
-      setTasks(tasks.map(task => 
-        task._id === activeTask._id ? { ...task, status: newStatus } : task
-      ))
+      setTasks(tasks.map((task) => (task._id === activeTask._id ? { ...task, status: newStatus } : task)))
 
       await updateTask(activeTask._id, { status: newStatus })
-      
+
       toast({
         title: "Succès",
-        description: "Le statut de la tâche a été mis à jour"
+        description: "Le statut de la tâche a été mis à jour",
       })
     } catch (err) {
-      setTasks(tasks.map(task => 
-        task._id === activeTask._id ? { ...task, status: activeTask.status } : task
-      ))
-      
+      setTasks(tasks.map((task) => (task._id === activeTask._id ? { ...task, status: activeTask.status } : task)))
+
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Impossible de mettre à jour le statut de la tâche"
+        description: "Impossible de mettre à jour le statut de la tâche",
       })
     }
   }
@@ -296,7 +291,7 @@ export default function TaskKanban() {
     )
   }
 
-  const getTasksByStatus = (status) => tasks.filter(task => task.status === status)
+  const getTasksByStatus = (status) => tasks.filter((task) => task.status === status)
 
   return (
     <div className="space-y-6">
@@ -307,12 +302,38 @@ export default function TaskKanban() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="bg-muted/50 backdrop-blur-sm rounded-lg p-3 mx-4 flex items-center gap-2 text-sm text-muted-foreground shadow-sm"
+            className="fixed top-4 right-4 z-50 bg-background/80 backdrop-blur-sm border rounded-lg p-4 shadow-lg flex items-center gap-3 text-sm max-w-sm"
           >
-            <Info className="h-4 w-4 text-primary" />
-            <p>
-              Utilisez la souris <GripVertical className="h-4 w-4 inline-block mx-1" /> pour glisser-déposer les tâches entre les colonnes
-            </p>
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+              <motion.div
+                animate={{
+                  x: [0, 10, 0],
+                  rotate: [0, 0, 0],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                }}
+              >
+                <ArrowLeftRight className="h-4 w-4 text-primary" />
+              </motion.div>
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Glissez pour changer le statut</p>
+              <p className="text-muted-foreground text-xs mt-1">
+                Faites glisser une tâche vers une autre colonne pour mettre à jour son statut
+              </p>
+            </div>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute top-2 right-2 h-6 w-6"
+              onClick={() => setShowHint(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -325,16 +346,11 @@ export default function TaskKanban() {
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
           {Object.entries(COLUMNS).map(([id, column]) => (
-            <DroppableColumn
-              key={id}
-              id={id}
-              column={column}
-              tasks={getTasksByStatus(id)}
-              activeId={activeId}
-            />
+            <DroppableColumn key={id} id={id} column={column} tasks={getTasksByStatus(id)} activeId={activeId} />
           ))}
         </div>
       </DndContext>
     </div>
   )
 }
+

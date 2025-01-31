@@ -1,20 +1,21 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
-import { AuthProvider } from "./contexts/AuthContext"
-import { NotificationProvider } from "./contexts/NotificationContext"
-import { ThemeProvider } from "./contexts/ThemeContext"
-import { SocketProvider } from "./contexts/SocketContext"
-import { LanguageProvider } from "./hooks/useTranslation"
-import { Toaster } from "./components/ui/toaster"
-import Dashboard from "./components/Dashboard"
-import Login from "./components/Login"
-import UserProfile from "./components/UserProfile"
-import UserManagement from "./components/UserManagement"
-import RegisterForm from "./components/RegisterForm"
-import PrivateRoute from "./components/PrivateRoute"
-import NotificationToast from "./components/NotificationToast"
-import LanguageToggle from "./components/LanguageToggle"
-import { SocketTest } from "./components/SocketTest"
-import "./index.css"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { NotificationProvider } from "./contexts/NotificationContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import { SocketProvider } from "./contexts/SocketContext";
+import { LanguageProvider } from "./hooks/useTranslation";
+import { Toaster } from "./components/ui/toaster";
+import Dashboard from "./components/Dashboard";
+import Login from "./components/Login";
+import UserProfile from "./components/UserProfile";
+import UserManagement from "./components/UserManagement";
+import RegisterForm from "./components/RegisterForm";
+import PrivateRoute from "./components/PrivateRoute";
+import NotificationToast from "./components/NotificationToast";
+import LanguageToggle from "./components/LanguageToggle";
+import { SocketTest } from "./components/SocketTest";
+import EmailSender from "./components/EmailSender"; // Ajout du module d'envoi d'e-mails
+import "./index.css";
 
 function App() {
   return (
@@ -59,6 +60,9 @@ function App() {
                   <NotificationToast />
                   <Toaster />
                   <SocketTest />
+
+                  {/* 📩 Ajout du module d'envoi d'e-mails */}
+                  <EmailSender />
                 </div>
               </LanguageProvider>
             </SocketProvider>
@@ -66,8 +70,7 @@ function App() {
         </AuthProvider>
       </Router>
     </ThemeProvider>
-  )
+  );
 }
 
-export default App
-
+export default App;

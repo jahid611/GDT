@@ -31,6 +31,8 @@ import { Badge } from "@/components/ui/badge"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useToast } from "@/hooks/useToast"
 import TaskEditDialog from "./TaskEditDialog"
+import emailjs from "@emailjs/browser";
+
 
 function TaskList({ newTask }) {
   const { t, language } = useTranslation()
@@ -220,42 +222,50 @@ function TaskList({ newTask }) {
     loadTasks()
   }, [newTask, sortBy, filterStatus, filterPriority, language]) // Added language to dependencies
 
-  const sendAssignmentEmail = async (task) => {
+  
+  
+  const sendAssignmentEmail = async (task, users) => {
     try {
-      if (!task.assignedTo?.email) {
-        console.log("Pas d'email fourni")
-        return
-      }
+        // Vérifie que la liste des utilisateurs est correcte
+        if (!users || users.length === 0) {
+            console.error("La liste des utilisateurs est vide.");
+            return;
+        }
 
-      console.log("Préparation de l'envoi à:", task.assignedTo.email)
+        // Trouve l'utilisateur assigné dans la liste
+        const assignedUser = users.find((u) => u._id === task.assignedTo);
+        if (!assignedUser || !assignedUser.email) {
+            console.error("Utilisateur assigné non trouvé ou pas d'e-mail.");
+            return;
+        }
 
-      const response = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: task.assignedTo.email,
-          task: {
-            ...task,
-            deadline: task.deadline ? new Date(task.deadline).toISOString() : null,
-          },
-        }),
-      })
+        console.log("Préparation de l'envoi à :", assignedUser.email);
 
-      const data = await response.json()
+        const templateParams = {
+            to_email: assignedUser.email, // Adresse e-mail correcte
+            task_title: task.title,
+            task_description: task.description,
+            task_deadline: task.deadline
+                ? new Date(task.deadline).toISOString()
+                : "Non spécifiée",
+            task_priority: task.priority,
+            task_status: task.status,
+        };
 
-      if (!response.ok) {
-        throw new Error(data.error || "Erreur lors de l'envoi de l'email")
-      }
+        // Envoie l'e-mail via EmailJS
+        const response = await emailjs.send(
+            "service_jhd", // Ton Service ID
+            "template_jhd", // Ton Template ID
+            templateParams,
+            "FiWAOQdkaG34q5-hc" // Ton User ID
+        );
 
-      console.log("Email envoyé avec succès:", data)
-      showToast("success", "Email envoyé avec succès")
+        console.log("E-mail envoyé avec succès :", response);
     } catch (error) {
-      console.error("Erreur détaillée:", error)
-      showToast("error", "Erreur lors de l'envoi de l'email")
+        console.error("Erreur lors de l'envoi de l'e-mail :", error);
     }
-  }
+};
+
 
   const handleTaskUpdated = (updatedTask) => {
     setTasks((prevTasks) => {

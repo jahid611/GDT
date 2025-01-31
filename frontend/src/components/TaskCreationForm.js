@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { sendAssignmentEmail } from "../utils/email";
 
 const DEFAULT_AVATAR =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
@@ -65,60 +66,62 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       setLoadingUsers(false)
     }
   }
-
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (loadingUsers) return
+    e.preventDefault();
+    if (loadingUsers) return;
 
     try {
-      setLoading(true)
-      let result
+        setLoading(true);
+        let result;
 
-      if (mode === "edit" && initialData?._id) {
-        result = await updateTask(initialData._id, formData)
-      } else {
-        result = await createTask({
-          ...formData,
-          createdBy: user.id,
-        })
-      }
-
-      if (formData.assignedTo) {
-        const assignedUser = users.find((u) => u._id === formData.assignedTo)
-        if (assignedUser) {
-          try {
-            await createNotification({
-              userId: assignedUser._id,
-              type: "TASK_ASSIGNED",
-              message: t("taskAssignedNotification", {
-                userName: user.name,
-                taskTitle: formData.title,
-              }),
-              taskId: result._id,
-              read: false,
-            })
-          } catch (error) {
-            console.error("Notification creation error:", error)
-          }
+        if (mode === "edit" && initialData?._id) {
+            result = await updateTask(initialData._id, formData);
+        } else {
+            result = await createTask({
+                ...formData,
+                createdBy: user.id,
+            });
         }
-      }
 
-      showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
+        // Attendre que les utilisateurs soient bien chargés avant d'envoyer l'e-mail
+        setTimeout(async () => {
+            console.log("🔄 Vérification avant envoi d'e-mail...");
+            const users = await getUsers();
 
-      if (onSuccess) {
-        onSuccess(result)
-      }
+            if (users.length === 0) {
+                console.error("❌ Impossible d'envoyer l'email, liste des utilisateurs vide.");
+                return;
+            }
+
+            if (formData.assignedTo) {
+                await sendAssignmentEmail(formData);
+            }
+        }, 2000); // 2 secondes de délai pour éviter les conflits
+
+        showToast(
+            t("success"),
+            mode === "edit" ? t("taskModified") : t("taskCreated")
+        );
+
+        if (onSuccess) {
+            onSuccess(result);
+        }
     } catch (err) {
-      console.error("Error handling task:", err)
-      showToast(
-        t("error"),
-        err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
-        "destructive",
-      )
+        console.error("Erreur lors de la gestion de la tâche :", err);
+        showToast(
+            t("error"),
+            err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
+            "destructive"
+        );
     } finally {
-      setLoading(false)
+        setLoading(false);
     }
-  }
+};
+
+
+
+
+
 
   const getUserDisplayName = (user) => {
     if (!user) return ""

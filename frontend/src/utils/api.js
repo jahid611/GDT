@@ -212,29 +212,30 @@ export const addComment = async (taskId, content) => {
 export const getUsers = async () => {
   return withRetry(async () => {
     try {
-      console.log("Fetching users from API...")
-      const token = localStorage.getItem("token")
+      console.log("📡 Fetching users from API...");
+      const token = localStorage.getItem("token");
 
       if (!token) {
-        throw new Error("Token d'authentification manquant")
+        throw new Error("❌ Token d'authentification manquant");
       }
 
-      const { data } = await api.get("/api/users")
+      const { data } = await api.get("/api/users");
 
       if (!Array.isArray(data)) {
-        console.error("Invalid users response format:", data)
-        throw new Error("Format de réponse invalide")
+        console.error("❌ Format de réponse invalide :", data);
+        throw new Error("Format de réponse invalide");
       }
 
-      console.log(`Successfully fetched ${data.length} users`)
-      return data
+      console.log(`✅ Successfully fetched ${data.length} users`, data);
+      return data;
     } catch (error) {
-      console.error("Error fetching users:", error)
-      const errorMessage = error.response?.data?.error || error.message || "Impossible de charger les utilisateurs"
-      throw new Error(errorMessage)
+      console.error("❌ Error fetching users:", error);
+      const errorMessage = error.response?.data?.error || error.message || "Impossible de charger les utilisateurs";
+      throw new Error(errorMessage);
     }
-  }, 3)
-}
+  }, 3);
+};
+
 
 export const createNotification = async (notificationData) => {
   return withRetry(async () => {
