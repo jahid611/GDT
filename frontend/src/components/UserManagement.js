@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getUsers, updateUserProfile } from "../utils/api"
-import { useTranslation } from "../hooks/useTranslation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Shield, User2, Search, Loader2, AlertCircle } from "lucide-react"
@@ -11,6 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import RequireRole from "./RequireRole"
 import { useNotifications } from "../contexts/NotificationContext"
 import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "../contexts/AuthContext"
 
 function UserManagement() {
   const [users, setUsers] = useState([])
@@ -19,13 +18,12 @@ function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const [processingUser, setProcessingUser] = useState(null)
   const [isMobile, setIsMobile] = useState(false)
-  const { t } = useTranslation()
   const { showToast } = useNotifications()
+  const { user: currentUser, token } = useAuth()
 
   useEffect(() => {
     loadUsers()
 
-    // Détection du mobile
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
@@ -39,25 +37,62 @@ function UserManagement() {
     try {
       setLoading(true)
       setError(null)
-      const data = await getUsers()
+
+      const response = await fetch("/api/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error("Erreur lors du chargement des utilisateurs")
+      }
+
+      const data = await response.json()
       setUsers(data)
     } catch (err) {
       console.error("Error loading users:", err)
-      setError(err.message || t("cannotLoadUsers"))
+      setError(err.message || "Impossible de charger les utilisateurs")
     } finally {
       setLoading(false)
+    }
+  }
+
+  const updateUserRole = async (userId, newRole) => {
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          role: newRole,
+          skipSessionUpdate: true, // Empêcher la mise à jour de la session
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la mise à jour du rôle")
+      }
+
+      const data = await response.json()
+      return data.user
+    } catch (error) {
+      console.error("Error updating user role:", error)
+      throw error
     }
   }
 
   const handlePromoteUser = async (userId) => {
     try {
       setProcessingUser(userId)
-      const updatedUser = await updateUserProfile(userId, { role: "admin" })
+      const updatedUser = await updateUserRole(userId, "admin")
       setUsers(users.map((user) => (user._id === userId ? { ...user, role: updatedUser.role } : user)))
-      showToast(t("success"), t("userPromoted"))
+      showToast("success", "L'utilisateur a été promu administrateur")
     } catch (err) {
       console.error("Error promoting user:", err)
-      showToast(t("error"), t("cannotPromoteUser"), "destructive")
+      showToast("error", "Impossible de promouvoir l'utilisateur")
     } finally {
       setProcessingUser(null)
     }
@@ -66,12 +101,12 @@ function UserManagement() {
   const handleDemoteUser = async (userId) => {
     try {
       setProcessingUser(userId)
-      const updatedUser = await updateUserProfile(userId, { role: "user" })
+      const updatedUser = await updateUserRole(userId, "user")
       setUsers(users.map((user) => (user._id === userId ? { ...user, role: updatedUser.role } : user)))
-      showToast(t("success"), t("userDemoted"))
+      showToast("success", "Le rôle d'administrateur a été retiré")
     } catch (err) {
       console.error("Error demoting user:", err)
-      showToast(t("error"), t("cannotDemoteUser"), "destructive")
+      showToast("error", "Impossible de modifier le rôle de l'utilisateur")
     } finally {
       setProcessingUser(null)
     }
@@ -82,6 +117,10 @@ function UserManagement() {
       user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  const isCurrentUser = (userId) => {
+    return userId === currentUser?._id
+  }
 
   if (loading) {
     return (
@@ -98,7 +137,7 @@ function UserManagement() {
         <AlertDescription className="flex items-center gap-2">
           {error}
           <Button variant="outline" size="sm" onClick={loadUsers}>
-            {t("retry")}
+            Réessayer
           </Button>
         </AlertDescription>
       </Alert>
@@ -110,16 +149,18 @@ function UserManagement() {
       <CardHeader className="space-y-2">
         <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
           <Shield className="h-5 w-5 text-primary" />
-          {t("userManagement")}
+          Gestion des utilisateurs
         </CardTitle>
-        <CardDescription className="text-sm sm:text-base">{t("userManagementDescription")}</CardDescription>
+        <CardDescription className="text-sm sm:text-base">
+          Gérez les rôles et les permissions des utilisateurs
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
             <Input
-              placeholder={t("searchUsers")}
+              placeholder="Rechercher un utilisateur..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -141,7 +182,10 @@ function UserManagement() {
                       <User2 className="h-5 w-5 text-primary" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="font-medium truncate">{user.username || user.email}</p>
+                      <p className="font-medium truncate">
+                        {user.username || user.email}
+                        {isCurrentUser(user._id) && <span className="ml-2 text-xs text-muted-foreground">(Vous)</span>}
+                      </p>
                       <p className="text-sm text-muted-foreground truncate">{user.email}</p>
                     </div>
                   </div>
@@ -152,30 +196,39 @@ function UserManagement() {
                           user.role === "admin" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                         }`}
                       >
-                        {user.role === "admin" ? t("adminRole") : t("userRole")}
+                        {user.role === "admin" ? "Administrateur" : "Utilisateur"}
                       </div>
                     </div>
-                    {user.role === "admin" ? (
-                      <Button
-                        variant="outline"
-                        size={isMobile ? "default" : "sm"}
-                        onClick={() => handleDemoteUser(user._id)}
-                        disabled={processingUser === user._id}
-                        className="w-full sm:w-auto"
-                      >
-                        {processingUser === user._id ? <Loader2 className="h-4 w-4 animate-spin" /> : t("removeAdmin")}
-                      </Button>
-                    ) : (
-                      <Button
-                        variant="outline"
-                        size={isMobile ? "default" : "sm"}
-                        onClick={() => handlePromoteUser(user._id)}
-                        disabled={processingUser === user._id}
-                        className="w-full sm:w-auto"
-                      >
-                        {processingUser === user._id ? <Loader2 className="h-4 w-4 animate-spin" /> : t("makeAdmin")}
-                      </Button>
-                    )}
+                    {!isCurrentUser(user._id) &&
+                      (user.role === "admin" ? (
+                        <Button
+                          variant="outline"
+                          size={isMobile ? "default" : "sm"}
+                          onClick={() => handleDemoteUser(user._id)}
+                          disabled={processingUser === user._id}
+                          className="w-full sm:w-auto"
+                        >
+                          {processingUser === user._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Retirer les droits admin"
+                          )}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size={isMobile ? "default" : "sm"}
+                          onClick={() => handlePromoteUser(user._id)}
+                          disabled={processingUser === user._id}
+                          className="w-full sm:w-auto"
+                        >
+                          {processingUser === user._id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Promouvoir admin"
+                          )}
+                        </Button>
+                      ))}
                   </div>
                 </motion.div>
               ))}
@@ -183,7 +236,7 @@ function UserManagement() {
 
             {filteredUsers.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                {searchTerm ? t("noUsersFound") : t("noUsers")}
+                {searchTerm ? "Aucun utilisateur trouvé" : "Aucun utilisateur"}
               </div>
             )}
           </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { getUserProfile } from "../utils/api"
 import { useAuth } from "../contexts/AuthContext"
 import { Loader2, Mail, User, AlertCircle, RefreshCw, Building, MapPin } from "lucide-react"
@@ -108,27 +108,26 @@ function UserProfile() {
           <div className="bg-card rounded-xl shadow-lg overflow-hidden">
             {/* Banner et Avatar */}
             <div
-  className="relative h-64 bg-center"
-  style={{
-    backgroundImage:
-      "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSv-wlhUmDt4FKA4-tl_ccd5SXBRLBMSdV8Lg&s')",
-    backgroundSize: "contain", // Permet de dézoomer l'image
-    backgroundRepeat: "no-repeat", // Empêche les répétitions de l'image
-  }}
->
-  <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-  <div className="absolute bottom-0 left-0 right-0 text-center transform translate-y-1/2">
-    <Avatar className="h-32 w-32 border-4 border-background mx-auto">
-      <AvatarImage
-        src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AEcjwHjVlLNBd0ayFs7YNUVPQwreMy.png"
-        alt="Profile"
-        className="object-contain p-2"
-      />
-      <AvatarFallback className="text-4xl">{displayName.charAt(0)}</AvatarFallback>
-    </Avatar>
-  </div>
-</div>
-
+              className="relative h-64 bg-center"
+              style={{
+                backgroundImage:
+                  "url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSv-wlhUmDt4FKA4-tl_ccd5SXBRLBMSdV8Lg&s')",
+                backgroundSize: "contain",
+                backgroundRepeat: "no-repeat",
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 text-center transform translate-y-1/2">
+                <Avatar className="h-32 w-32 border-4 border-background mx-auto">
+                  <AvatarImage
+                    src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AEcjwHjVlLNBd0ayFs7YNUVPQwreMy.png"
+                    alt={t("userProfile")}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="text-4xl">{displayName.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
 
             {/* Contenu du profil */}
             <div className="pt-20 px-4 pb-8 md:px-8">
@@ -141,8 +140,8 @@ function UserProfile() {
                 <div className="grid gap-6 md:grid-cols-2">
                   <ProfileField icon={User} label={t("name")} value={displayName} />
                   <ProfileField icon={Mail} label={t("email")} value={profile.email} />
-                  <ProfileField icon={Building} label={t("department")} value="Ramnicu Valcea" />
-                  <ProfileField icon={MapPin} label={t("location")} value="Roumanie" />
+                  <ProfileField icon={Building} label={t("department")} value={t("department")} />
+                  <ProfileField icon={MapPin} label={t("location")} value={t("location")} />
                 </div>
               </div>
             </div>
@@ -154,3 +153,4 @@ function UserProfile() {
 }
 
 export default UserProfile
+

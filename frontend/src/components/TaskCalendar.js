@@ -33,6 +33,7 @@ import {
   isWithinInterval,
   startOfWeek,
   endOfWeek,
+  startOfDay,
 } from "date-fns"
 import { fr, enUS, ro } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
@@ -108,7 +109,7 @@ function TaskCalendar() {
   const [filterPriority, setFilterPriority] = useState("all")
   const [sortDirection, setSortDirection] = useState("asc")
   const [sortBy, setSortBy] = useState("deadline")
-  const [view, setView] = useState("day")
+  const [view, setView] = useState("day") // can be "day", "week", or "favorites"
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTags, setSelectedTags] = useState([])
   const [showOverdue, setShowOverdue] = useState(true)
@@ -227,9 +228,26 @@ function TaskCalendar() {
   }
 
   const filteredAndSortedTasks = useMemo(() => {
-    let filtered = tasks.filter((task) => {
-      if (!task.deadline) return false
+    console.log("Current date:", date) // Debug log
 
+    let filtered = tasks.filter((task) => {
+      // Normaliser la date de la tâche
+      const taskDate = task.deadline ? startOfDay(new Date(task.deadline)) : null
+      const currentDate = startOfDay(date)
+
+      console.log("Task:", task.title) // Debug log
+      console.log("Task date:", taskDate) // Debug log
+      console.log("Current date:", currentDate) // Debug log
+
+      const isValidDate = taskDate && !isNaN(taskDate.getTime())
+      if (!isValidDate) return false
+
+      // Si on est en vue favoris, filtrer par favoris
+      if (view === "favorites" && !favorites.includes(task._id)) {
+        return false
+      }
+
+      // Filtres de recherche
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase()
         const matchesSearch =
@@ -239,41 +257,53 @@ function TaskCalendar() {
         if (!matchesSearch) return false
       }
 
-      if (filterStatus !== "all" && task.status !== filterStatus) {
-        return false
-      }
+      // Filtres de statut et priorité
+      if (filterStatus !== "all" && task.status !== filterStatus) return false
+      if (filterPriority !== "all" && task.priority !== filterPriority) return false
 
-      if (filterPriority !== "all" && task.priority !== filterPriority) {
-        return false
-      }
-
+      // Filtres de tags
       if (selectedTags.length > 0) {
         if (!task.tags || !selectedTags.every((tag) => task.tags.includes(tag))) {
           return false
         }
       }
 
-      if (view === "day") {
-        return isSameDay(new Date(task.deadline), date)
-      } else {
-        const weekStart = startOfWeek(date)
-        const weekEnd = endOfWeek(date)
-        return isWithinInterval(new Date(task.deadline), { start: weekStart, end: weekEnd })
+      // Filtre de date selon la vue
+      if (view !== "favorites") {
+        if (view === "day") {
+          const isSameDate = isSameDay(taskDate, currentDate)
+          console.log("Is same date:", isSameDate) // Debug log
+          return isSameDate
+        } else if (view === "week") {
+          const weekStart = startOfWeek(currentDate)
+          const weekEnd = endOfWeek(currentDate)
+          return isWithinInterval(taskDate, { start: weekStart, end: weekEnd })
+        }
       }
+
+      return true
     })
 
+    // Filtre des tâches en retard
     if (!showOverdue) {
-      filtered = filtered.filter((task) => !isPast(new Date(task.deadline)) || task.status === "done")
+      filtered = filtered.filter((task) => {
+        const taskDate = startOfDay(new Date(task.deadline))
+        return !isPast(taskDate) || task.status === "done"
+      })
     }
 
+    // Tri des tâches
     return filtered.sort((a, b) => {
+      // Priorité aux favoris
       if (favorites.includes(a._id) && !favorites.includes(b._id)) return -1
       if (!favorites.includes(a._id) && favorites.includes(b._id)) return 1
 
       let comparison = 0
       switch (sortBy) {
         case "deadline":
-          comparison = new Date(a.deadline) - new Date(b.deadline)
+          const dateA = startOfDay(new Date(a.deadline))
+          const dateB = startOfDay(new Date(b.deadline))
+          comparison = dateA - dateB
           break
         case "priority":
           const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 }
@@ -300,13 +330,24 @@ function TaskCalendar() {
   ])
 
   const taskGroups = useMemo(() => {
-    if (view === "day") return { [format(date, "yyyy-MM-dd")]: filteredAndSortedTasks }
+    if (view === "favorites") {
+      return { favorites: filteredAndSortedTasks }
+    }
 
+    if (view === "day") {
+      const today = format(date, "yyyy-MM-dd")
+      return { [today]: filteredAndSortedTasks }
+    }
+
+    // Vue semaine
     const groups = {}
     filteredAndSortedTasks.forEach((task) => {
-      const dayKey = format(new Date(task.deadline), "yyyy-MM-dd")
-      if (!groups[dayKey]) groups[dayKey] = []
-      groups[dayKey].push(task)
+      const taskDate = new Date(task.deadline)
+      if (!isNaN(taskDate.getTime())) {
+        const dayKey = format(taskDate, "yyyy-MM-dd")
+        if (!groups[dayKey]) groups[dayKey] = []
+        groups[dayKey].push(task)
+      }
     })
     return groups
   }, [filteredAndSortedTasks, view, date])
@@ -369,10 +410,18 @@ function TaskCalendar() {
             )}
 
             <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {format(new Date(task.deadline), isMobile ? "PP" : "PPp", { locale: dateLocale })}
-              </div>
+              {task.deadline && (
+                <div className="flex items-center gap-1">
+                  <Clock className="h-4 w-4" />
+                  {(() => {
+                    const taskDate = new Date(task.deadline)
+                    if (isNaN(taskDate.getTime())) {
+                      return t("invalidDate")
+                    }
+                    return format(taskDate, isMobile ? "PP" : "PPp", { locale: dateLocale })
+                  })()}
+                </div>
+              )}
               {task.assignedTo && (
                 <div className="flex items-center gap-1">
                   <User2 className="h-4 w-4" />
@@ -443,17 +492,15 @@ function TaskCalendar() {
 
   if (loading) {
     return (
-      <Card className="p-4 sm:p-8">
-        <div className="flex flex-col items-center justify-center h-64 space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">{t("loadingTasks")}</p>
-        </div>
-      </Card>
+      <div className="flex flex-col items-center justify-center h-64 space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">{t("loadingTasks")}</p>
+      </div>
     )
   }
 
   return (
-    <Card className="relative overflow-hidden">
+    <div className="relative overflow-hidden bg-background rounded-lg border">
       <CardHeader className="flex flex-col space-y-4 p-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
@@ -474,6 +521,15 @@ function TaskCalendar() {
                 className={cn("flex-1 sm:flex-none", view === "week" && "bg-primary text-primary-foreground")}
               >
                 {t("weekView")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setView("favorites")}
+                className={cn("flex-1 sm:flex-none", view === "favorites" && "bg-primary text-primary-foreground")}
+              >
+                <Star className={cn("w-4 h-4 mr-2", view === "favorites" && "fill-current")} />
+                {t("favorites")}
               </Button>
             </div>
           </div>
@@ -599,16 +655,22 @@ function TaskCalendar() {
           <AnimatePresence mode="wait">
             {Object.entries(taskGroups).map(([dayKey, dayTasks]) => (
               <div key={dayKey} className="mb-6 last:mb-0">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-base sm:text-lg">
-                    {format(new Date(dayKey), "EEEE d MMMM", { locale: dateLocale })}
-                  </h3>
-                  {isToday(new Date(dayKey)) && (
-                    <Badge variant="secondary" className="font-normal">
-                      {t("today")}
-                    </Badge>
-                  )}
-                </div>
+                {view === "favorites" ? (
+                  <h3 className="font-medium text-base sm:text-lg mb-4">{t("favorites")}</h3>
+                ) : (
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-medium text-base sm:text-lg">
+                      {dayKey !== "day" && !isNaN(new Date(dayKey).getTime())
+                        ? format(new Date(dayKey), "EEEE d MMMM", { locale: dateLocale })
+                        : t("today")}
+                    </h3>
+                    {isToday(new Date(dayKey)) && (
+                      <Badge variant="secondary" className="font-normal">
+                        {t("today")}
+                      </Badge>
+                    )}
+                  </div>
+                )}
 
                 {dayTasks.length === 0 ? (
                   <motion.div
@@ -643,7 +705,7 @@ function TaskCalendar() {
           })
         }}
       />
-    </Card>
+    </div>
   )
 }
 
