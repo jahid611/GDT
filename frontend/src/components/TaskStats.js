@@ -1,9 +1,8 @@
 "use client"
 
-import React, { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { fetchTasks } from "../utils/api"
-import { format, isAfter, isBefore, startOfMonth, endOfMonth, differenceInDays } from "date-fns"
-import { fr } from "date-fns/locale"
+import { format, isBefore, startOfMonth, endOfMonth, differenceInDays } from "date-fns"
 import {
   CheckCircle2,
   Clock,
@@ -14,7 +13,6 @@ import {
   Users,
   Timer,
   BarChart2,
-  PieChart,
   RefreshCw,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -25,7 +23,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { motion, AnimatePresence } from "framer-motion"
 import { useTranslation } from "../hooks/useTranslation"
 import { Badge } from "@/components/ui/badge"
-import { cn } from "@/lib/utils"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 export default function TaskStats() {
@@ -126,7 +123,6 @@ export default function TaskStats() {
     const now = new Date()
     const data = []
 
-    // Get last 7 days
     for (let i = 6; i >= 0; i--) {
       const date = new Date(now)
       date.setDate(date.getDate() - i)
@@ -155,7 +151,7 @@ export default function TaskStats() {
   }, [tasks])
 
   const renderCompletionMetrics = () => (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       <Card className="relative overflow-hidden">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-medium">
@@ -235,7 +231,7 @@ export default function TaskStats() {
   )
 
   const renderPriorityMetrics = () => (
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -374,7 +370,7 @@ export default function TaskStats() {
 
   const renderTimelineMetrics = () => {
     return (
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
         <Card className="col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -524,7 +520,7 @@ export default function TaskStats() {
             description={t("efficiency")}
             icon={Users}
             color="text-blue-500"
-            trend={0} // Placeholder for trend calculation
+            trend={0}
           />
         ))}
       </div>
@@ -590,7 +586,7 @@ export default function TaskStats() {
       <Tabs value={selectedMetric} onValueChange={(value) => setSelectedMetric(value)}>
         <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
           <TabsTrigger value="completion">
-            <BarChart2 className="w-4 h-4 mr-2" />
+            <CheckCircle2 className="w-4 h-4 mr-2" />
             {t("completion")}
           </TabsTrigger>
           <TabsTrigger value="priority">
@@ -598,7 +594,7 @@ export default function TaskStats() {
             {t("priority")}
           </TabsTrigger>
           <TabsTrigger value="timeline">
-            <Timer className="w-4 h-4 mr-2" />
+            <Clock className="w-4 h-4 mr-2" />
             {t("timeline")}
           </TabsTrigger>
           <TabsTrigger value="performance">

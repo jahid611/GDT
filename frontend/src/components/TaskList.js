@@ -272,13 +272,13 @@ export default function TaskList({ newTask }) {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 sm:py-6"
+        className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4"
       >
-        <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-3 sm:space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div className="space-y-1">
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{t("taskList")}</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="text-lg sm:text-2xl font-bold tracking-tight">{t("taskList")}</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 {sortedTasks.length} {t("tasks")} {t("total")}
               </p>
             </div>
@@ -287,29 +287,29 @@ export default function TaskList({ newTask }) {
                 onClick={loadTasks}
                 variant="outline"
                 size="sm"
-                className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 hover:opacity-90"
+                className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 hover:opacity-90"
                 disabled={loading}
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-                {t("refresh")}
+                <RefreshCw className={`h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2 ${loading ? "animate-spin" : ""}`} />
+                <span className="text-xs sm:text-sm">{t("refresh")}</span>
               </Button>
               <Button
                 onClick={() => setIsDeleteAllDialogOpen(true)}
                 variant="destructive"
                 size="sm"
                 disabled={tasks.length === 0 || loading}
-                className="bg-red-500 hover:bg-red-600"
+                className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {t("deleteAll")}
+                <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2" />
+                <span className="text-xs sm:text-sm">{t("deleteAll")}</span>
               </Button>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-[180px] h-9 sm:h-10 bg-background">
-                <SortAsc className="w-4 h-4 mr-2 text-muted-foreground" />
+              <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
+                <SortAsc className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
                 <SelectValue placeholder={t("sortBy")} />
               </SelectTrigger>
               <SelectContent sideOffset={8}>
@@ -320,8 +320,8 @@ export default function TaskList({ newTask }) {
             </Select>
 
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="w-full sm:w-[180px] h-9 sm:h-10 bg-background">
-                <Filter className="w-4 h-4 mr-2 text-muted-foreground" />
+              <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
+                <Filter className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
                 <SelectValue placeholder={t("filterByStatus")} />
               </SelectTrigger>
               <SelectContent sideOffset={8}>
@@ -334,8 +334,8 @@ export default function TaskList({ newTask }) {
             </Select>
 
             <Select value={filterPriority} onValueChange={setFilterPriority}>
-              <SelectTrigger className="w-full sm:w-[180px] h-9 sm:h-10 bg-background">
-                <AlertCircle className="w-4 h-4 mr-2 text-muted-foreground" />
+              <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
+                <AlertCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
                 <SelectValue placeholder={t("filterByPriority")} />
               </SelectTrigger>
               <SelectContent sideOffset={8}>
@@ -374,7 +374,7 @@ export default function TaskList({ newTask }) {
               </Button>
             </motion.div>
           ) : (
-            <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {sortedTasks.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -401,32 +401,38 @@ export default function TaskList({ newTask }) {
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                    <div className="relative p-4 sm:p-6 space-y-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <h3 className="font-semibold text-base sm:text-lg tracking-tight line-clamp-2 dark:text-white">
+                    <div className="relative p-3 sm:p-4 space-y-3 sm:space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="font-semibold text-sm sm:text-base tracking-tight line-clamp-2 dark:text-white">
                           {task.title}
                         </h3>
                         <div className="flex items-center">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreVertical className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+                                <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuItem onClick={() => handleEditTask(task)}>
-                                <Edit className="mr-2 h-4 w-4" />
+                            <DropdownMenuContent align="end" className="w-44 sm:w-48">
+                              <DropdownMenuItem onClick={() => handleEditTask(task)} className="text-xs sm:text-sm">
+                                <Edit className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 {t("edit")}
                               </DropdownMenuItem>
                               {task.status !== "done" && (
-                                <DropdownMenuItem onClick={() => handleStatusUpdate(task._id, task.status)}>
-                                  <CheckCircle className="mr-2 h-4 w-4" />
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusUpdate(task._id, task.status)}
+                                  className="text-xs sm:text-sm"
+                                >
+                                  <CheckCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                   {t("advanceStatus")}
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleDeleteTask(task._id)} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteTask(task._id)}
+                                className="text-destructive text-xs sm:text-sm"
+                              >
+                                <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                                 {t("delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -434,60 +440,66 @@ export default function TaskList({ newTask }) {
                         </div>
                       </div>
 
-                      <p className="text-sm text-muted-foreground dark:text-white/70 line-clamp-3">
+                      <p className="text-xs sm:text-sm text-muted-foreground dark:text-white/70 line-clamp-2 sm:line-clamp-3">
                         {task.description}
                       </p>
 
-                      <div className="flex flex-wrap items-center gap-2 mt-2">
-                        <Badge variant="secondary" className={getStatusColor(task.status)}>
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <Badge variant="secondary" className={cn("text-xs", getStatusColor(task.status))}>
                           {getStatusLabel(task.status)}
                         </Badge>
-                        <Badge variant="outline" className={getPriorityColor(task.priority)}>
+                        <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
                           {getPriorityLabel(task.priority)}
                         </Badge>
                       </div>
 
-                      <div className="pt-4 border-t dark:border-white/10 space-y-4">
-                        <div className="grid gap-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
+                      <div className="pt-3 sm:pt-4 border-t dark:border-white/10 space-y-3 sm:space-y-4">
+                        <div className="grid gap-2 sm:gap-3">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                               <AvatarImage
                                 src={task.createdBy?.avatar || getRandomAvatar()}
                                 alt={`Avatar de ${task.createdBy?.email || "utilisateur"}`}
                               />
-                              <AvatarFallback className="bg-primary/10 dark:bg-primary/20">
+                              <AvatarFallback className="text-xs sm:text-sm bg-primary/10 dark:bg-primary/20">
                                 {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground dark:text-white/60">{t("createdBy")}</span>
-                              <span className="text-sm font-medium dark:text-white">{task.createdBy?.email}</span>
+                              <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
+                                {t("createdBy")}
+                              </span>
+                              <span className="text-xs sm:text-sm font-medium dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
+                                {task.createdBy?.email}
+                              </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-8 w-8">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                               <AvatarImage
                                 src={task.assignedTo?.avatar || getRandomAvatar()}
                                 alt={`Avatar de ${task.assignedTo?.email || "utilisateur"}`}
                               />
-                              <AvatarFallback className="bg-secondary/10 dark:bg-secondary/20">
+                              <AvatarFallback className="text-xs sm:text-sm bg-secondary/10 dark:bg-secondary/20">
                                 {task.assignedTo?.email?.charAt(0).toUpperCase() || "?"}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
-                              <span className="text-xs text-muted-foreground dark:text-white/60">
+                              <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
                                 {t("assignedTo")}
                               </span>
-                              <span className="text-sm font-medium dark:text-white">{task.assignedTo?.email}</span>
+                              <span className="text-xs sm:text-sm font-medium dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
+                                {task.assignedTo?.email}
+                              </span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground dark:text-white/60">
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
                           {task.deadline && (
                             <div className="flex items-center gap-1">
-                              <Calendar className="h-3.5 w-3.5" />
+                              <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               <span
                                 className={cn(
                                   new Date(task.deadline) < new Date() &&
@@ -503,7 +515,7 @@ export default function TaskList({ newTask }) {
 
                           {task.estimatedTime && (
                             <div className="flex items-center gap-1">
-                              <Clock className="h-3.5 w-3.5" />
+                              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               <span>
                                 {task.estimatedTime}h {t("estimated")}
                               </span>

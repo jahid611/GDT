@@ -1,68 +1,63 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState } from "react"
 
-const ThemeContext = createContext()
+const ThemeContext = createContext({})
 
 export function ThemeProvider({ children, defaultTheme = "system", storageKey = "gdt-theme" }) {
-  // Initialize theme from localStorage or default
   const [theme, setTheme] = useState(() => {
+    // Check if theme is stored in localStorage
     const storedTheme = localStorage.getItem(storageKey)
-    if (storedTheme) return storedTheme
-
-    // If no stored theme, check system preference
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      return "dark"
+    if (storedTheme) {
+      return storedTheme
     }
+
+    // If not stored, check system preference
+    if (defaultTheme === "system") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    }
+
     return defaultTheme
   })
 
-  // Update theme class and localStorage
-  const updateTheme = (newTheme) => {
+  useEffect(() => {
     const root = window.document.documentElement
-
-    // Remove existing theme classes
     root.classList.remove("light", "dark")
 
-    // Apply new theme
-    if (newTheme === "system") {
+    if (theme === "system") {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
       root.classList.add(systemTheme)
     } else {
-      root.classList.add(newTheme)
+      root.classList.add(theme)
     }
 
-    // Store theme preference
-    localStorage.setItem(storageKey, newTheme)
-    setTheme(newTheme)
-  }
-
-  // Initial theme setup
-  useEffect(() => {
-    updateTheme(theme)
-  }, [theme, updateTheme]) // Added updateTheme to dependencies
-
-  // Listen for system theme changes
-  useEffect(() => {
+    // Listen for system theme changes
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
     const handleChange = () => {
       if (theme === "system") {
-        updateTheme("system")
+        root.classList.remove("light", "dark")
+        root.classList.add(mediaQuery.matches ? "dark" : "light")
       }
     }
 
     mediaQuery.addEventListener("change", handleChange)
     return () => mediaQuery.removeEventListener("change", handleChange)
-  }, [theme, updateTheme]) // Added updateTheme to dependencies
+  }, [theme])
 
-  return <ThemeContext.Provider value={{ theme, setTheme: updateTheme }}>{children}</ThemeContext.Provider>
+  const value = {
+    theme,
+    setTheme: (newTheme) => {
+      localStorage.setItem(storageKey, newTheme)
+      setTheme(newTheme)
+    },
+  }
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
 
 export const useTheme = () => {
   const context = useContext(ThemeContext)
-  if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider")
-  }
+  if (context === undefined) throw new Error("useTheme must be used within a ThemeProvider")
   return context
 }
 

@@ -1,20 +1,62 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "./contexts/AuthContext";
-import { NotificationProvider } from "./contexts/NotificationContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import { SocketProvider } from "./contexts/SocketContext";
-import { LanguageProvider } from "./hooks/useTranslation";
-import { Toaster } from "./components/ui/toaster";
-import Dashboard from "./components/Dashboard";
-import Login from "./components/Login";
-import UserProfile from "./components/UserProfile";
-import UserManagement from "./components/UserManagement";
-import RegisterForm from "./components/RegisterForm";
-import PrivateRoute from "./components/PrivateRoute";
-import NotificationToast from "./components/NotificationToast";
-import LanguageToggle from "./components/LanguageToggle";
-import EmailSender from "./components/EmailSender"; // Ajout du module d'envoi d'e-mails
-import "./index.css";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
+import { AuthProvider } from "./contexts/AuthContext"
+import { NotificationProvider } from "./contexts/NotificationContext"
+import { ThemeProvider } from "./contexts/ThemeContext"
+import { SocketProvider } from "./contexts/SocketContext"
+import { LanguageProvider } from "./hooks/useTranslation"
+import { Toaster } from "./components/ui/toaster"
+import Dashboard from "./components/Dashboard"
+import Login from "./components/Login"
+import UserProfile from "./components/UserProfile"
+import UserManagement from "./components/UserManagement"
+import RegisterForm from "./components/RegisterForm"
+import PrivateRoute from "./components/PrivateRoute"
+import NotificationToast from "./components/NotificationToast"
+import { ThemeToggle } from "./components/ThemeToggle"
+import LanguageToggle from "./components/LanguageToggle"
+
+function AppContent() {
+  return (
+    <div className="min-h-screen bg-background font-sans antialiased">
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<RegisterForm />} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <PrivateRoute>
+              <UserProfile />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <PrivateRoute>
+              <UserManagement />
+            </PrivateRoute>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+
+      <div className="fixed bottom-4 right-4 flex items-center gap-2 z-50">
+        <ThemeToggle />
+        <LanguageToggle />
+      </div>
+      <NotificationToast />
+      <Toaster />
+    </div>
+  )
+}
 
 function App() {
   return (
@@ -24,51 +66,15 @@ function App() {
           <NotificationProvider>
             <SocketProvider>
               <LanguageProvider>
-                <div className="min-h-screen bg-background font-sans antialiased">
-                  <Routes>
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<RegisterForm />} />
-                    <Route
-                      path="/"
-                      element={
-                        <PrivateRoute>
-                          <Dashboard />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <PrivateRoute>
-                          <UserProfile />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/users"
-                      element={
-                        <PrivateRoute>
-                          <UserManagement />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route path="*" element={<Navigate to="/" replace />} />
-                  </Routes>
-
-                  <LanguageToggle />
-                  <NotificationToast />
-                  <Toaster />
-
-                  {/* 📩 Ajout du module d'envoi d'e-mails */}
-                  <EmailSender />
-                </div>
+                <AppContent />
               </LanguageProvider>
             </SocketProvider>
           </NotificationProvider>
         </AuthProvider>
       </Router>
     </ThemeProvider>
-  );
+  )
 }
 
-export default App;
+export default App
+

@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { fetchTasks, updateTask, deleteTask } from "../utils/api"
 import {
@@ -18,6 +20,8 @@ import {
   XCircle,
   AlertTriangle,
   Eye,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
 import {
   format,
@@ -103,15 +107,27 @@ function TaskCalendar() {
   const [filterStatus, setFilterStatus] = useState("all")
   const [filterPriority, setFilterPriority] = useState("all")
   const [sortDirection, setSortDirection] = useState("asc")
-  const [sortBy, setSortBy] = useState("deadline") // 'deadline', 'priority', 'title'
+  const [sortBy, setSortBy] = useState("deadline")
   const [view, setView] = useState("day")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedTags, setSelectedTags] = useState([])
   const [showOverdue, setShowOverdue] = useState(true)
   const [favorites, setFavorites] = useState([])
+  const [isMobile, setIsMobile] = useState(false)
   const { t, language } = useTranslation()
 
   const dateLocale = locales[language] || enUS
+
+  // Détection du mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   const loadTasks = useCallback(
     async (showRefreshing = false) => {
@@ -139,14 +155,12 @@ function TaskCalendar() {
 
   useEffect(() => {
     loadTasks()
-    // Charger les favoris depuis le localStorage
     const savedFavorites = localStorage.getItem("taskFavorites")
     if (savedFavorites) {
       setFavorites(JSON.parse(savedFavorites))
     }
   }, [loadTasks])
 
-  // Sauvegarder les favoris dans le localStorage
   useEffect(() => {
     localStorage.setItem("taskFavorites", JSON.stringify(favorites))
   }, [favorites])
@@ -162,7 +176,6 @@ function TaskCalendar() {
         title: t("success"),
         description: t("taskDeleted"),
       })
-      // Retirer des favoris si présent
       setFavorites(favorites.filter((id) => id !== taskId))
     } catch (err) {
       toast({
@@ -217,7 +230,6 @@ function TaskCalendar() {
     let filtered = tasks.filter((task) => {
       if (!task.deadline) return false
 
-      // Filtre par recherche
       if (searchQuery) {
         const searchLower = searchQuery.toLowerCase()
         const matchesSearch =
@@ -227,24 +239,20 @@ function TaskCalendar() {
         if (!matchesSearch) return false
       }
 
-      // Filtre par statut
       if (filterStatus !== "all" && task.status !== filterStatus) {
         return false
       }
 
-      // Filtre par priorité
       if (filterPriority !== "all" && task.priority !== filterPriority) {
         return false
       }
 
-      // Filtre par tags
       if (selectedTags.length > 0) {
         if (!task.tags || !selectedTags.every((tag) => task.tags.includes(tag))) {
           return false
         }
       }
 
-      // Filtre par vue (jour/semaine)
       if (view === "day") {
         return isSameDay(new Date(task.deadline), date)
       } else {
@@ -254,14 +262,11 @@ function TaskCalendar() {
       }
     })
 
-    // Filtre des tâches en retard
     if (!showOverdue) {
       filtered = filtered.filter((task) => !isPast(new Date(task.deadline)) || task.status === "done")
     }
 
-    // Tri
     return filtered.sort((a, b) => {
-      // Favoris en premier
       if (favorites.includes(a._id) && !favorites.includes(b._id)) return -1
       if (!favorites.includes(a._id) && favorites.includes(b._id)) return 1
 
@@ -323,7 +328,6 @@ function TaskCalendar() {
           isOverdue && "border-red-500 dark:border-red-500/50",
         )}
       >
-        {/* Indicateur de favori */}
         <button
           onClick={(e) => {
             e.stopPropagation()
@@ -337,11 +341,11 @@ function TaskCalendar() {
           <Star className={cn("w-5 h-5", isFavorite && "fill-current")} />
         </button>
 
-        <div className="flex items-start gap-3">
+        <div className="flex flex-col sm:flex-row items-start gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-2">
               <StatusIcon className={cn("w-5 h-5", isOverdue ? "text-red-500" : "text-muted-foreground")} />
-              <h4 className="font-medium truncate text-lg">{task.title}</h4>
+              <h4 className="font-medium truncate text-base sm:text-lg">{task.title}</h4>
               <Badge variant="secondary" className={STATUS_STYLES[task.status]?.color}>
                 {t(task.status)}
               </Badge>
@@ -354,7 +358,6 @@ function TaskCalendar() {
 
             <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{task.description}</p>
 
-            {/* Tags */}
             {task.tags && task.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mb-3">
                 {task.tags.map((tag) => (
@@ -365,10 +368,10 @@ function TaskCalendar() {
               </div>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
-                {format(new Date(task.deadline), "PPp", { locale: dateLocale })}
+                {format(new Date(task.deadline), isMobile ? "PP" : "PPp", { locale: dateLocale })}
               </div>
               {task.assignedTo && (
                 <div className="flex items-center gap-1">
@@ -385,11 +388,12 @@ function TaskCalendar() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto mt-2 sm:mt-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
-                  <Edit className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
+                  <Edit className="h-4 w-4 mr-2" />
+                  {isMobile && t("edit")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -405,8 +409,9 @@ function TaskCalendar() {
             </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100">
-                  <AlertCircle className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="w-full sm:w-auto">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  {isMobile && t("status")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -424,7 +429,6 @@ function TaskCalendar() {
           </div>
         </div>
 
-        {/* Barre de progression si en cours */}
         {task.status === "in_progress" && task.progress && (
           <div className="mt-3 w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700">
             <div
@@ -439,7 +443,7 @@ function TaskCalendar() {
 
   if (loading) {
     return (
-      <Card className="p-8">
+      <Card className="p-4 sm:p-8">
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-sm text-muted-foreground">{t("loadingTasks")}</p>
@@ -450,16 +454,16 @@ function TaskCalendar() {
 
   return (
     <Card className="relative overflow-hidden">
-      <CardHeader className="flex flex-col space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <CardHeader className="flex flex-col space-y-4 p-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
             <CardTitle>{t("taskCalendar")}</CardTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setView("day")}
-                className={cn(view === "day" && "bg-primary text-primary-foreground")}
+                className={cn("flex-1 sm:flex-none", view === "day" && "bg-primary text-primary-foreground")}
               >
                 {t("dayView")}
               </Button>
@@ -467,85 +471,83 @@ function TaskCalendar() {
                 variant="outline"
                 size="sm"
                 onClick={() => setView("week")}
-                className={cn(view === "week" && "bg-primary text-primary-foreground")}
+                className={cn("flex-1 sm:flex-none", view === "week" && "bg-primary text-primary-foreground")}
               >
                 {t("weekView")}
               </Button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Recherche */}
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t("searchTasks")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 w-[200px]"
+                className="pl-8 w-full sm:w-[200px]"
               />
             </div>
 
-            {/* Filtres */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Filter className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={() => setFilterStatus("all")}>{t("allStatuses")}</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {Object.keys(STATUS_STYLES).map((status) => (
-                  <DropdownMenuItem
-                    key={status}
-                    onClick={() => setFilterStatus(status)}
-                    className={filterStatus === status ? "bg-muted" : ""}
-                  >
-                    {t(status)}
-                  </DropdownMenuItem>
-                ))}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowOverdue(!showOverdue)}>
-                  <div className="flex items-center">
-                    <div className="mr-2">{showOverdue ? "✓" : ""}</div>
-                    {t("showOverdue")}
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Tri */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  {sortDirection === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSortBy("deadline")}>{t("sortByDeadline")}</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("priority")}>{t("sortByPriority")}</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("title")}>{t("sortByTitle")}</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}>
-                  {sortDirection === "asc" ? t("sortAscending") : t("sortDescending")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Navigation calendrier */}
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={handlePrevDay}>
-                {"<"}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="flex-1 sm:flex-none">
+                    <Filter className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => setFilterStatus("all")}>{t("allStatuses")}</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  {Object.keys(STATUS_STYLES).map((status) => (
+                    <DropdownMenuItem
+                      key={status}
+                      onClick={() => setFilterStatus(status)}
+                      className={filterStatus === status ? "bg-muted" : ""}
+                    >
+                      {t(status)}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowOverdue(!showOverdue)}>
+                    <div className="flex items-center">
+                      <div className="mr-2">{showOverdue ? "✓" : ""}</div>
+                      {t("showOverdue")}
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon" className="flex-1 sm:flex-none">
+                    {sortDirection === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy("deadline")}>{t("sortByDeadline")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("priority")}>{t("sortByPriority")}</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy("title")}>{t("sortByTitle")}</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}>
+                    {sortDirection === "asc" ? t("sortAscending") : t("sortDescending")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="icon" onClick={handlePrevDay} className="flex-1 sm:flex-none">
+                <ChevronLeft className="h-4 w-4" />
               </Button>
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="min-w-[200px]">
+                  <Button variant="outline" className="flex-1 sm:w-[200px] justify-start">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {format(date, "PPP", { locale: dateLocale })}
+                    {format(date, isMobile ? "PP" : "PPP", { locale: dateLocale })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
+                <PopoverContent className="w-auto p-0" align="center">
                   <Calendar
                     mode="single"
                     selected={date}
@@ -556,30 +558,35 @@ function TaskCalendar() {
                   />
                 </PopoverContent>
               </Popover>
-              <Button variant="outline" size="icon" onClick={handleNextDay}>
-                {">"}
+              <Button variant="outline" size="icon" onClick={handleNextDay} className="flex-1 sm:flex-none">
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
 
-            <Button variant="outline" size="icon" onClick={() => loadTasks(true)} disabled={refreshing}>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => loadTasks(true)}
+              disabled={refreshing}
+              className="flex-1 sm:flex-none"
+            >
               <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
             </Button>
           </div>
         </div>
 
-        {/* Statistiques */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
           {Object.entries(STATUS_STYLES).map(([status, style]) => {
             const count = tasks.filter((t) => t.status === status).length
             const Icon = style.icon
             return (
-              <Card key={status} className={cn("p-4", style.cardStyle)}>
+              <Card key={status} className={cn("p-2 sm:p-4", style.cardStyle)}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{t(status)}</span>
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="font-medium text-xs sm:text-sm">{t(status)}</span>
                   </div>
-                  <span className="text-2xl font-bold">{count}</span>
+                  <span className="text-lg sm:text-2xl font-bold">{count}</span>
                 </div>
               </Card>
             )
@@ -587,13 +594,13 @@ function TaskCalendar() {
         </div>
       </CardHeader>
 
-      <CardContent>
-        <ScrollArea className="h-[600px] pr-4">
+      <CardContent className="p-4">
+        <ScrollArea className="h-[400px] sm:h-[600px] pr-4">
           <AnimatePresence mode="wait">
             {Object.entries(taskGroups).map(([dayKey, dayTasks]) => (
               <div key={dayKey} className="mb-6 last:mb-0">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-lg">
+                  <h3 className="font-medium text-base sm:text-lg">
                     {format(new Date(dayKey), "EEEE d MMMM", { locale: dateLocale })}
                   </h3>
                   {isToday(new Date(dayKey)) && (
@@ -610,7 +617,7 @@ function TaskCalendar() {
                     exit={{ opacity: 0, y: -20 }}
                     className="flex flex-col items-center justify-center py-8 text-center"
                   >
-                    <CalendarIcon className="h-12 w-12 text-muted-foreground/50" />
+                    <CalendarIcon className="h-8 sm:h-12 w-8 sm:w-12 text-muted-foreground/50" />
                     <p className="mt-2 text-sm text-muted-foreground">{t("noTasksForDate")}</p>
                   </motion.div>
                 ) : (
