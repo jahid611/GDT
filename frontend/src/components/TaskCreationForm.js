@@ -1,5 +1,7 @@
+"use client"
+
 import { useState, useEffect } from "react"
-import { createTask, updateTask, getUsers, createNotification } from "../utils/api"
+import { createTask, updateTask, getUsers } from "../utils/api"
 import { useNotifications } from "../contexts/NotificationContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { sendAssignmentEmail } from "../utils/email";
 
 const DEFAULT_AVATAR =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
@@ -25,6 +26,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     deadline: "",
     estimatedTime: "",
     assignedTo: "",
+    imageUrl: "", // Nouveau champ pour l'URL de l'image
   })
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
@@ -44,6 +46,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : "",
         estimatedTime: initialData.estimatedTime || "",
         assignedTo: initialData.assignedTo?._id || "",
+        imageUrl: initialData.imageUrl || "",
       })
     }
   }, [initialData])
@@ -66,62 +69,41 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       setLoadingUsers(false)
     }
   }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loadingUsers) return;
 
     try {
-        setLoading(true);
-        let result;
+      setLoading(true);
+      const payload = { ...formData, createdBy: user.id };
 
-        if (mode === "edit" && initialData?._id) {
-            result = await updateTask(initialData._id, formData);
-        } else {
-            result = await createTask({
-                ...formData,
-                createdBy: user.id,
-            });
-        }
+      let result;
+      if (mode === "edit" && initialData?._id) {
+        result = await updateTask(initialData._id, payload);
+      } else {
+        result = await createTask(payload);
+      }
 
-        // Attendre que les utilisateurs soient bien chargés avant d'envoyer l'e-mail
-        setTimeout(async () => {
-            console.log("🔄 Vérification avant envoi d'e-mail...");
-            const users = await getUsers();
+      showToast(
+        t("success"),
+        mode === "edit" ? t("taskModified") : t("taskCreated")
+      );
 
-            if (users.length === 0) {
-                console.error("❌ Impossible d'envoyer l'email, liste des utilisateurs vide.");
-                return;
-            }
-
-            if (formData.assignedTo) {
-                await sendAssignmentEmail(formData);
-            }
-        }, 2000); // 2 secondes de délai pour éviter les conflits
-
-        showToast(
-            t("success"),
-            mode === "edit" ? t("taskModified") : t("taskCreated")
-        );
-
-        if (onSuccess) {
-            onSuccess(result);
-        }
+      if (onSuccess) {
+        onSuccess(result);
+      }
     } catch (err) {
-        console.error("Erreur lors de la gestion de la tâche :", err);
-        showToast(
-            t("error"),
-            err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
-            "destructive"
-        );
+      console.error("Erreur lors de la gestion de la tâche :", err);
+      showToast(
+        t("error"),
+        err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
+        "destructive"
+      );
     } finally {
-        setLoading(false);
+      setLoading(false);
     }
-};
-
-
-
-
-
+  };
 
   const getUserDisplayName = (user) => {
     if (!user) return ""
@@ -289,6 +271,21 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         )}
       </div>
 
+      {/* Nouveau champ pour l'URL de l'image */}
+      <div className="space-y-2">
+        <Label htmlFor="imageUrl" className="text-foreground">
+          {t("Image URL")}
+        </Label>
+        <Input
+          id="imageUrl"
+          type="text"
+          placeholder="https://exemple.com/monimage.jpg"
+          value={formData.imageUrl}
+          onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+          className="bg-background border-input text-foreground"
+        />
+      </div>
+
       <div className="flex justify-end gap-2">
         {onCancel && (
           <Button
@@ -316,4 +313,3 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     </form>
   )
 }
-

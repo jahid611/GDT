@@ -13,6 +13,7 @@ import {
   MoreVertical,
   AlertCircle,
   Edit,
+  ImageIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -54,15 +55,9 @@ const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgr
 
 const getAvatarForUser = (email) => {
   if (!email) return DEFAULT_AVATAR
-
-  const hash = email.split("").reduce((acc, char) => {
-    return char.charCodeAt(0) + ((acc << 5) - acc)
-  }, 0)
-
+  const hash = email.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0)
   const avatarSet = Object.values(DEFAULT_AVATARS)
-
   const index = Math.abs(hash) % avatarSet.length
-
   return avatarSet[index]
 }
 
@@ -84,6 +79,7 @@ export default function TaskList({ newTask }) {
     setError(null)
     try {
       const fetchedTasks = await fetchTasks()
+      console.log("Tasks fetched:", fetchedTasks)
       setTasks(fetchedTasks)
     } catch (error) {
       setError(error)
@@ -149,9 +145,7 @@ export default function TaskList({ newTask }) {
     }
   }
 
-  const getStatusColor = (status) => {
-    return "bg-muted/50 text-muted-foreground"
-  }
+  const getStatusColor = (status) => "bg-muted/50 text-muted-foreground"
 
   const getStatusLabel = (status) => {
     switch (status) {
@@ -168,9 +162,7 @@ export default function TaskList({ newTask }) {
     }
   }
 
-  const getPriorityColor = (priority) => {
-    return "bg-muted/50 text-muted-foreground"
-  }
+  const getPriorityColor = (priority) => "bg-muted/50 text-muted-foreground"
 
   const getPriorityLabel = (priority) => {
     switch (priority) {
@@ -249,25 +241,16 @@ export default function TaskList({ newTask }) {
     loadTasks()
   }, [newTask, sortBy, filterStatus, filterPriority, language])
 
-  useEffect(() => {}, [tasks])
-
   const handleTaskUpdated = (updatedTask) => {
     setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
     setIsEditDialogOpen(false)
   }
 
-  const getAvatarForUser = (email) => {
-    if (!email) return DEFAULT_AVATAR
-
-    const hash = email.split("").reduce((acc, char) => {
-      return char.charCodeAt(0) + ((acc << 5) - acc)
-    }, 0)
-
-    const avatarSet = Object.values(DEFAULT_AVATARS)
-
-    const index = Math.abs(hash) % avatarSet.length
-
-    return avatarSet[index]
+  // Fonction pour ouvrir l'image dans un nouvel onglet
+  const handleViewImage = (imageUrl) => {
+    if (imageUrl) {
+      window.open(imageUrl, "_blank")
+    }
   }
 
   return (
@@ -409,7 +392,19 @@ export default function TaskList({ newTask }) {
                         <h3 className="font-semibold text-sm sm:text-base tracking-tight line-clamp-2 dark:text-white">
                           {task.title}
                         </h3>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
+                          {/* Bouton pour voir l'image */}
+                          {task.imageUrl && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewImage(task.imageUrl)}
+                              className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                              <span className="text-xs">Voir image</span>
+                            </Button>
+                          )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">

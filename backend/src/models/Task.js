@@ -1,3 +1,4 @@
+// models/Task.js
 import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema({
@@ -24,7 +25,7 @@ const taskSchema = new mongoose.Schema({
   assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    default: null, // Peut ne pas être assigné au départ
+    default: null,
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -39,8 +40,12 @@ const taskSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  // Ajout du champ imageUrl
+  imageUrl: {
+    type: String,
+    default: "",
+  },
 });
 
 const Task = mongoose.model("Task", taskSchema);
-
 export default Task;
