@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import emailjs from "@emailjs/browser"
+import emailjs from "emailjs-com"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -29,10 +29,7 @@ const EmailSender = ({ initialData }) => {
       setDescription(initialData.task_description || "")
       setPriority(initialData.task_priority || "medium")
       setStatus(initialData.task_status || "todo")
-
-      // Convertir la date en format local pour l'input datetime-local
       if (initialData.task_deadline) {
-        // Supprimer le '.000Z' s'il existe
         const cleanDate = initialData.task_deadline.replace(".000Z", "")
         setDeadline(cleanDate)
       }
@@ -41,21 +38,17 @@ const EmailSender = ({ initialData }) => {
 
   const formatDate = (dateStr) => {
     try {
-      // Supprimer le '.000Z' s'il existe
       const cleanDate = dateStr.replace(".000Z", "")
       const date = new Date(cleanDate)
-
       if (isNaN(date.getTime())) {
         console.error("Date invalide:", dateStr)
         return ""
       }
-
       const day = date.getDate().toString().padStart(2, "0")
       const month = (date.getMonth() + 1).toString().padStart(2, "0")
       const year = date.getFullYear()
       const hours = date.getHours().toString().padStart(2, "0")
       const minutes = date.getMinutes().toString().padStart(2, "0")
-
       return `${day}/${month}/${year} ${hours}:${minutes}`
     } catch (error) {
       console.error("Erreur lors du formatage de la date:", error)
@@ -71,9 +64,6 @@ const EmailSender = ({ initialData }) => {
     setIsError(false)
 
     const formattedDeadline = deadline ? formatDate(deadline) : ""
-    console.log("Date originale:", deadline)
-    console.log("Date formatée:", formattedDeadline)
-
     const templateParams = {
       to_email: to,
       task_title: title,
@@ -87,7 +77,6 @@ const EmailSender = ({ initialData }) => {
       await emailjs.send("service_jhd", "template_jhd", templateParams, "FiWAOQdkaG34q5-hc")
       setResponseMessage("E-mail envoyé avec succès !")
       setIsSuccess(true)
-      // Réinitialiser le formulaire
       setTo("")
       setTitle("")
       setDescription("")
@@ -204,4 +193,3 @@ const EmailSender = ({ initialData }) => {
 }
 
 export default EmailSender
-

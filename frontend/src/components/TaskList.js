@@ -89,6 +89,10 @@ export default function TaskList({ newTask }) {
     }
   }
 
+  useEffect(() => {
+    loadTasks()
+  }, [newTask, sortBy, filterStatus, filterPriority, language])
+
   const handleEditTask = (task) => {
     setSelectedTask(task)
     setIsEditDialogOpen(true)
@@ -237,19 +241,24 @@ export default function TaskList({ newTask }) {
     return 0
   })
 
-  useEffect(() => {
-    loadTasks()
-  }, [newTask, sortBy, filterStatus, filterPriority, language])
-
   const handleTaskUpdated = (updatedTask) => {
-    setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
+    )
     setIsEditDialogOpen(false)
   }
 
-  // Fonction pour ouvrir l'image dans un nouvel onglet
-  const handleViewImage = (imageUrl) => {
-    if (imageUrl) {
-      window.open(imageUrl, "_blank")
+  // --- Fonction mise à jour pour afficher l'image ---  
+  // Convertit la Data URL en Blob et ouvre une nouvelle fenêtre avec l'URL blob.
+  const handleViewImage = (task) => {
+    if (task.imageUrl) {
+      fetch(task.imageUrl)
+        .then((res) => res.blob())
+        .then((blob) => {
+          const blobUrl = URL.createObjectURL(blob)
+          window.open(blobUrl, "_blank")
+        })
+        .catch((err) => console.error("Erreur lors de l'ouverture de l'image :", err))
     }
   }
 
@@ -382,7 +391,7 @@ export default function TaskList({ newTask }) {
                       "group relative overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300",
                       "backdrop-blur-sm dark:backdrop-blur-md",
                       "border border-white/10 dark:border-white/5",
-                      getCardBackground(task.status),
+                      getCardBackground(task.status)
                     )}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -393,12 +402,11 @@ export default function TaskList({ newTask }) {
                           {task.title}
                         </h3>
                         <div className="flex items-center gap-2">
-                          {/* Bouton pour voir l'image */}
                           {task.imageUrl && (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleViewImage(task.imageUrl)}
+                              onClick={() => handleViewImage(task)}
                               className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
                             >
                               <ImageIcon className="h-4 w-4" />
@@ -430,7 +438,7 @@ export default function TaskList({ newTask }) {
                                 onClick={() => handleDeleteTask(task._id)}
                                 className="text-destructive text-xs sm:text-sm"
                               >
-                                <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-3.5" />
                                 {t("delete")}
                               </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -466,7 +474,7 @@ export default function TaskList({ newTask }) {
                             <span
                               className={cn(
                                 "font-medium",
-                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400",
+                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400"
                               )}
                             >
                               {format(new Date(task.deadline), "Pp", {
@@ -586,4 +594,3 @@ export default function TaskList({ newTask }) {
     </div>
   )
 }
-
