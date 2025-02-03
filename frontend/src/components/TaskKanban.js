@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { fetchTasks, updateTask } from "../utils/api"
+import { useUrlParams } from "../hooks/useUrlParams"
 import {
   DndContext,
   closestCenter,
@@ -142,6 +143,7 @@ function DraggableTask({ task, isDragging }) {
       className="touch-none"
     >
       <Card
+        id={`task-${task._id}`} // Add ID for task highlighting
         className={`mb-2 group cursor-grab active:cursor-grabbing ${
           isDragging ? "shadow-lg scale-105 rotate-3" : "hover:shadow-md transition-all duration-200"
         }`}
@@ -186,6 +188,8 @@ export default function TaskKanban() {
   const [error, setError] = useState(null)
   const [activeId, setActiveId] = useState(null)
   const [showHint, setShowHint] = useState(true)
+  const urlParams = useUrlParams()
+  const focusedTaskId = urlParams.get("taskId")
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -268,6 +272,24 @@ export default function TaskKanban() {
       })
     }
   }
+
+  useEffect(() => {
+    if (focusedTaskId) {
+      const taskElement = document.getElementById(`task-${focusedTaskId}`)
+      if (taskElement) {
+        // Scroll to the task with a smooth animation
+        taskElement.scrollIntoView({ behavior: "smooth", block: "center" })
+
+        // Add highlight animation
+        taskElement.classList.add("highlight-task")
+
+        // Remove highlight after animation
+        setTimeout(() => {
+          taskElement.classList.remove("highlight-task")
+        }, 2000)
+      }
+    }
+  }, [focusedTaskId]) // Removed unnecessary dependency: tasks
 
   if (loading) {
     return (

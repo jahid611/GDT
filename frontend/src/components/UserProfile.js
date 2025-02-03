@@ -140,8 +140,8 @@ function UserProfile() {
                 <div className="grid gap-6 md:grid-cols-2">
                   <ProfileField icon={User} label={t("name")} value={displayName} />
                   <ProfileField icon={Mail} label={t("email")} value={profile.email} />
-                  <ProfileField icon={Building} label={t("department")} value={t("department")} />
-                  <ProfileField icon={MapPin} label={t("location")} value={t("location")} />
+                  <ProfileField icon={Building} label={t("department")} value={t("Râmnicu Vâlcea")} />
+                  <ProfileField icon={MapPin} label={t("location")} value={t("Roumanie")} />
                 </div>
               </div>
             </div>

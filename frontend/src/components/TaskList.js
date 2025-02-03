@@ -5,7 +5,6 @@ import { fetchTasks, updateTask, deleteTask } from "../utils/api"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   CheckCircle,
-  Clock,
   Calendar,
   Filter,
   RefreshCw,
@@ -45,18 +44,27 @@ import {
 } from "@/components/ui/alert-dialog"
 
 const DEFAULT_AVATARS = {
-  user1: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-  user2: "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-  user3: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob",
-  user4: "https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie",
+  user1: "https://api.dicebear.com/7.x/initials/svg?seed=JD&backgroundColor=52,53,65,255",
+  user2: "https://api.dicebear.com/7.x/initials/svg?seed=AB&backgroundColor=52,53,65,255",
+  user3: "https://api.dicebear.com/7.x/initials/svg?seed=CD&backgroundColor=52,53,65,255",
+  user4: "https://api.dicebear.com/7.x/initials/svg?seed=EF&backgroundColor=52,53,65,255",
 }
 
-const getRandomAvatar = () => {
-  const avatars = Object.values(DEFAULT_AVATARS)
-  return avatars[Math.floor(Math.random() * avatars.length)]
-}
+const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgroundColor=52,53,65,255"
 
-const DEFAULT_AVATAR = "https://github.com/shadcn.png"
+const getAvatarForUser = (email) => {
+  if (!email) return DEFAULT_AVATAR
+
+  const hash = email.split("").reduce((acc, char) => {
+    return char.charCodeAt(0) + ((acc << 5) - acc)
+  }, 0)
+
+  const avatarSet = Object.values(DEFAULT_AVATARS)
+
+  const index = Math.abs(hash) % avatarSet.length
+
+  return avatarSet[index]
+}
 
 export default function TaskList({ newTask }) {
   const { t, language } = useTranslation()
@@ -104,7 +112,6 @@ export default function TaskList({ newTask }) {
   const handleDeleteAllTasks = async () => {
     try {
       setLoading(true)
-      // Supprimer toutes les tâches une par une
       await Promise.all(tasks.map((task) => deleteTask(task._id)))
       setTasks([])
       showToast("success", t("allTasksDeleted"))
@@ -143,18 +150,7 @@ export default function TaskList({ newTask }) {
   }
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case "todo":
-        return "bg-red-200/80 text-red-900 dark:bg-red-300/20 dark:text-red-300"
-      case "in_progress":
-        return "bg-blue-200/80 text-blue-900 dark:bg-blue-300/20 dark:text-blue-300"
-      case "review":
-        return "bg-yellow-200/80 text-yellow-900 dark:bg-yellow-300/20 dark:text-yellow-300"
-      case "done":
-        return "bg-green-200/80 text-green-900 dark:bg-green-300/20 dark:text-green-300"
-      default:
-        return ""
-    }
+    return "bg-muted/50 text-muted-foreground"
   }
 
   const getStatusLabel = (status) => {
@@ -173,16 +169,7 @@ export default function TaskList({ newTask }) {
   }
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500 text-white"
-      case "medium":
-        return "bg-yellow-500 text-white"
-      case "low":
-        return "bg-green-500 text-white"
-      default:
-        return ""
-    }
+    return "bg-muted/50 text-muted-foreground"
   }
 
   const getPriorityLabel = (priority) => {
@@ -219,17 +206,6 @@ export default function TaskList({ newTask }) {
     return true
   })
 
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (sortBy === "deadline") {
-      return new Date(a.deadline) - new Date(b.deadline)
-    } else if (sortBy === "priority") {
-      return getPriorityOrder(b.priority) - getPriorityOrder(a.priority)
-    } else if (sortBy === "status") {
-      return getStatusOrder(a.status) - getStatusOrder(b.status)
-    }
-    return 0
-  })
-
   const getPriorityOrder = (priority) => {
     switch (priority) {
       case "high":
@@ -258,13 +234,40 @@ export default function TaskList({ newTask }) {
     }
   }
 
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (sortBy === "deadline") {
+      return new Date(a.deadline) - new Date(b.deadline)
+    } else if (sortBy === "priority") {
+      return getPriorityOrder(b.priority) - getPriorityOrder(a.priority)
+    } else if (sortBy === "status") {
+      return getStatusOrder(a.status) - getStatusOrder(b.status)
+    }
+    return 0
+  })
+
   useEffect(() => {
     loadTasks()
-  }, [newTask, sortBy, filterStatus, filterPriority])
+  }, [newTask, sortBy, filterStatus, filterPriority, language])
+
+  useEffect(() => {}, [tasks])
 
   const handleTaskUpdated = (updatedTask) => {
     setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
     setIsEditDialogOpen(false)
+  }
+
+  const getAvatarForUser = (email) => {
+    if (!email) return DEFAULT_AVATAR
+
+    const hash = email.split("").reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc)
+    }, 0)
+
+    const avatarSet = Object.values(DEFAULT_AVATARS)
+
+    const index = Math.abs(hash) % avatarSet.length
+
+    return avatarSet[index]
   }
 
   return (
@@ -301,7 +304,7 @@ export default function TaskList({ newTask }) {
                 className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600"
               >
                 <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2" />
-                <span className="text-xs sm:text-sm">{t("deleteAll")}</span>
+                <span className="text-xs sm:text-sm">{t("Delete all")}</span>
               </Button>
             </div>
           </div>
@@ -445,7 +448,7 @@ export default function TaskList({ newTask }) {
                       </p>
 
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <Badge variant="secondary" className={cn("text-xs", getStatusColor(task.status))}>
+                        <Badge variant="outline" className={cn("text-xs", getStatusColor(task.status))}>
                           {getStatusLabel(task.status)}
                         </Badge>
                         <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
@@ -453,12 +456,46 @@ export default function TaskList({ newTask }) {
                         </Badge>
                       </div>
 
+                      <div className="grid gap-2 mt-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{t("status")}:</span>
+                          <span className="font-medium">{getStatusLabel(task.status)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{t("priority")}:</span>
+                          <span className="font-medium">{getPriorityLabel(task.priority)}</span>
+                        </div>
+                        {task.deadline && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">{t("deadline")}:</span>
+                            <span
+                              className={cn(
+                                "font-medium",
+                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400",
+                              )}
+                            >
+                              {format(new Date(task.deadline), "Pp", {
+                                locale: language === "fr" ? fr : enUS,
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        {task.estimatedTime && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">{t("estimatedTime")}:</span>
+                            <span className="font-medium">
+                              {task.estimatedTime}h {t("estimated")}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="pt-3 sm:pt-4 border-t dark:border-white/10 space-y-3 sm:space-y-4">
                         <div className="grid gap-2 sm:gap-3">
                           <div className="flex items-center gap-2 sm:gap-3">
                             <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                               <AvatarImage
-                                src={task.createdBy?.avatar || getRandomAvatar()}
+                                src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
                                 alt={`Avatar de ${task.createdBy?.email || "utilisateur"}`}
                               />
                               <AvatarFallback className="text-xs sm:text-sm bg-primary/10 dark:bg-primary/20">
@@ -478,7 +515,7 @@ export default function TaskList({ newTask }) {
                           <div className="flex items-center gap-2 sm:gap-3">
                             <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                               <AvatarImage
-                                src={task.assignedTo?.avatar || getRandomAvatar()}
+                                src={task.assignedTo?.avatar || getAvatarForUser(task.assignedTo?.email)}
                                 alt={`Avatar de ${task.assignedTo?.email || "utilisateur"}`}
                               />
                               <AvatarFallback className="text-xs sm:text-sm bg-secondary/10 dark:bg-secondary/20">
@@ -496,28 +533,23 @@ export default function TaskList({ newTask }) {
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
-                          {task.deadline && (
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              <span
-                                className={cn(
-                                  new Date(task.deadline) < new Date() &&
-                                    "text-destructive dark:text-red-400 font-medium",
-                                )}
-                              >
-                                {format(new Date(task.deadline), "Pp", {
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-3.5 w-3.5" />
+                            <span>
+                              {format(new Date(task.createdAt || new Date()), "Pp", {
+                                locale: language === "fr" ? fr : enUS,
+                              })}
+                            </span>
+                          </div>
+                          {task.updatedAt && task.updatedAt !== task.createdAt && (
+                            <div className="flex items-center gap-2">
+                              <Edit className="h-3.5 w-3.5" />
+                              <span>
+                                {t("lastUpdated")}:{" "}
+                                {format(new Date(task.updatedAt), "Pp", {
                                   locale: language === "fr" ? fr : enUS,
                                 })}
-                              </span>
-                            </div>
-                          )}
-
-                          {task.estimatedTime && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                              <span>
-                                {task.estimatedTime}h {t("estimated")}
                               </span>
                             </div>
                           )}

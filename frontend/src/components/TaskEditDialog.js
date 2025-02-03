@@ -7,13 +7,17 @@ const TaskEditDialog = ({ task, open, onOpenChange, onTaskUpdated }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("editTask")}</DialogTitle>
         </DialogHeader>
         <TaskCreationForm
           mode="edit"
-          initialData={task}
+          initialData={{
+            ...task,
+            deadline: task?.deadline ? new Date(task.deadline).toISOString().slice(0, 16) : "",
+            assignedTo: task?.assignedTo?._id || "",
+          }}
           onSuccess={(updatedTask) => {
             onTaskUpdated(updatedTask)
             onOpenChange(false)

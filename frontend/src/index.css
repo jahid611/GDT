@@ -27,25 +27,62 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    /* Base colors */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 95%;
+
+    /* True black elements */
+    --true-black: 0 0% 0%;
+    --header-background: var(--true-black);
+    --footer-background: var(--true-black);
+    --sidebar-background: var(--true-black);
+    --dropdown-background: var(--true-black);
+    --command-background: var(--true-black);
+
+    /* Card and content */
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
+    --card-hovered: 0 0% 11%;
+    --card-pressed: 0 0% 13%;
+
+    /* Interactive elements */
+    --popover: var(--true-black);
+    --popover-foreground: 0 0% 95%;
+
+    /* Primary elements */
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --primary-button: var(--true-black);
+    --primary-button-foreground: 0 0% 98%;
+
+    /* Secondary elements */
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-button: 0 0% 13%;
+    --secondary-button-hover: 0 0% 15%;
+
+    /* Muted elements */
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 63.9%;
+
+    /* Accent elements */
+    --accent: var(--true-black);
+    --accent-foreground: 0 0% 98%;
+
+    /* Destructive */
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders and inputs */
+    --border: 0 0% 13%;
+    --input: 0 0% 13%;
+    --ring: 0 0% 83.9%;
+
+    /* Special elements */
+    --tooltip: var(--true-black);
+    --selected: var(--true-black);
+    --hover: 0 0% 11%;
+    --pressed: 0 0% 13%;
   }
 }
 
@@ -58,4 +95,70 @@
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+@layer components {
+  .dark .header {
+    background-color: hsl(var(--header-background));
+    border-bottom: 1px solid hsl(var(--border));
+  }
+
+  .dark .footer {
+    background-color: hsl(var(--footer-background));
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  .dark .sidebar {
+    background-color: hsl(var(--sidebar-background));
+    border-right: 1px solid hsl(var(--border));
+  }
+
+  .dark .dropdown-content {
+    background-color: hsl(var(--dropdown-background));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .dark .command-menu {
+    background-color: hsl(var(--command-background));
+  }
+
+  .dark .btn-primary {
+    background-color: hsl(var(--primary-button));
+    color: hsl(var(--primary-button-foreground));
+  }
+
+  .dark .btn-secondary {
+    background-color: hsl(var(--secondary-button));
+    color: hsl(var(--secondary-foreground));
+  }
+
+  .dark .btn-secondary:hover {
+    background-color: hsl(var(--secondary-button-hover));
+  }
+
+  .dark .card {
+    background-color: hsl(var(--card));
+  }
+
+  .dark .card:hover {
+    background-color: hsl(var(--card-hovered));
+  }
+
+  .dark .tooltip {
+    background-color: hsl(var(--tooltip));
+  }
+
+  .dark .selected {
+    background-color: hsl(var(--selected));
+  }
+
+  .dark .hover:hover {
+    background-color: hsl(var(--hover));
+  }
+
+  .dark .pressed:active {
+    background-color: hsl(var(--pressed));
+  }
+}
+
+
 

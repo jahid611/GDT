@@ -82,9 +82,14 @@ export default function LoginForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
-            <div className="rounded-full bg-primary/10 p-3">
-              <LogIn className="h-6 w-6 text-primary" />
-            </div>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              className="rounded-full bg-[#C5D200] p-3"
+            >
+              <LogIn className="h-6 w-6 text-zinc-950" />
+            </motion.div>
           </div>
           <CardTitle className="text-2xl font-bold text-center">Connexion</CardTitle>
           <p className="text-sm text-muted-foreground text-center">
@@ -136,7 +141,7 @@ export default function LoginForm() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-[#C5D200] hover:bg-[#97A000] text-zinc-950" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -146,6 +151,18 @@ export default function LoginForm() {
                 "Se connecter"
               )}
             </Button>
+
+            <div className="text-center text-sm">
+              <span className="text-muted-foreground">Vous n'avez pas de compte ? </span>
+              <Button
+                type="button"
+                variant="link"
+                onClick={() => navigate("/register")}
+                className="p-0 h-auto font-medium text-[#C5D200] hover:text-[#97A000]"
+              >
+                Créer un compte
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

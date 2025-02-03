@@ -14,15 +14,20 @@ import PrivateRoute from "./components/PrivateRoute"
 import NotificationToast from "./components/NotificationToast"
 import { ThemeToggle } from "./components/ThemeToggle"
 import LanguageToggle from "./components/LanguageToggle"
+import HomePage from "./pages/Home"
 
 function AppContent() {
   return (
     <div className="min-h-screen bg-background font-sans antialiased">
       <Routes>
+        {/* Routes publiques */}
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterForm />} />
+
+        {/* Routes privées */}
         <Route
-          path="/"
+          path="/dashboard"
           element={
             <PrivateRoute>
               <Dashboard />
@@ -45,13 +50,24 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+
+        {/* Redirection des routes inconnues vers l'accueil */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      <div className="fixed bottom-4 right-4 flex items-center gap-2 z-50">
-        <ThemeToggle />
-        <LanguageToggle />
-      </div>
+      {/* Ne pas afficher les toggles sur la page d'accueil */}
+      <Routes>
+        <Route
+          path="/*"
+          element={
+            <div className="fixed bottom-4 right-4 flex items-center gap-2 z-50">
+              <ThemeToggle />
+              <LanguageToggle />
+            </div>
+          }
+        />
+      </Routes>
+
       <NotificationToast />
       <Toaster />
     </div>

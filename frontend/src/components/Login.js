@@ -38,14 +38,12 @@ export default function Login() {
 
       if (response?.user) {
         authLogin(response.user)
-        navigate("/")
+        navigate("/dashboard") // Modification ici pour rediriger vers /dashboard
       } else {
-        // Pour toute erreur de réponse, on affiche le même message
         setError("Aucun compte existant")
       }
     } catch (err) {
       console.error("Login error:", err)
-      // Pour toute erreur, on affiche le même message
       setError("Aucun compte existant")
     } finally {
       setLoading(false)
@@ -53,19 +51,19 @@ export default function Login() {
   }
 
   const handleInputChange = () => {
-    if (error) setError("") // Efface l'erreur quand l'utilisateur commence à taper
+    if (error) setError("")
   }
 
   return (
     <AuthLayout>
-      <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background via-background/95 to-background/90 dark:from-background dark:via-background dark:to-black">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
-          <Card className="backdrop-blur-sm bg-background/95 dark:bg-background/80 shadow-xl border-border/50 dark:border-border/20">
+          <Card className="backdrop-blur-sm bg-background/95 dark:bg-zinc-900/90 shadow-xl border-border/50 dark:border-border/20">
             <CardHeader className="space-y-4 pb-8">
               <div className="flex justify-center">
                 <motion.div
@@ -79,7 +77,7 @@ export default function Login() {
               </div>
               <div className="space-y-2 text-center">
                 <CardTitle className="text-2xl font-bold tracking-tight">{t("login")}</CardTitle>
-                <CardDescription>{t("loginDescription")}</CardDescription>
+                <CardDescription className="dark:text-muted-foreground">{t("loginDescription")}</CardDescription>
               </div>
             </CardHeader>
             <form onSubmit={handleSubmit}>
@@ -117,7 +115,7 @@ export default function Login() {
                         handleInputChange()
                       }}
                       required
-                      className="pl-10 bg-background dark:bg-background/50"
+                      className="pl-10 bg-background/50 dark:bg-background/10"
                     />
                   </div>
                 </div>
@@ -136,7 +134,7 @@ export default function Login() {
                         handleInputChange()
                       }}
                       required
-                      className="pl-10 bg-background dark:bg-background/50"
+                      className="pl-10 bg-background/50 dark:bg-background/10"
                     />
                   </div>
                 </div>

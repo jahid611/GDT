@@ -11,8 +11,6 @@ import UserProfile from "./UserProfile"
 import AdminPanel from "./AdminPanel"
 import { useNotifications } from "../contexts/NotificationContext"
 import { useTranslation } from "../hooks/useTranslation"
-import LanguageToggle from "./LanguageToggle"
-import { ThemeToggle } from "./ThemeToggle"
 import {
   LayoutGrid,
   Calendar,
@@ -26,16 +24,14 @@ import {
   Shield,
   ChevronLeft,
   Menu,
-  Search,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
-import { Input } from "@/components/ui/input"
+import { Button } from "../components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "../components/ui/sheet"
+import { ScrollArea } from "../components/ui/scroll-area"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "../components/ui/tooltip"
 import NotificationPanel from "./NotificationPanel"
 import NotificationPopup from "./NotificationPopup"
-import { cn } from "@/lib/utils"
+import { cn } from "../lib/utils"
 import TaskCreationDialog from "./TaskCreationDialog"
 import { motion, AnimatePresence } from "framer-motion"
 
@@ -110,6 +106,15 @@ export default function Dashboard() {
     }
   }
 
+  const cleanUsername = (email) => {
+    if (!email) return ""
+    return email
+      .split("@")[0]
+      .replace(/[^a-zA-Z]/g, "")
+      .toLowerCase()
+      .trim()
+  }
+
   const renderContent = () => {
     switch (selectedView) {
       case "list":
@@ -131,45 +136,44 @@ export default function Dashboard() {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-background transition-colors duration-300">
+      <div className="min-h-screen bg-gradient-to-b from-background to-background/95 transition-colors duration-300">
         <AnimatePresence mode="wait">
           {isSidebarOpen && (
             <motion.aside
-              initial={{ x: -320 }}
-              animate={{ x: 0 }}
-              exit={{ x: -320 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              initial={{ x: -320, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -320, opacity: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 500,
+                damping: 30,
+                mass: 0.5,
+                duration: 0.15,
+              }}
               className={cn(
-                "fixed inset-y-0 left-0 z-50 w-[280px] bg-card border-r",
+                "fixed inset-y-0 left-0 z-50 w-[280px] border-r",
                 "lg:w-72 lg:translate-x-0",
-                "transform transition-transform duration-200 ease-in-out",
+                "transform transition-all duration-100 ease-out",
                 "backdrop-blur-md bg-opacity-90",
+                "dark:bg-[#111113]/95 dark:border-white/[0.08]",
+                "shadow-xl dark:shadow-2xl shadow-black/5",
                 isMobile ? "w-full sm:w-[280px]" : "",
               )}
             >
               <div className="flex flex-col h-full p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                    {t("myTasks")}
-                  </h1>
-                  <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(false)}>
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t("myTasks")}</h1>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="lg:hidden hover:bg-white/10 transition-colors"
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
                     <X className="h-5 w-5" />
                   </Button>
                 </div>
 
-                <div className="mb-6">
-                  <div className="relative">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder={t("search")}
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8 bg-background/50"
-                    />
-                  </div>
-                </div>
-
-                <nav className="space-y-1 flex-1">
+                <nav className="space-y-1.5 flex-1">
                   {finalMenuItems.map((item) => (
                     <Tooltip key={item.id} delayDuration={300}>
                       <TooltipTrigger asChild>
@@ -182,29 +186,40 @@ export default function Dashboard() {
                           className={cn(
                             "w-full justify-start transition-all duration-200",
                             "text-sm sm:text-base",
-                            selectedView === item.id && "font-medium bg-primary/10 dark:bg-primary/20",
+                            selectedView === item.id
+                              ? "dark:bg-white/10 dark:text-foreground font-medium"
+                              : "dark:text-foreground/80 dark:hover:bg-white/5 dark:hover:text-foreground",
+                            "group",
                           )}
                         >
-                          <item.icon className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+                          <item.icon
+                            className={cn(
+                              "mr-2 h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200",
+                              "group-hover:scale-110",
+                            )}
+                          />
                           {item.label}
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent side="right" className="hidden lg:block">
+                      <TooltipContent side="right" className="hidden lg:block dark:bg-black/95 dark:border-white/10">
                         {item.label}
                       </TooltipContent>
                     </Tooltip>
                   ))}
                 </nav>
 
-                <div className="space-y-4 pt-6 border-t">
-                  <div className="flex items-center justify-between gap-2">
-                    <LanguageToggle />
-                    <ThemeToggle />
-                  </div>
+                <div className="space-y-4 pt-6 border-t dark:border-white/[0.08]">
                   <Button
                     onClick={handleLogout}
                     variant="ghost"
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                    className={cn(
+                      "w-full justify-start",
+                      "text-red-500 hover:text-red-600",
+                      "hover:bg-red-500/10",
+                      "dark:text-red-500 dark:hover:text-red-400",
+                      "dark:hover:bg-red-950/30",
+                      "transition-colors duration-200",
+                    )}
                   >
                     <LogOut className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                     {t("logout")}
@@ -216,19 +231,19 @@ export default function Dashboard() {
         </AnimatePresence>
 
         <div className="sticky top-0 z-40 lg:hidden">
-          <div className="flex items-center justify-between px-3 py-2 sm:px-4 bg-background/80 backdrop-blur-md border-b">
+          <div className="flex items-center justify-between px-3 py-2 sm:px-4 dark:bg-black/95 backdrop-blur-md border-b dark:border-white/[0.08] shadow-lg">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={() => setIsSidebarOpen(true)}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSidebarOpen(true)}
+                className="dark:hover:bg-white/5"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
-              <h1 className="text-base sm:text-lg font-semibold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                {t("myTasks")}
-              </h1>
+              <h1 className="text-base sm:text-lg font-semibold text-foreground">{t("myTasks")}</h1>
             </div>
-            <div className="flex items-center gap-2">
-              <LanguageToggle />
-              <ThemeToggle />
-            </div>
+            <div></div>
           </div>
         </div>
 
@@ -237,18 +252,24 @@ export default function Dashboard() {
             "min-h-screen transition-all duration-300 ease-in-out pb-16 lg:pb-0",
             isSidebarOpen ? "lg:pl-72" : "",
             "pt-[60px] lg:pt-0",
+            "dark:bg-zinc-950",
           )}
         >
           <div className="container mx-auto px-3 py-4 sm:p-4 lg:p-8">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
               <div className="flex items-center gap-2">
                 {!isMobile && !isSidebarOpen && (
-                  <Button variant="ghost" size="sm" onClick={() => setIsSidebarOpen(true)} className="mr-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="mr-2 dark:hover:bg-white/5"
+                  >
                     <ChevronLeft className="h-5 w-5" />
                   </Button>
                 )}
-                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                  {t("welcome")}, {user?.email ? user.email.split("@")[0] : user?.name}
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                  {t("welcome")}, {user?.email ? cleanUsername(user.email) : cleanUsername(user?.name)}
                 </h2>
               </div>
               <div className="flex items-center gap-2 sm:gap-4">
@@ -257,11 +278,18 @@ export default function Dashboard() {
                     size="icon"
                     onClick={() => setShowNotifications(true)}
                     variant="outline"
-                    className="rounded-full relative shadow-sm hover:shadow-md transition-shadow h-9 w-9 sm:h-10 sm:w-10"
+                    className={cn(
+                      "rounded-full relative",
+                      "shadow-lg hover:shadow-xl",
+                      "transition-all duration-200",
+                      "h-9 w-9 sm:h-10 sm:w-10",
+                      "dark:bg-white/5 dark:border-white/10",
+                      "dark:hover:bg-white/10 dark:hover:border-white/20",
+                    )}
                   >
                     <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 text-xs flex items-center justify-center bg-primary text-primary-foreground rounded-full">
+                      <span className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 text-xs flex items-center justify-center bg-primary text-white rounded-full animate-pulse">
                         {unreadCount}
                       </span>
                     )}
@@ -270,7 +298,14 @@ export default function Dashboard() {
                 <Button
                   onClick={() => setIsTaskDialogOpen(true)}
                   size="default"
-                  className="bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className={cn(
+                    "bg-primary hover:bg-primary/90",
+                    "shadow-lg hover:shadow-xl",
+                    "transition-all duration-200",
+                    "dark:bg-white dark:text-black",
+                    "dark:hover:bg-white/90",
+                    "font-medium",
+                  )}
                 >
                   <Plus className="h-4 w-4 sm:h-5 sm:w-5 sm:mr-2" />
                   <span className="hidden sm:inline">{t("newTask")}</span>
@@ -285,7 +320,12 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
-                className="rounded-xl border bg-card p-4 sm:p-6 shadow-sm"
+                className={cn(
+                  "rounded-xl border p-4 sm:p-6",
+                  "dark:bg-black/40 dark:border-white/[0.08]",
+                  "shadow-lg hover:shadow-xl transition-all duration-500",
+                  "backdrop-blur-sm",
+                )}
               >
                 {renderContent()}
               </motion.div>
@@ -294,9 +334,11 @@ export default function Dashboard() {
         </main>
 
         <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
-          <SheetContent className="w-full sm:max-w-md">
+          <SheetContent
+            className={cn("w-full sm:max-w-md", "dark:bg-black/95 dark:border-white/[0.08]", "backdrop-blur-xl")}
+          >
             <SheetHeader>
-              <SheetTitle>{t("notifications")}</SheetTitle>
+              <SheetTitle className="text-lg font-semibold dark:text-foreground">{t("notifications")}</SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
               <NotificationPanel />
@@ -305,23 +347,29 @@ export default function Dashboard() {
         </Sheet>
 
         <TaskCreationDialog
-  open={isTaskDialogOpen}
-  onOpenChange={setIsTaskDialogOpen}
-  onSuccess={() => {
-    setIsTaskDialogOpen(false);
-  }}
-  onTaskCreated={(task) => {
-    setNewTask(task);
-  }}
-/>
-
+          open={isTaskDialogOpen}
+          onOpenChange={setIsTaskDialogOpen}
+          onSuccess={() => {
+            setIsTaskDialogOpen(false)
+          }}
+          onTaskCreated={(task) => {
+            setNewTask(task)
+          }}
+        />
 
         <NotificationPopup
           notification={currentNotification}
           onClose={dismissCurrentNotification}
           onView={handleViewNotification}
         />
+
+        <footer className="fixed bottom-0 w-full py-4 lg:hidden dark:bg-black/95 dark:border-t dark:border-white/[0.08] backdrop-blur-md">
+          <div className="container flex items-center justify-center px-4">
+            <p className="text-sm text-muted-foreground dark:text-foreground/60">© 2025 Vilmar Tasks Manager</p>
+          </div>
+        </footer>
       </div>
     </TooltipProvider>
   )
 }
+
