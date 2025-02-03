@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import emailjs from "emailjs-com"
 
-// Remplacez ces valeurs par vos identifiants EmailJS réels
+// Identifiants EmailJS (remplacez-les par vos identifiants réels)
 const EMAILJS_SERVICE_ID = "service_jhd"
 const EMAILJS_TEMPLATE_ID = "template_jhd"
 const EMAILJS_USER_ID = "FiWAOQdkaG34q5-hc"
@@ -25,7 +25,7 @@ const DEFAULT_AVATAR =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
 
 export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
-  // États pour les champs texte du formulaire
+  // États pour les champs textes du formulaire
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -35,7 +35,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     estimatedTime: "",
     assignedTo: "",
   })
-  // États pour stocker les fichiers joints (images et PDFs)
+  // États pour stocker les fichiers joints (images et PDF)
   const [attachments, setAttachments] = useState([]) // Chaque élément: { file, dataUrl }
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
@@ -45,7 +45,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   const { user } = useAuth()
   const { t } = useTranslation()
 
-  // Initialisation des champs en mode édition
+  // Initialisation des données si en mode édition
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -59,7 +59,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         estimatedTime: initialData.estimatedTime || "",
         assignedTo: initialData.assignedTo?._id || "",
       })
-      // Si initialData contient déjà des attachments, vous pouvez les intégrer ici
+      // Si l'ancienne tâche contient déjà une image, vous pouvez la charger dans attachments ou dans un champ spécifique
     }
   }, [initialData])
 
@@ -82,7 +82,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }
 
-  // Gestion de l'upload de plusieurs fichiers (images et PDFs)
+  // Fonction pour gérer l'upload de plusieurs fichiers (images et PDF)
   const handleFilesUpload = async (e) => {
     const files = e.target.files
     if (files && files.length > 0) {
@@ -94,11 +94,11 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           showToast(t("error"), "Type de fichier non accepté", "destructive")
           continue
         }
-        // Pour les images, compresser si taille > 100 KB
+        // Pour les images : compresser si taille > 100KB
         if (file.type.startsWith("image/") && file.size > 102400) {
           try {
             const options = {
-              maxSizeMB: 0.1, // Environ 100 KB
+              maxSizeMB: 0.1, // ~100KB
               maxWidthOrHeight: 800,
               useWebWorker: true,
             }
@@ -107,13 +107,10 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             console.error("Erreur de compression de l'image :", err)
           }
         }
-        // Pour les PDFs, si trop volumineux, on affiche un avertissement mais on continue
-        if (file.type === "application/pdf" && file.size > 102400) {
-          showToast(t("warning"), "Fichier PDF volumineux, vérifiez la configuration du serveur", "warning")
-          // Vous pouvez décider de rejeter le fichier en ajoutant 'continue' ici,
-          // ou d'autoriser son envoi (mais cela peut provoquer l'erreur PayloadTooLarge)
-        }
-        // Conversion en Data URL pour prévisualisation
+        // Pour les PDFs, vous pouvez choisir d'accepter toutes les tailles ou appliquer une limite
+        // Ici, nous acceptons le PDF même s'il est volumineux (mais vous pouvez afficher un toast si besoin)
+
+        // Conversion du fichier en Data URL pour prévisualisation (pour images, et éventuellement pour PDFs si besoin)
         const dataUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = (event) => resolve(event.target.result)
@@ -122,18 +119,44 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         })
         newAttachments.push({ file, dataUrl })
       }
-      // Ajoute les nouveaux fichiers aux attachments existants
       setAttachments((prev) => [...prev, ...newAttachments])
     }
   }
 
+  // Pour la prévisualisation, si le fichier est une image, on affiche l'image ;
+  // si c'est un PDF, on affiche une icône PDF avec un bouton "Voir le document".
+  const renderAttachmentPreview = (att, index) => {
+    if (att.file.type.startsWith("image/")) {
+      return (
+        <img
+          key={index}
+          src={att.dataUrl}
+          alt={`Aperçu ${index}`}
+          className="w-24 h-24 object-cover"
+        />
+      )
+    } else if (att.file.type === "application/pdf") {
+      return (
+        <div key={index} className="w-24 h-24 flex flex-col items-center justify-center border p-1">
+          <span className="text-xs font-bold">PDF</span>
+          <Button
+            variant="outline"
+            size="xs"
+            onClick={() => window.open(URL.createObjectURL(att.file), "_blank")}
+          >
+            Voir
+          </Button>
+        </div>
+      )
+    }
+    return null
+  }
+
   // Fonction d'envoi d'e-mail via EmailJS
-  // L'e-mail inclut le statut, la priorité, la date limite et le nombre de fichiers joints.
   const sendEmailNotification = async (task) => {
     try {
-      // Récupère l'utilisateur assigné (s'il existe)
+      // Récupère l'utilisateur assigné, s'il existe
       const assignedUser = users.find((u) => u._id === task.assignedTo)
-      // Le destinataire sera l'utilisateur assigné ou, à défaut, le créateur
       const recipientEmail = assignedUser ? assignedUser.email : user.email
 
       const templateParams = {
@@ -169,13 +192,13 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         }
       })
 
-      // Si des fichiers ont été uploadés, on ajoute la Data URL de la première image dans "imageUrl"
+      // Pour le champ imageUrl, on envoie la Data URL de la première image uploadée (si elle existe)
       const firstImageAttachment = attachments.find((att) => att.file.type.startsWith("image/"))
       if (firstImageAttachment) {
         formDataToSend.append("imageUrl", firstImageAttachment.dataUrl)
       }
 
-      // Ajoute chaque fichier dans "attachments"
+      // Ajoute tous les fichiers uploadés dans "attachments"
       attachments.forEach((att) => {
         formDataToSend.append("attachments", att.file)
       })
@@ -403,11 +426,18 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
               <div key={index} className="border p-1">
                 {att.file.type.startsWith("image/") ? (
                   <img src={att.dataUrl} alt={`Aperçu ${index}`} className="w-24 h-24 object-cover" />
-                ) : (
-                  <div className="w-24 h-24 flex items-center justify-center bg-gray-100">
-                    <span className="text-xs">PDF</span>
+                ) : att.file.type === "application/pdf" ? (
+                  <div className="w-24 h-24 flex flex-col items-center justify-center bg-gray-100">
+                    <span className="text-xs font-bold">PDF</span>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => window.open(URL.createObjectURL(att.file), "_blank")}
+                    >
+                      Voir
+                    </Button>
                   </div>
-                )}
+                ) : null}
               </div>
             ))}
           </div>
