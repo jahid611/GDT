@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,22 +36,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
+      <Link to="/" className="mb-8 transform hover:scale-105 transition-transform duration-200">
+        <img src="/logo-vilmar.png" alt="Logo Vilmar" className="h-16 w-auto" />
+      </Link>
+
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center text-green-700">
-            Gestionnaire de Tâches Vilmar
-          </CardTitle>
-          <CardDescription className="text-center">
-            Connectez-vous à votre compte
-          </CardDescription>
+          <CardTitle className="text-2xl font-bold text-center text-green-700">Gestionnaire de Tâches Vilmar</CardTitle>
+          <CardDescription className="text-center">Connectez-vous à votre compte</CardDescription>
         </CardHeader>
         <CardContent>
-          {error && (
-            <div className="mb-4 p-2 text-sm text-red-600 bg-red-50 rounded-md">
-              {error}
-            </div>
-          )}
+          {error && <div className="mb-4 p-2 text-sm text-red-600 bg-red-50 rounded-md">{error}</div>}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -75,11 +71,7 @@ export default function LoginPage() {
                 className="w-full"
               />
             </div>
-            <Button
-              type="submit"
-              className="w-full bg-green-600 hover:bg-green-700"
-              disabled={isLoading}
-            >
+            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
               {isLoading ? "Connexion..." : "Se connecter"}
             </Button>
           </form>
@@ -96,3 +88,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

@@ -1,28 +1,29 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import imageCompression from "browser-image-compression"
-import { createTask, updateTask, getUsers } from "../utils/api"
-import { useNotifications } from "../contexts/NotificationContext"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Loader2, User } from "lucide-react"
-import { useAuth } from "../contexts/AuthContext"
-import { useTranslation } from "../hooks/useTranslation"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import emailjs from "emailjs-com"
+import { useState, useEffect } from "react";
+import imageCompression from "browser-image-compression";
+import pako from "pako"; // Pour compresser les PDF
+import { createTask, updateTask, getUsers } from "../utils/api";
+import { useNotifications } from "../contexts/NotificationContext";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, User } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useTranslation } from "../hooks/useTranslation";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import emailjs from "emailjs-com";
 
 // Identifiants EmailJS (remplacez-les par vos identifiants réels)
-const EMAILJS_SERVICE_ID = "service_jhd"
-const EMAILJS_TEMPLATE_ID = "template_jhd"
-const EMAILJS_USER_ID = "FiWAOQdkaG34q5-hc"
+const EMAILJS_SERVICE_ID = "service_jhd";
+const EMAILJS_TEMPLATE_ID = "template_jhd";
+const EMAILJS_USER_ID = "FiWAOQdkaG34q5-hc";
 
 const DEFAULT_AVATAR =
-  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png";
 
 export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
   // États pour les champs textes du formulaire
@@ -34,30 +35,31 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     deadline: "",
     estimatedTime: "",
     assignedTo: "",
-  })
+  });
 
   // États pour stocker les fichiers joints (images et PDF)
-  const [attachments, setAttachments] = useState([]) // Chaque élément: { file, dataUrl }
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [loadingUsers, setLoadingUsers] = useState(true)
-  const [userError, setUserError] = useState("")
-  const { showToast } = useNotifications()
-  const { user } = useAuth()
-  const { t } = useTranslation()
+  // Chaque élément: { file, dataUrl }
+  const [attachments, setAttachments] = useState([]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [userError, setUserError] = useState("");
+  const { showToast } = useNotifications();
+  const { user } = useAuth();
+  const { t } = useTranslation();
 
   // Au montage, charge les fichiers joints sauvegardés dans le localStorage
   useEffect(() => {
-    const storedAttachments = localStorage.getItem("attachments")
+    const storedAttachments = localStorage.getItem("attachments");
     if (storedAttachments) {
-      setAttachments(JSON.parse(storedAttachments))
+      setAttachments(JSON.parse(storedAttachments));
     }
-  }, [])
+  }, []);
 
   // Sauvegarde les fichiers joints dans le localStorage à chaque modification de l'état
   useEffect(() => {
-    localStorage.setItem("attachments", JSON.stringify(attachments))
-  }, [attachments])
+    localStorage.setItem("attachments", JSON.stringify(attachments));
+  }, [attachments]);
 
   // Initialisation des données si en mode édition
   useEffect(() => {
@@ -72,78 +74,96 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           : "",
         estimatedTime: initialData.estimatedTime || "",
         assignedTo: initialData.assignedTo?._id || "",
-      })
+      });
       // Vous pouvez également charger une image existante dans `attachments` si besoin
     }
-  }, [initialData])
+  }, [initialData]);
 
   useEffect(() => {
-    loadUsers()
-  }, [])
+    loadUsers();
+  }, []);
 
   const loadUsers = async () => {
     try {
-      setLoadingUsers(true)
-      setUserError("")
-      const fetchedUsers = await getUsers()
-      setUsers(fetchedUsers)
+      setLoadingUsers(true);
+      setUserError("");
+      const fetchedUsers = await getUsers();
+      setUsers(fetchedUsers);
     } catch (err) {
-      console.error("Erreur lors du chargement des utilisateurs :", err)
-      setUserError(err.message)
-      showToast(t("error"), t("errorLoadingUsers"), "destructive")
+      console.error("Erreur lors du chargement des utilisateurs :", err);
+      setUserError(err.message);
+      showToast(t("error"), t("errorLoadingUsers"), "destructive");
     } finally {
-      setLoadingUsers(false)
+      setLoadingUsers(false);
     }
-  }
+  };
 
   // Fonction pour gérer l'upload de plusieurs fichiers (images et PDF)
   const handleFilesUpload = async (e) => {
-    const files = e.target.files
+    const files = e.target.files;
     if (files && files.length > 0) {
-      const newAttachments = []
+      const newAttachments = [];
       for (let i = 0; i < files.length; i++) {
-        let file = files[i]
+        let file = files[i];
+
         // Vérifier que le fichier est une image ou un PDF
         if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-          showToast(t("error"), "Type de fichier non accepté", "destructive")
-          continue
+          showToast(t("error"), "Type de fichier non accepté", "destructive");
+          continue;
         }
-        // Pour les images : compresser si taille > 500KB
-        if (file.type.startsWith("image/") && file.size > 512000) {
+
+        // Pour les images : compresser si taille > 100KB
+        if (file.type.startsWith("image/") && file.size > 102400) {
           try {
             const options = {
-              maxSizeMB: 0.5, // 500KB
+              maxSizeMB: 0.1, // 100KB
               maxWidthOrHeight: 800,
               useWebWorker: true,
-            }
-            file = await imageCompression(file, options)
+            };
+            file = await imageCompression(file, options);
           } catch (err) {
-            console.error("Erreur de compression de l'image :", err)
+            console.error("Erreur de compression de l'image :", err);
           }
         }
-        // Pour les PDF, vous pouvez refuser les fichiers trop volumineux (> 500KB) :
-        if (file.type === "application/pdf" && file.size > 512000) {
-          showToast(t("error"), "La taille du PDF ne doit pas dépasser 500KB", "destructive")
-          continue
+
+        // Pour les PDF : compresser si taille > 100KB
+        if (file.type === "application/pdf" && file.size > 102400) {
+          try {
+            const arrayBuffer = await file.arrayBuffer();
+            // Utilisation de pako pour deflate (compression)
+            const compressedBuffer = pako.deflate(new Uint8Array(arrayBuffer), { level: 9 });
+            // Créez un nouveau fichier à partir du buffer compressé
+            file = new File([compressedBuffer], file.name, { type: file.type });
+            // Vérifiez si le fichier compressé est bien en dessous de 100KB
+            if (file.size > 102400) {
+              showToast(t("error"), "La taille compressée du PDF dépasse toujours 100KB", "destructive");
+              continue;
+            }
+          } catch (err) {
+            console.error("Erreur de compression du PDF :", err);
+            continue;
+          }
         }
+
         // Conversion du fichier (image ou PDF) en Data URL pour prévisualisation
         const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = (event) => resolve(event.target.result)
-          reader.onerror = (error) => reject(error)
-          reader.readAsDataURL(file)
-        })
-        newAttachments.push({ file, dataUrl })
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target.result);
+          reader.onerror = (error) => reject(error);
+          reader.readAsDataURL(file);
+        });
+        newAttachments.push({ file, dataUrl });
       }
-      // Met à jour l'état local et le localStorage (grâce au useEffect)
-      setAttachments((prev) => [...prev, ...newAttachments])
+      // Met à jour l'état local et le localStorage
+      setAttachments((prev) => [...prev, ...newAttachments]);
     }
-  }
+  };
 
   // Pour la prévisualisation, si le fichier est une image, on affiche l'image ;
   // si c'est un PDF, on affiche une icône PDF avec un bouton "Voir le document".
   const renderAttachmentPreview = (att, index) => {
-    if (att.file.type.startsWith("image/")) {
+    if (!att || !att.file || !att.dataUrl) return null;
+    if (att.file.type && att.file.type.startsWith("image/")) {
       return (
         <img
           key={index}
@@ -151,7 +171,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           alt={`Aperçu ${index}`}
           className="w-24 h-24 object-cover"
         />
-      )
+      );
     } else if (att.file.type === "application/pdf") {
       return (
         <div key={index} className="w-24 h-24 flex flex-col items-center justify-center border p-1">
@@ -164,17 +184,17 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             Voir
           </Button>
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   // Fonction d'envoi d'e-mail via EmailJS
   const sendEmailNotification = async (task) => {
     try {
       // Récupère l'utilisateur assigné, s'il existe
-      const assignedUser = users.find((u) => u._id === task.assignedTo)
-      const recipientEmail = assignedUser ? assignedUser.email : user.email
+      const assignedUser = users.find((u) => u._id === task.assignedTo);
+      const recipientEmail = assignedUser ? assignedUser.email : user.email;
 
       const templateParams = {
         to_email: recipientEmail,
@@ -184,83 +204,83 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         task_status: task.status,
         task_deadline: task.deadline ? new Date(task.deadline).toLocaleString() : "Non définie",
         attachments_count: attachments.length,
-      }
+      };
 
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_USER_ID)
-      console.log("E-mail envoyé avec succès via EmailJS")
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, EMAILJS_USER_ID);
+      console.log("E-mail envoyé avec succès via EmailJS");
     } catch (err) {
-      console.error("Erreur lors de l'envoi de l'e-mail avec EmailJS :", err)
+      console.error("Erreur lors de l'envoi de l'e-mail avec EmailJS :", err);
     }
-  }
+  };
 
   // Fonction pour sauvegarder la tâche localement dans le localStorage
   const storeTaskLocally = (task) => {
-    const storedTasks = JSON.parse(localStorage.getItem("tasks")) || []
-    storedTasks.push(task)
-    localStorage.setItem("tasks", JSON.stringify(storedTasks))
-  }
+    const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    storedTasks.push(task);
+    localStorage.setItem("tasks", JSON.stringify(storedTasks));
+  };
 
   // Fonction de soumission du formulaire
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (loadingUsers) return
+    e.preventDefault();
+    if (loadingUsers) return;
 
     try {
-      setLoading(true)
-      const formDataToSend = new FormData()
+      setLoading(true);
+      const formDataToSend = new FormData();
 
       // Ajoute les champs textes du formulaire
       Object.keys(formData).forEach((key) => {
         if (formData[key]) {
-          formDataToSend.append(key, formData[key])
+          formDataToSend.append(key, formData[key]);
         }
-      })
+      });
 
-      // Pour le champ imageUrl, on envoie la Data URL du premier fichier uploadé (qu'il s'agisse d'une image ou d'un PDF)
+      // Pour le champ imageUrl, on envoie la Data URL du premier fichier uploadé (image ou PDF)
       if (attachments.length > 0) {
-        formDataToSend.append("imageUrl", attachments[0].dataUrl)
+        formDataToSend.append("imageUrl", attachments[0].dataUrl);
       }
 
       // Ajoute tous les fichiers uploadés dans "attachments"
       attachments.forEach((att) => {
-        formDataToSend.append("attachments", att.file)
-      })
+        formDataToSend.append("attachments", att.file);
+      });
 
       // Ajoute l'ID du créateur
-      formDataToSend.append("createdBy", user.id)
+      formDataToSend.append("createdBy", user.id);
 
-      let result
+      let result;
       if (mode === "edit" && initialData?._id) {
-        result = await updateTask(initialData._id, formDataToSend)
+        result = await updateTask(initialData._id, formDataToSend);
       } else {
-        result = await createTask(formDataToSend)
+        result = await createTask(formDataToSend);
       }
 
-      showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
+      showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"));
 
-      // Envoi de l'e-mail via EmailJS avec les informations supplémentaires
-      await sendEmailNotification(result)
+      // Envoi de l'e-mail via EmailJS
+      await sendEmailNotification(result);
 
-      // Sauvegarde locale de la tâche pour un stockage "à vie" dans le navigateur
-      storeTaskLocally(result)
+      // Sauvegarde locale de la tâche
+      storeTaskLocally(result);
 
-      if (onSuccess) onSuccess(result)
+      if (onSuccess) onSuccess(result);
     } catch (err) {
-      console.error("Erreur lors de la gestion de la tâche :", err)
+      console.error("Erreur lors de la gestion de la tâche :", err);
       showToast(
         t("error"),
         err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
         "destructive"
-      )
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getUserDisplayName = (user) => {
-    if (!user) return ""
-    return user.name || user.username || user.email.split("@")[0]
-  }
+    if (!user) return "";
+    return user.name || user.username || user.email.split("@")[0];
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -482,5 +502,5 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         </Button>
       </div>
     </form>
-  )
+  );
 }
