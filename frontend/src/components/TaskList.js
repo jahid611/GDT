@@ -429,7 +429,7 @@ export default function TaskList({ newTask }) {
                               className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
                             >
                               <ImageIcon className="h-4 w-4" />
-                              <span className="text-xs">Voir image</span>
+                              <span className="text-xs">Voir l'image</span>
                             </Button>
                           )}
                           {task.attachments &&
