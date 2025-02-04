@@ -35,6 +35,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     estimatedTime: "",
     assignedTo: "",
   })
+
   // États pour stocker les fichiers joints (images et PDF)
   const [attachments, setAttachments] = useState([]) // Chaque élément: { file, dataUrl }
   const [users, setUsers] = useState([])
@@ -44,6 +45,19 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   const { showToast } = useNotifications()
   const { user } = useAuth()
   const { t } = useTranslation()
+
+  // Au montage, charge les fichiers joints sauvegardés dans le localStorage
+  useEffect(() => {
+    const storedAttachments = localStorage.getItem("attachments")
+    if (storedAttachments) {
+      setAttachments(JSON.parse(storedAttachments))
+    }
+  }, [])
+
+  // Sauvegarde les fichiers joints dans le localStorage à chaque modification de l'état
+  useEffect(() => {
+    localStorage.setItem("attachments", JSON.stringify(attachments))
+  }, [attachments])
 
   // Initialisation des données si en mode édition
   useEffect(() => {
@@ -59,7 +73,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         estimatedTime: initialData.estimatedTime || "",
         assignedTo: initialData.assignedTo?._id || "",
       })
-      // Si l'ancienne tâche contient déjà une image, vous pouvez la charger dans attachments ou dans un champ spécifique
+      // Vous pouvez également charger une image existante dans `attachments` si besoin
     }
   }, [initialData])
 
@@ -94,11 +108,11 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           showToast(t("error"), "Type de fichier non accepté", "destructive")
           continue
         }
-        // Pour les images : compresser si taille > 100KB
-        if (file.type.startsWith("image/") && file.size > 102400) {
+        // Pour les images : compresser si taille > 500KB
+        if (file.type.startsWith("image/") && file.size > 512000) {
           try {
             const options = {
-              maxSizeMB: 0.1, // ~100KB
+              maxSizeMB: 0.5, // 500KB
               maxWidthOrHeight: 800,
               useWebWorker: true,
             }
@@ -107,10 +121,12 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             console.error("Erreur de compression de l'image :", err)
           }
         }
-        // Pour les PDFs, vous pouvez choisir d'accepter toutes les tailles ou appliquer une limite
-        // Ici, nous acceptons le PDF même s'il est volumineux (mais vous pouvez afficher un toast si besoin)
-
-        // Conversion du fichier en Data URL pour prévisualisation (pour images, et éventuellement pour PDFs si besoin)
+        // Pour les PDF, vous pouvez refuser les fichiers trop volumineux (> 500KB) :
+        if (file.type === "application/pdf" && file.size > 512000) {
+          showToast(t("error"), "La taille du PDF ne doit pas dépasser 500KB", "destructive")
+          continue
+        }
+        // Conversion du fichier (image ou PDF) en Data URL pour prévisualisation
         const dataUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = (event) => resolve(event.target.result)
@@ -119,6 +135,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         })
         newAttachments.push({ file, dataUrl })
       }
+      // Met à jour l'état local et le localStorage (grâce au useEffect)
       setAttachments((prev) => [...prev, ...newAttachments])
     }
   }
@@ -142,7 +159,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           <Button
             variant="outline"
             size="xs"
-            onClick={() => window.open(URL.createObjectURL(att.file), "_blank")}
+            onClick={() => window.open(att.dataUrl, "_blank")}
           >
             Voir
           </Button>
@@ -176,6 +193,13 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }
 
+  // Fonction pour sauvegarder la tâche localement dans le localStorage
+  const storeTaskLocally = (task) => {
+    const storedTasks = JSON.parse(localStorage.getItem("tasks")) || []
+    storedTasks.push(task)
+    localStorage.setItem("tasks", JSON.stringify(storedTasks))
+  }
+
   // Fonction de soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -192,10 +216,9 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         }
       })
 
-      // Pour le champ imageUrl, on envoie la Data URL de la première image uploadée (si elle existe)
-      const firstImageAttachment = attachments.find((att) => att.file.type.startsWith("image/"))
-      if (firstImageAttachment) {
-        formDataToSend.append("imageUrl", firstImageAttachment.dataUrl)
+      // Pour le champ imageUrl, on envoie la Data URL du premier fichier uploadé (qu'il s'agisse d'une image ou d'un PDF)
+      if (attachments.length > 0) {
+        formDataToSend.append("imageUrl", attachments[0].dataUrl)
       }
 
       // Ajoute tous les fichiers uploadés dans "attachments"
@@ -217,6 +240,9 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
       // Envoi de l'e-mail via EmailJS avec les informations supplémentaires
       await sendEmailNotification(result)
+
+      // Sauvegarde locale de la tâche pour un stockage "à vie" dans le navigateur
+      storeTaskLocally(result)
 
       if (onSuccess) onSuccess(result)
     } catch (err) {
@@ -424,20 +450,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           <div className="mt-2 flex flex-wrap gap-2">
             {attachments.map((att, index) => (
               <div key={index} className="border p-1">
-                {att.file.type.startsWith("image/") ? (
-                  <img src={att.dataUrl} alt={`Aperçu ${index}`} className="w-24 h-24 object-cover" />
-                ) : att.file.type === "application/pdf" ? (
-                  <div className="w-24 h-24 flex flex-col items-center justify-center bg-gray-100">
-                    <span className="text-xs font-bold">PDF</span>
-                    <Button
-                      variant="outline"
-                      size="xs"
-                      onClick={() => window.open(URL.createObjectURL(att.file), "_blank")}
-                    >
-                      Voir
-                    </Button>
-                  </div>
-                ) : null}
+                {renderAttachmentPreview(att, index)}
               </div>
             ))}
           </div>

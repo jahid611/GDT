@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Edit,
   ImageIcon,
+  FileText, // icône pour PDF
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -128,7 +129,9 @@ export default function TaskList({ newTask }) {
     const newStatus = getNextStatus(currentStatus)
     try {
       await updateTask(taskId, { status: newStatus })
-      setTasks((prevTasks) => prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task)))
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task))
+      )
       showToast("success", t("statusUpdated"))
     } catch (error) {
       console.error("Error updating task status:", error)
@@ -248,8 +251,7 @@ export default function TaskList({ newTask }) {
     setIsEditDialogOpen(false)
   }
 
-  // --- Fonction mise à jour pour afficher l'image ---  
-  // Convertit la Data URL en Blob et ouvre une nouvelle fenêtre avec l'URL blob.
+  // Fonction pour ouvrir l'image
   const handleViewImage = (task) => {
     if (task.imageUrl) {
       fetch(task.imageUrl)
@@ -259,6 +261,23 @@ export default function TaskList({ newTask }) {
           window.open(blobUrl, "_blank")
         })
         .catch((err) => console.error("Erreur lors de l'ouverture de l'image :", err))
+    }
+  }
+
+  // Fonction pour ouvrir le PDF
+  const handleViewPDF = (task) => {
+    if (task.attachments && Array.isArray(task.attachments)) {
+      // Cherche le premier attachement dont la dataUrl commence par "data:application/pdf"
+      const pdfAttachment = task.attachments.find((att) =>
+        att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
+      )
+      if (pdfAttachment) {
+        window.open(pdfAttachment.dataUrl, "_blank")
+      } else {
+        showToast("error", t("noPDFFound"))
+      }
+    } else {
+      showToast("error", t("noPDFFound"))
     }
   }
 
@@ -413,6 +432,21 @@ export default function TaskList({ newTask }) {
                               <span className="text-xs">Voir image</span>
                             </Button>
                           )}
+                          {task.attachments &&
+                            Array.isArray(task.attachments) &&
+                            task.attachments.some((att) =>
+                              att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
+                            ) && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewPDF(task)}
+                                className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                              >
+                                <FileText className="h-4 w-4" />
+                                <span className="text-xs">Voir PDF</span>
+                              </Button>
+                            )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
