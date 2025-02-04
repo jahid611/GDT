@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
-// Ici, nous importons la fonction d'envoi d'email qui fonctionne parfaitement
+// Importation de la fonction d'envoi d'email d'assignation (qui fonctionne correctement)
 import { sendAssignmentEmail } from "../utils/email"
 
 const DEFAULT_AVATAR =
@@ -45,7 +45,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   const { user } = useAuth()
   const { t } = useTranslation()
 
-  // Gestion des pièces jointes en localStorage
+  // Gestion des pièces jointes via localStorage
   useEffect(() => {
     const storedAttachments = localStorage.getItem("attachments")
     if (storedAttachments) {
@@ -92,7 +92,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }
 
-  // Gestion du chargement des fichiers
+  // Gestion du chargement et de la compression des fichiers
   const handleFilesUpload = async (e) => {
     const files = e.target.files
     if (files && files.length > 0) {
@@ -135,7 +135,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           }
         }
 
-        // Conversion du fichier en dataUrl
+        // Conversion du fichier en dataUrl pour la prévisualisation
         const dataUrl = await new Promise((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = (event) => resolve(event.target.result)
@@ -202,7 +202,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
     try {
       setLoading(true)
-      // Préparation des données à envoyer (on inclut ici les pièces jointes)
+      // Préparation des données à envoyer (y compris les pièces jointes)
       const formDataToSend = new FormData()
 
       Object.keys(formData).forEach((key) => {
@@ -228,19 +228,10 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         result = await createTask(formDataToSend)
       }
 
-      // Envoi de l'email d'assignation après un délai de 2 secondes
-      setTimeout(async () => {
-        console.log("🔄 Vérification avant envoi d'e-mail...")
-        const usersList = await getUsers()
-        if (usersList.length === 0) {
-          console.error("❌ Impossible d'envoyer l'email, liste des utilisateurs vide.")
-          return
-        }
-        if (formData.assignedTo) {
-          // La fonction sendAssignmentEmail doit accepter l'objet formData (ou éventuellement result)
-          await sendAssignmentEmail(formData)
-        }
-      }, 2000)
+      // Envoi de l'email d'assignation immédiatement après la création/modification de la tâche
+      if (formData.assignedTo) {
+        await sendAssignmentEmail(formData)
+      }
 
       showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
       if (onSuccess) onSuccess(result)
