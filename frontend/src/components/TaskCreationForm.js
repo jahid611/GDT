@@ -94,7 +94,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   }
 
   const compressFile = async (file) => {
-    const MAX_FILE_SIZE = 512000 // 500KB
+    const MAX_FILE_SIZE = 5242880 // 5MB
 
     if (file.size <= MAX_FILE_SIZE) {
       return file
@@ -241,7 +241,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       }
       throw new Error(
         `Le fichier "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB) ` +
-          `et ne peut pas être compressé en dessous de 500KB.`,
+          `et ne peut pas être compressé en dessous de 5MB.`,
       )
     } catch (err) {
       console.error("File compression error:", err)
