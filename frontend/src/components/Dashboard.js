@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import TaskList from "./TaskList"
 import TaskStats from "./TaskStats"
@@ -49,6 +49,11 @@ export default function Dashboard() {
   const { user, logout } = useAuth()
   const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
   const { t } = useTranslation()
+
+  // Forcer le mode light en retirant la classe "dark" de l'élément HTML
+  useEffect(() => {
+    document.documentElement.classList.remove("dark")
+  }, [])
 
   const menuItems = useMemo(
     () => [
@@ -134,6 +139,10 @@ export default function Dashboard() {
     }
   }
 
+  // Logo en base64 fourni
+  const logoSrc =
+    "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAAXNSR0IArs4c6QAAA3hJREFUSEu9Vr9PWlEU/nj8UCtVkZq6mW5ONQETFqUsjRFDGgZZ7Ebp5MRQ/wY7MNkuyFYXFtIQMaaLZTNprSPQKJrUwVKrIk0KArc5F+7LffggD4feQeHd+853zne/8x1M+M/LZBQvGo2yvb09HBwcaF5xuVzw+XyIxWKGYvU8lEwm2cbGBrLZLAex2+0YGBjQAFarVVQqFf7M6/VidXUVoVCoa9yuG1RRLBbD2NhDLC+HMD7uRDKZbAdvAlA4iKIoWFl5yT9vbX3A+flPRKPRrhXrAvr9fpbJZDiYw+HE+vpbnrXH42b5fAFWq1Wt0m4fQbF4wuO4XC52fPwdV1c3WFt7Q+/diX/nAYERhUNDg2g2GSwWM9zuWU7l4eE3lEq/VAqJYjo3NzfPE6D9YvGEU5vNZnWL0TwUNE5MPALQoo1ALy4u1Ir8fj+mp6f591wuB2JCXpREpVLhcXd2nrPFxU8aDPULCSQUCnEazWYbFKW1dXtbxdTUE0Qir0kQullvJhLs/bt3sFpN2N//ys98TM8ym8WBJqthyf9ZfU/94PV6WT6fw+TkJMrlMsrlGzQaNczP+5BOpw1JXlRKYIO2x1hY2Dbt7i4x+i/25EBMqCsYDLJUKkUioL7rC4wCb2eeMbkqSuBF4AuPw/+Iu+sE3Ewk8Coc7htQBuhMQJVzoVDA8PADjI6O4PLyiqtRJGTUjcQ5Eoui2FRKm80ahHhE9szpdHKhkEjqdcalnclk+q5OgBKtismm5irEowK2WoFWE6XS755uYaRiArSY7a2IzRpq9UvQPXYF7OYURsBED4qzRO/f2rkWUKaUrCkYDCKVSt2bUrpHOTkNpTMzT9nR0TGIVodjHGdnP7gJ31c0gk7Rf7LjaNpC0Cj6kKZDr1HTjd7OtrjTh+0XWSQSRjyeMAUCAZZOp3uacK+77PRQXUAaLaenp3A6Hbi+LnNK7+M04u5IKEKhsoHrmjeJpr36Eo0sFAKU20E3YCQSZvF4Ah6PW+P6FvMw6o0/EIYs00kg1GM0GWgJIF5dx6TQVWEbVB0xMgg5f73R+v2i9pjJptoW7Yvnsp3J57tSJujpHKDCJ/XuRzS8XmWG7kgMUQFKFVDmMm3CpCkg7QtH6aZiQ6IgYAog7knvruiOxczr1TKGAOUA5CIUnBaJSR60vYAMUWokQL9n/gF+AvQsAnSRtQAAAABJRU5ErkJggg=="
+
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-gradient-to-b from-background to-background/95 transition-colors duration-300">
@@ -162,7 +171,14 @@ export default function Dashboard() {
             >
               <div className="flex flex-col h-full p-4 sm:p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h1 className="text-xl sm:text-2xl font-bold text-foreground">{t("myTasks")}</h1>
+                  <div className="flex items-center gap-2">
+                    <Link to="/home">
+                      <img src={logoSrc} alt="Logo" className="h-8 w-auto" />
+                    </Link>
+                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                      {t("myTasks")}
+                    </h1>
+                  </div>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -230,6 +246,7 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
+        {/* Header pour mobile avec logo */}
         <div className="sticky top-0 z-40 lg:hidden">
           <div className="flex items-center justify-between px-3 py-2 sm:px-4 dark:bg-black/95 backdrop-blur-md border-b dark:border-white/[0.08] shadow-lg">
             <div className="flex items-center gap-2">
@@ -241,7 +258,12 @@ export default function Dashboard() {
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <h1 className="text-base sm:text-lg font-semibold text-foreground">{t("myTasks")}</h1>
+              <Link to="/home">
+                <img src={logoSrc} alt="Logo" className="h-8 w-auto" />
+              </Link>
+              <h1 className="text-base sm:text-lg font-semibold text-foreground">
+                {t("myTasks")}
+              </h1>
             </div>
             <div></div>
           </div>
@@ -269,7 +291,10 @@ export default function Dashboard() {
                   </Button>
                 )}
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
-                  {t("welcome")}, {user?.email ? cleanUsername(user.email) : cleanUsername(user?.name)}
+                  {t("welcome")},{" "}
+                  {user?.email
+                    ? cleanUsername(user.email)
+                    : cleanUsername(user?.name)}
                 </h2>
               </div>
               <div className="flex items-center gap-2 sm:gap-4">
@@ -338,7 +363,9 @@ export default function Dashboard() {
             className={cn("w-full sm:max-w-md", "dark:bg-black/95 dark:border-white/[0.08]", "backdrop-blur-xl")}
           >
             <SheetHeader>
-              <SheetTitle className="text-lg font-semibold dark:text-foreground">{t("notifications")}</SheetTitle>
+              <SheetTitle className="text-lg font-semibold dark:text-foreground">
+                {t("notifications")}
+              </SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-8rem)] mt-4">
               <NotificationPanel />
@@ -365,11 +392,12 @@ export default function Dashboard() {
 
         <footer className="fixed bottom-0 w-full py-4 lg:hidden dark:bg-black/95 dark:border-t dark:border-white/[0.08] backdrop-blur-md">
           <div className="container flex items-center justify-center px-4">
-            <p className="text-sm text-muted-foreground dark:text-foreground/60">© 2025 Vilmar Tasks Manager</p>
+            <p className="text-sm text-muted-foreground dark:text-foreground/60">
+              © 2025 Vilmar Tasks Manager
+            </p>
           </div>
         </footer>
       </div>
     </TooltipProvider>
   )
 }
-

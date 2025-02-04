@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { PDFDocument } from "pdf-lib"
 
 // Importation de la fonction d'envoi d'email d'assignation (qui fonctionne correctement)
 import { sendAssignmentEmail } from "../utils/email"
@@ -92,57 +93,188 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }
 
-  // Gestion du chargement et de la compression des fichiers
+  const compressFile = async (file) => {
+    const MAX_FILE_SIZE = 512000 // 500KB
+
+    if (file.size <= MAX_FILE_SIZE) {
+      return file
+    }
+
+    // Handle images
+    if (file.type.startsWith("image/")) {
+      try {
+        // Start with higher quality settings
+        const options = {
+          maxSizeMB: 0.1,
+          maxWidthOrHeight: 2048, // Increased max dimension
+          initialQuality: 0.9, // Start with higher quality
+          useWebWorker: true,
+          alwaysKeepResolution: true, // Try to maintain resolution
+          preserveExif: true, // Keep image metadata
+        }
+
+        let compressedFile = await imageCompression(file, options)
+
+        // If still too large, try progressive compression
+        if (compressedFile.size > MAX_FILE_SIZE) {
+          options.maxWidthOrHeight = 1600
+          options.initialQuality = 0.8
+          compressedFile = await imageCompression(file, options)
+        }
+
+        if (compressedFile.size > MAX_FILE_SIZE) {
+          options.maxWidthOrHeight = 1200
+          options.initialQuality = 0.7
+          compressedFile = await imageCompression(file, options)
+        }
+
+        if (compressedFile.size <= MAX_FILE_SIZE) {
+          return compressedFile
+        }
+        throw new Error(`Impossible de compresser l'image "${file.name}" tout en maintenant une qualité acceptable`)
+      } catch (err) {
+        console.error("Image compression error:", err)
+        throw new Error(`Erreur lors de la compression de l'image "${file.name}"`)
+      }
+    }
+
+    // Handle PDFs
+    if (file.type === "application/pdf") {
+      try {
+        const arrayBuffer = await file.arrayBuffer()
+        const pdfDoc = await PDFDocument.load(arrayBuffer)
+
+        // Première tentative - compression basique
+        let compressedBytes = await pdfDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          preserveEditability: false,
+        })
+
+        if (compressedBytes.length <= MAX_FILE_SIZE) {
+          return new File([compressedBytes], file.name, { type: file.type })
+        }
+
+        // Deuxième tentative - compression des images
+        const pages = pdfDoc.getPages()
+        for (const page of pages) {
+          try {
+            const resources = await page.node.Resources()
+            if (!resources) continue
+
+            const xObjects = await resources.lookup("XObject")
+            if (!xObjects) continue
+
+            const imageObjects = Object.entries(xObjects.dict).filter(
+              ([_, obj]) =>
+                obj.constructor.name === "PDFImage" || (obj.dictionary && obj.dictionary.get("Subtype") === "Image"),
+            )
+
+            for (const [_, imageObj] of imageObjects) {
+              try {
+                if (imageObj.dictionary && imageObj.dictionary.get("BitsPerComponent")) {
+                  imageObj.dictionary.set("BitsPerComponent", 4)
+                }
+              } catch (imgErr) {
+                console.warn("Failed to compress image in PDF:", imgErr)
+                continue
+              }
+            }
+          } catch (pageErr) {
+            console.warn("Failed to process page in PDF:", pageErr)
+            continue
+          }
+        }
+
+        compressedBytes = await pdfDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          preserveEditability: false,
+          objectsPerTick: 50,
+        })
+
+        if (compressedBytes.length <= MAX_FILE_SIZE) {
+          return new File([compressedBytes], file.name, { type: file.type })
+        }
+
+        // Troisième tentative - compression agressive
+        const aggressiveDoc = await PDFDocument.create()
+        const copiedPages = await aggressiveDoc.copyPages(pdfDoc, pdfDoc.getPageIndices())
+        copiedPages.forEach((page) => aggressiveDoc.addPage(page))
+
+        compressedBytes = await aggressiveDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          preserveEditability: false,
+          objectsPerTick: 25,
+          updateFieldAppearances: false,
+        })
+
+        if (compressedBytes.length <= MAX_FILE_SIZE) {
+          return new File([compressedBytes], file.name, { type: file.type })
+        }
+
+        throw new Error(
+          `Le PDF "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB). ` +
+            `Même après compression, il fait ${(compressedBytes.length / 1024).toFixed(1)}KB. ` +
+            `Veuillez essayer un PDF plus petit ou avec moins d'images.`,
+        )
+      } catch (err) {
+        console.error("PDF compression error:", err)
+        throw new Error(
+          `Impossible de compresser le PDF "${file.name}". ` + `Erreur: ${err.message || "Erreur inconnue"}`,
+        )
+      }
+    }
+
+    // Handle other file types
+    try {
+      const arrayBuffer = await file.arrayBuffer()
+      const compressedBuffer = pako.deflate(new Uint8Array(arrayBuffer), {
+        level: 9,
+        memLevel: 9,
+        strategy: 2,
+      })
+
+      if (compressedBuffer.length <= MAX_FILE_SIZE) {
+        return new File([compressedBuffer], file.name, { type: file.type })
+      }
+      throw new Error(
+        `Le fichier "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB) ` +
+          `et ne peut pas être compressé en dessous de 500KB.`,
+      )
+    } catch (err) {
+      console.error("File compression error:", err)
+      throw new Error(`Erreur lors de la compression de "${file.name}": ${err.message || "Erreur inconnue"}`)
+    }
+  }
+
   const handleFilesUpload = async (e) => {
     const files = e.target.files
     if (files && files.length > 0) {
       const newAttachments = []
       for (let i = 0; i < files.length; i++) {
-        let file = files[i]
+        const file = files[i]
 
-        if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
-          showToast(t("error"), "Type de fichier non accepté", "destructive")
-          continue
+        try {
+          // Attempt to compress the file
+          const compressedFile = await compressFile(file)
+
+          // Convert to dataUrl for preview
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = (event) => resolve(event.target.result)
+            reader.onerror = (error) => reject(error)
+            reader.readAsDataURL(compressedFile)
+          })
+
+          newAttachments.push({ file: compressedFile, dataUrl })
+          showToast(t("success"), `${file.name} compressé avec succès`, "success")
+        } catch (err) {
+          console.error("Error processing file:", err)
+          showToast(t("error"), err.message || `Erreur lors du traitement de ${file.name}`, "destructive")
+          continue // Skip to next file instead of stopping completely
         }
-
-        // Compression des images si nécessaire
-        if (file.type.startsWith("image/") && file.size > 102400) {
-          try {
-            const options = {
-              maxSizeMB: 0.1,
-              maxWidthOrHeight: 800,
-              useWebWorker: true,
-            }
-            file = await imageCompression(file, options)
-          } catch (err) {
-            console.error("Erreur de compression de l'image :", err)
-          }
-        }
-
-        // Compression des PDF si nécessaire
-        if (file.type === "application/pdf" && file.size > 102400) {
-          try {
-            const arrayBuffer = await file.arrayBuffer()
-            const compressedBuffer = pako.deflate(new Uint8Array(arrayBuffer), { level: 9 })
-            file = new File([compressedBuffer], file.name, { type: file.type })
-            if (file.size > 102400) {
-              showToast(t("error"), "La taille compressée du PDF dépasse toujours 100KB", "destructive")
-              continue
-            }
-          } catch (err) {
-            console.error("Erreur de compression du PDF :", err)
-            continue
-          }
-        }
-
-        // Conversion du fichier en dataUrl pour la prévisualisation
-        const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader()
-          reader.onload = (event) => resolve(event.target.result)
-          reader.onerror = (error) => reject(error)
-          reader.readAsDataURL(file)
-        })
-        newAttachments.push({ file, dataUrl })
       }
       setAttachments((prev) => [...prev, ...newAttachments])
     }
@@ -240,7 +372,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       showToast(
         t("error"),
         err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
-        "destructive"
+        "destructive",
       )
     } finally {
       setLoading(false)
@@ -482,3 +614,4 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     </>
   )
 }
+

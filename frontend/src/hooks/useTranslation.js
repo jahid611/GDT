@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from "react"
+import { createContext, useContext, useState, useCallback } from "react";
 
 const translations = {
   fr: {
@@ -20,6 +20,7 @@ const translations = {
     inProgress: "En cours",
     done: "Terminé",
     review: "En révision",
+    in_progress: "En cours", // variante de "inProgress" si besoin
 
     // Priority Levels
     low: "Basse",
@@ -43,12 +44,9 @@ const translations = {
     cannotDeleteTask: "Impossible de supprimer la tâche",
     taskUpdatedSuccess: "La tâche a été modifiée avec succès",
     noTasksFound: "Aucune tâche trouvée",
-    refresh: "Rafraîchir",
     sortBy: "Trier par...",
     filterByStatus: "Filtrer par statut",
     filterByPriority: "Filtrer par priorité",
-    allStatuses: "Tous les statuts",
-    allPriorities: "Toutes les priorités",
     deadline: "Date limite",
     priority: "Priorité",
     status: "Statut",
@@ -57,17 +55,6 @@ const translations = {
     advanceStatus: "Avancer le statut",
     estimated: "estimées",
     tryAgain: "Réessayer",
-
-    // Task Status
-    todo: "À faire",
-    in_progress: "En cours",
-    review: "En révision",
-    done: "Terminé",
-
-    // Priority Levels
-    low: "Basse",
-    medium: "Moyenne",
-    high: "Haute",
 
     // Common
     success: "Succès",
@@ -98,6 +85,11 @@ const translations = {
     weeklyProgressDesc: "Progrès hebdomadaire",
     productivityDesc: "Mesures de productivité",
     efficiency: "Efficacité",
+    memberEfficiency: "Efficacité des membres",
+    productivityInsights: "Aperçu de la productivité",
+    keyMetrics: "Métriques clés",
+    avgTimePerTask: "Temps moyen par tâche",
+    daysPerTask: "Jours par tâche",
 
     // Profile
     userProfile: "Profil Utilisateur",
@@ -112,21 +104,15 @@ const translations = {
     retry: "Réessayer",
 
     // Kanban
-    loadingTasks: "Chargement des tâches...",
     errorLoadingTasks: "Une erreur est survenue lors du chargement des tâches",
-    cannotLoadTasks: "Impossible de charger les tâches. Veuillez réessayer.",
     statusUpdateSuccess: "Le statut de la tâche a été mis à jour",
     statusUpdateError: "Impossible de mettre à jour le statut de la tâche",
     noTasks: "Aucune tâche",
     dragHint: "Utilisez la souris pour glisser-déposer les tâches entre les colonnes",
-    estimated: "estimées",
 
     // Task Creation Form
     title: "Titre",
     description: "Description",
-    priority: "Priorité",
-    status: "Statut",
-    deadline: "Date limite",
     estimatedTime: "Temps estimé (heures)",
     assignedTo: "Assigné à",
     unassigned: "Non assigné",
@@ -145,7 +131,6 @@ const translations = {
     // Login Form
     login: "Connexion",
     loginDescription: "Connectez-vous à votre compte pour accéder à vos tâches",
-    email: "Email",
     emailPlaceholder: "exemple@email.com",
     password: "Mot de passe",
     loggingIn: "Connexion en cours...",
@@ -166,7 +151,8 @@ const translations = {
     loginLink: "Connectez-vous",
     passwordMismatch: "Les mots de passe ne correspondent pas",
     registrationError: "Une erreur est survenue lors de l'inscription",
-    // New translations
+
+    // New translations (Analytics, Admin, etc.)
     taskAnalytics: "Analyse des tâches",
     analyticsDescription: "Vue d'ensemble détaillée de la progression et de la performance",
     selectTimeRange: "Sélectionner la période",
@@ -174,7 +160,6 @@ const translations = {
     lastMonth: "Dernier mois",
     lastYear: "Dernière année",
     completion: "Complétion",
-    priority: "Priorité",
     timeline: "Chronologie",
     team: "Équipe",
     taskTimeline: "Chronologie des tâches",
@@ -193,12 +178,6 @@ const translations = {
     currentStatus: "État actuel",
     days: "jours",
     tasks: "tâches",
-    efficiency: "Efficacité",
-    memberEfficiency: "Efficacité des membres",
-    productivityInsights: "Aperçu de la productivité",
-    keyMetrics: "Métriques clés",
-    avgTimePerTask: "Temps moyen par tâche",
-    daysPerTask: "Jours par tâche",
     noAccount: "Vous n'avez pas de compte ?",
     createAccountLink: "Créer un compte",
     adminCreateUser: "Créer un nouvel utilisateur",
@@ -214,12 +193,9 @@ const translations = {
     unauthorizedAccess: "Accès non autorisé. Vous n'avez pas les permissions nécessaires.",
     adminArea: "Zone administrative",
     adminOnly: "Cette section est réservée aux administrateurs.",
-    // User Management
     userManagement: "Gestion des utilisateurs",
     userManagementDescription: "Gérer les rôles et les permissions des utilisateurs",
     searchUsers: "Rechercher des utilisateurs...",
-    adminRole: "Administrateur",
-    userRole: "Utilisateur",
     makeAdmin: "Promouvoir admin",
     removeAdmin: "Retirer admin",
     userPromoted: "L'utilisateur a été promu administrateur",
@@ -250,6 +226,7 @@ const translations = {
     inProgress: "In Progress",
     done: "Done",
     review: "In Review",
+    in_progress: "In Progress",
 
     // Priority Levels
     low: "Low",
@@ -273,12 +250,9 @@ const translations = {
     cannotDeleteTask: "Cannot delete task",
     taskUpdatedSuccess: "Task successfully updated",
     noTasksFound: "No tasks found",
-    refresh: "Refresh",
     sortBy: "Sort by...",
     filterByStatus: "Filter by status",
     filterByPriority: "Filter by priority",
-    allStatuses: "All statuses",
-    allPriorities: "All priorities",
     deadline: "Deadline",
     priority: "Priority",
     status: "Status",
@@ -287,17 +261,6 @@ const translations = {
     advanceStatus: "Advance status",
     estimated: "estimated",
     tryAgain: "Try again",
-
-    // Task Status
-    todo: "To Do",
-    in_progress: "In Progress",
-    review: "In Review",
-    done: "Done",
-
-    // Priority Levels
-    low: "Low",
-    medium: "Medium",
-    high: "High",
 
     // Common
     success: "Success",
@@ -322,6 +285,17 @@ const translations = {
     toProcess: "To process",
     perTask: "Per task",
     loadingStats: "Loading statistics...",
+    tasksByPriority: "Tasks by Priority",
+    currentStatus: "Current Status",
+    last7Days: "Last 7 days",
+    weeklyProgressDesc: "Weekly progress",
+    productivityDesc: "Productivity metrics",
+    efficiency: "Efficiency",
+    memberEfficiency: "Member Efficiency",
+    productivityInsights: "Productivity Insights",
+    keyMetrics: "Key Metrics",
+    avgTimePerTask: "Average Time per Task",
+    daysPerTask: "Days per Task",
 
     // Profile
     userProfile: "User Profile",
@@ -336,21 +310,15 @@ const translations = {
     retry: "Retry",
 
     // Kanban
-    loadingTasks: "Loading tasks...",
     errorLoadingTasks: "An error occurred while loading tasks",
-    cannotLoadTasks: "Cannot load tasks. Please try again.",
     statusUpdateSuccess: "Task status has been updated",
     statusUpdateError: "Cannot update task status",
     noTasks: "No tasks",
     dragHint: "Use the mouse to drag and drop tasks between columns",
-    estimated: "estimated",
 
     // Task Creation Form
     title: "Title",
     description: "Description",
-    priority: "Priority",
-    status: "Status",
-    deadline: "Deadline",
     estimatedTime: "Estimated time (hours)",
     assignedTo: "Assigned to",
     unassigned: "Unassigned",
@@ -360,7 +328,7 @@ const translations = {
     createTask: "Create task",
     editTask: "Edit task",
     taskCreated: "Task created successfully",
-    taskModified: "Task modified successfully",
+    taskModified: "Task successfully updated",
     cannotCreateTask: "Cannot create task",
     cannotModifyTask: "Cannot modify task",
     errorLoadingUsers: "Error loading users",
@@ -369,7 +337,6 @@ const translations = {
     // Login Form
     login: "Login",
     loginDescription: "Sign in to your account to access your tasks",
-    email: "Email",
     emailPlaceholder: "example@email.com",
     password: "Password",
     loggingIn: "Logging in...",
@@ -390,7 +357,8 @@ const translations = {
     loginLink: "Sign in",
     passwordMismatch: "Passwords do not match",
     registrationError: "An error occurred during registration",
-    // New translations
+
+    // New translations (Analytics, Admin, etc.)
     taskAnalytics: "Task Analytics",
     analyticsDescription: "Detailed overview of progress and performance",
     selectTimeRange: "Select time range",
@@ -398,7 +366,6 @@ const translations = {
     lastMonth: "Last month",
     lastYear: "Last year",
     completion: "Completion",
-    priority: "Priority",
     timeline: "Timeline",
     team: "Team",
     taskTimeline: "Task Timeline",
@@ -417,12 +384,6 @@ const translations = {
     currentStatus: "Current Status",
     days: "days",
     tasks: "tasks",
-    efficiency: "Efficiency",
-    memberEfficiency: "Member Efficiency",
-    productivityInsights: "Productivity Insights",
-    keyMetrics: "Key Metrics",
-    avgTimePerTask: "Average Time per Task",
-    daysPerTask: "Days per Task",
     noAccount: "Don't have an account?",
     createAccountLink: "Create account",
     adminCreateUser: "Create New User",
@@ -438,12 +399,9 @@ const translations = {
     unauthorizedAccess: "Unauthorized access. You don't have the required permissions.",
     adminArea: "Administrative Area",
     adminOnly: "This section is restricted to administrators only.",
-    // User Management
     userManagement: "User Management",
     userManagementDescription: "Manage user roles and permissions",
     searchUsers: "Search users...",
-    adminRole: "Administrator",
-    userRole: "User",
     makeAdmin: "Promote to admin",
     removeAdmin: "Remove admin",
     userPromoted: "User promoted to administrator",
@@ -474,6 +432,7 @@ const translations = {
     inProgress: "În desfășurare",
     done: "Terminat",
     review: "În revizuire",
+    in_progress: "În desfășurare",
 
     // Priority Levels
     low: "Scăzută",
@@ -496,13 +455,9 @@ const translations = {
     taskDeletedSuccess: "Sarcina a fost ștearsă cu succes",
     cannotDeleteTask: "Nu se poate șterge sarcina",
     taskUpdatedSuccess: "Sarcina a fost actualizată cu succes",
-    noTasksFound: "Nu s-au găsit sarcini",
-    refresh: "Reîmprospătare",
     sortBy: "Sortare după...",
     filterByStatus: "Filtrare după status",
     filterByPriority: "Filtrare după prioritate",
-    allStatuses: "Toate statusurile",
-    allPriorities: "Toate prioritățile",
     deadline: "Termen limită",
     priority: "Prioritate",
     status: "Status",
@@ -511,17 +466,6 @@ const translations = {
     advanceStatus: "Avansare status",
     estimated: "estimate",
     tryAgain: "Încearcă din nou",
-
-    // Task Status
-    todo: "De făcut",
-    in_progress: "În desfășurare",
-    review: "În revizuire",
-    done: "Terminat",
-
-    // Priority Levels
-    low: "Scăzută",
-    medium: "Medie",
-    high: "Ridicată",
 
     // Common
     success: "Succes",
@@ -546,6 +490,17 @@ const translations = {
     toProcess: "De procesat",
     perTask: "Per sarcină",
     loadingStats: "Se încarcă statisticile...",
+    tasksByPriority: "Sarcini după Prioritate",
+    currentStatus: "Status Curent",
+    last7Days: "Ultimele 7 zile",
+    weeklyProgressDesc: "Progres Săptămânal",
+    productivityDesc: "Măsuri de productivitate",
+    efficiency: "Eficiență",
+    memberEfficiency: "Eficiența Membrilor",
+    productivityInsights: "Informații Productivitate",
+    keyMetrics: "Metrici Cheie",
+    avgTimePerTask: "Timp Mediu per Sarcină",
+    daysPerTask: "Zile per Sarcină",
 
     // Profile
     userProfile: "Profil utilizator",
@@ -560,21 +515,15 @@ const translations = {
     retry: "Reîncearcă",
 
     // Kanban
-    loadingTasks: "Se încarcă sarcinile...",
     errorLoadingTasks: "A apărut o eroare la încărcarea sarcinilor",
-    cannotLoadTasks: "Nu se pot încărca sarcinile. Vă rugăm să încercați din nou.",
     statusUpdateSuccess: "Statusul sarcinii a fost actualizat",
     statusUpdateError: "Nu se poate actualiza statusul sarcinii",
     noTasks: "Nu există sarcini",
     dragHint: "Folosiți mouse-ul pentru a trage și plasa sarcinile între coloane",
-    estimated: "estimate",
 
     // Task Creation Form
     title: "Titlu",
     description: "Descriere",
-    priority: "Prioritate",
-    status: "Status",
-    deadline: "Termen limită",
     estimatedTime: "Timp estimat (ore)",
     assignedTo: "Atribuit către",
     unassigned: "Neatribuit",
@@ -593,7 +542,6 @@ const translations = {
     // Login Form
     login: "Autentificare",
     loginDescription: "Conectați-vă la contul dvs. pentru a accesa sarcinile",
-    email: "Email",
     emailPlaceholder: "exemplu@email.com",
     password: "Parolă",
     loggingIn: "Autentificare în curs...",
@@ -614,7 +562,8 @@ const translations = {
     loginLink: "Autentificare",
     passwordMismatch: "Parolele nu corespund",
     registrationError: "A apărut o eroare la înregistrare",
-    // New translations
+
+    // New translations (Analytics, Admin, etc.)
     taskAnalytics: "Analiza Sarcinilor",
     analyticsDescription: "Prezentare detaliată a progresului și performanței",
     selectTimeRange: "Selectați perioada",
@@ -622,7 +571,6 @@ const translations = {
     lastMonth: "Ultima lună",
     lastYear: "Ultimul an",
     completion: "Finalizare",
-    priority: "Prioritate",
     timeline: "Cronologie",
     team: "Echipă",
     taskTimeline: "Cronologia Sarcinilor",
@@ -641,12 +589,6 @@ const translations = {
     currentStatus: "Status Curent",
     days: "zile",
     tasks: "sarcini",
-    efficiency: "Eficiență",
-    memberEfficiency: "Eficiența Membrilor",
-    productivityInsights: "Informații Productivitate",
-    keyMetrics: "Metrici Cheie",
-    avgTimePerTask: "Timp Mediu per Sarcină",
-    daysPerTask: "Zile per Sarcină",
     noAccount: "Nu aveți cont?",
     createAccountLink: "Creați cont",
     adminCreateUser: "Creare Utilizator Nou",
@@ -662,12 +604,9 @@ const translations = {
     unauthorizedAccess: "Acces neautorizat. Nu aveți permisiunile necesare.",
     adminArea: "Zonă administrativă",
     adminOnly: "Această secțiune este restricționată doar pentru administratori.",
-    // User Management
     userManagement: "Gestionarea Utilizatorilor",
     userManagementDescription: "Gestionați rolurile și permisiunile utilizatorilor",
     searchUsers: "Căutați utilizatori...",
-    adminRole: "Administrator",
-    userRole: "Utilizator",
     makeAdmin: "Promovați la administrator",
     removeAdmin: "Eliminați administratorul",
     userPromoted: "Utilizatorul a fost promovat la administrator",
@@ -679,30 +618,33 @@ const translations = {
     cannotLoadUsers: "Nu se poate încărca lista de utilizatori",
     retry: "Încercați din nou",
   },
-}
+};
 
-const LanguageContext = createContext()
+const LanguageContext = createContext();
 
 function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState("fr")
+  const [language, setLanguage] = useState("fr");
 
   const t = useCallback(
     (key) => {
-      return translations[language][key] || key
+      return translations[language][key] || key;
     },
-    [language],
-  )
+    [language]
+  );
 
-  return <LanguageContext.Provider value={{ language, setLanguage, t }}>{children}</LanguageContext.Provider>
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
 }
 
 function useTranslation() {
-  const context = useContext(LanguageContext)
+  const context = useContext(LanguageContext);
   if (!context) {
-    throw new Error("useTranslation must be used within a LanguageProvider")
+    throw new Error("useTranslation must be used within a LanguageProvider");
   }
-  return context
+  return context;
 }
 
-// Un seul export à la fin du fichier
-export { LanguageProvider, useTranslation }
+export { LanguageProvider, useTranslation };
