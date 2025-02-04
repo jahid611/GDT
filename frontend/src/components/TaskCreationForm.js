@@ -465,7 +465,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           onChange={handleFilesUpload}
           className="bg-background border-input text-foreground"
         />
-        {/* Prévisualisation des fichiers joints */}
+        {/* Prévisualisati  on des fichiers joints */}
         {attachments.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
             {attachments.map((att, index) => (
