@@ -268,7 +268,7 @@ export default function TaskKanban() {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Impossible de me ttre à jour le statut de la tâche",
+        description: "Impos  sible de me ttre à jour le statut de la tâche",
       })
     }
   }
