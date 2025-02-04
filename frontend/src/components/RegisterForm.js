@@ -1,277 +1,137 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { User, Mail, Lock, UserPlus, Loader2, Home } from "lucide-react"
-import { register } from "../utils/api"
-import { useTranslation } from "../hooks/useTranslation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
-import { motion } from "framer-motion"
-import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { register } from "../utils/api"
+import { useAuth } from "../contexts/AuthContext"
 
-function RegisterForm() {
-  const navigate = useNavigate()
-  const { t } = useTranslation()
+export default function Register() {
   const [formData, setFormData] = useState({
-    username: "",
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "user",
   })
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const validateForm = () => {
-    const newErrors = {}
-
-    if (!formData.username || formData.username.trim().length < 3) {
-      newErrors.username = t("usernameMinLength", "Le nom d'utilisateur doit contenir au moins 3 caractères")
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!formData.email || !emailRegex.test(formData.email)) {
-      newErrors.email = t("invalidEmail", "Veuillez entrer une adresse email valide")
-    }
-
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = t("passwordMinLength", "Le mot de passe doit contenir au moins 6 caractères")
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = t("passwordMismatch")
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+  const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
+  const { setUser } = useAuth()
 
   const handleChange = (e) => {
-    const { id, value } = e.target
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
-      [id]: id === "username" ? value.trim() : value,
+      [name]: value,
     }))
-    if (errors[id]) {
-      setErrors((prev) => ({
-        ...prev,
-        [id]: undefined,
-      }))
-    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    setError("")
 
-    if (!validateForm()) {
+    if (formData.password !== formData.confirmPassword) {
+      setError("Les mots de passe ne correspondent pas")
       return
     }
 
-    try {
-      setIsSubmitting(true)
-      setErrors({})
+    setIsLoading(true)
 
-      await register({
-        username: formData.username.trim(),
+    try {
+      const userData = await register({
+        name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: "user",
       })
-
-      navigate("/login")
+      setUser(userData)
+      navigate("/dashboard")
     } catch (err) {
-      console.error("Registration error:", err)
-
-      if (err.response?.data?.errors) {
-        const serverErrors = {}
-        Object.entries(err.response.data.errors).forEach(([field, error]) => {
-          serverErrors[field] = error.message || t("validationError")
-        })
-        setErrors(serverErrors)
-      } else {
-        setErrors({
-          submit: err.message || t("registrationError"),
-        })
-      }
+      setError(err.response?.data?.message || "Erreur lors de l'inscription")
     } finally {
-      setIsSubmitting(false)
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background via-background/95 to-background/90 dark:from-background dark:via-background dark:to-black">
-      <Link
-        to="/"
-        className="absolute top-4 left-4 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 transition-colors"
-      >
-        <Home className="h-6 w-6 text-primary" />
-        <span className="sr-only">Retour à l'accueil</span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
+      <Link to="/" className="mb-8 transform hover:scale-105 transition-transform duration-200">
+        <img src="/logo-vilmar.png" alt="Logo Vilmar" className="h-16 w-auto" />
       </Link>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Card className="backdrop-blur-sm bg-background/95 dark:bg-background/80 shadow-xl border-border/50 dark:border-border/20">
-          <CardHeader className="space-y-4 pb-8">
-            <div className="flex justify-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                className="rounded-full bg-gradient-to-tr from-primary/90 to-primary dark:from-primary/70 dark:to-primary/90 p-3"
-              >
-                <UserPlus className="h-6 w-6 text-primary-foreground" />
-              </motion.div>
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold text-center text-green-700">Créer un compte</CardTitle>
+          <CardDescription className="text-center">Rejoignez Gestionnaire de Tâches Vilmar</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error && <div className="mb-4 p-2 text-sm text-red-600 bg-red-50 rounded-md">{error}</div>}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom complet</Label>
+              <Input
+                id="name"
+                name="name"
+                type="text"
+                placeholder="Jean Dupont"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full"
+              />
             </div>
-            <div className="space-y-2 text-center">
-              <CardTitle className="text-2xl font-bold tracking-tight">{t("createAccount")}</CardTitle>
-              <CardDescription>{t("registerDescription")}</CardDescription>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="exemple@vilmar.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full"
+              />
             </div>
-          </CardHeader>
-
-          <CardContent>
-            {errors.submit && (
-              <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-                <Alert variant="destructive">
-                  <AlertDescription>{errors.submit}</AlertDescription>
-                </Alert>
-              </motion.div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">
-                  {t("username")}
-                </Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="username"
-                    type="text"
-                    required
-                    value={formData.username}
-                    onChange={handleChange}
-                    placeholder={t("usernamePlaceholder")}
-                    className={cn(
-                      "pl-10 bg-background dark:bg-background/50",
-                      errors.username && "border-destructive dark:border-destructive",
-                    )}
-                  />
-                </div>
-                {errors.username && <p className="text-sm text-destructive mt-1">{errors.username}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
-                  {t("email")}
-                </Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder={t("emailPlaceholder")}
-                    className={cn(
-                      "pl-10 bg-background dark:bg-background/50",
-                      errors.email && "border-destructive dark:border-destructive",
-                    )}
-                  />
-                </div>
-                {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  {t("password")}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type="password"
-                    required
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder={t("passwordPlaceholder")}
-                    className={cn(
-                      "pl-10 bg-background dark:bg-background/50",
-                      errors.password && "border-destructive dark:border-destructive",
-                    )}
-                  />
-                </div>
-                {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-sm font-medium">
-                  {t("confirmPassword")}
-                </Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder={t("confirmPasswordPlaceholder")}
-                    className={cn(
-                      "pl-10 bg-background dark:bg-background/50",
-                      errors.confirmPassword && "border-destructive dark:border-destructive",
-                    )}
-                  />
-                </div>
-                {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary dark:from-primary/80 dark:to-primary hover:dark:from-primary/70 hover:dark:to-primary/90 text-primary-foreground"
-                size="lg"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t("creating")}
-                  </>
-                ) : (
-                  t("createAccountButton")
-                )}
-              </Button>
-
-              <div className="text-center text-sm">
-                <span className="text-muted-foreground">{t("alreadyHaveAccount")}</span>{" "}
-                <Link
-                  to="/login"
-                  className="font-medium text-primary hover:text-primary/90 dark:text-primary/90 dark:hover:text-primary transition-colors underline-offset-4 hover:underline"
-                >
-                  {t("loginLink")}
-                </Link>
-              </div>
-            </form>
-            <div className="mt-4 p-4 bg-muted/50 dark:bg-muted/20 rounded-lg text-sm text-muted-foreground">
-              <p>
-                {t(
-                  "adminPrivilegeInfo",
-                  "Pour obtenir des privilèges d'administrateur, veuillez contacter un administrateur existant après la création de votre compte.",
-                )}
-              </p>
+            <div className="space-y-2">
+              <Label htmlFor="password">Mot de passe</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full"
+              />
             </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="w-full"
+              />
+            </div>
+            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
+              {isLoading ? "Création..." : "Créer un compte"}
+            </Button>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-2">
+          <div className="text-sm text-center text-gray-600">
+            Vous avez déjà un compte ?{" "}
+            <Link to="/login" className="text-green-600 hover:text-green-700 font-medium">
+              Se connecter
+            </Link>
+          </div>
+        </CardFooter>
+      </Card>
     </div>
   )
 }
-
-export default RegisterForm
 
