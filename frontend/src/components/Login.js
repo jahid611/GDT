@@ -1,90 +1,180 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
-import { login } from "../utils/api"
-import { useAuth } from "../contexts/AuthContext"
+"use client"
 
-export default function LoginPage() {
+import { useState } from "react"
+import { useNavigate, Link } from "react-router-dom"
+import { useAuth } from "../contexts/AuthContext"
+import { login } from "../utils/api"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Loader2, Mail, Lock, LogIn, AlertCircle } from "lucide-react"
+import { useTranslation } from "../hooks/useTranslation"
+import { motion, AnimatePresence } from "framer-motion"
+
+export default function Login() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const { setUser } = useAuth()
+  const { login: authLogin } = useAuth()
+  const { t } = useTranslation()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
-    setIsLoading(true)
-
     try {
-      const data = await login({ email, password })
-      if (data && data.token) {
-        setUser(data)
+      setError("")
+      setLoading(true)
+
+      if (!email || !password) {
+        setError("Aucun compte existant")
+        return
+      }
+
+      const response = await login({ email, password })
+
+      if (response?.user) {
+        authLogin(response.user)
         navigate("/dashboard")
       } else {
-        setError("Erreur lors de la connexion")
+        setError("Aucun compte existant")
       }
     } catch (err) {
-      setError(err.message || "Erreur lors de la connexion")
+      console.error("Login error:", err)
+      setError("Aucun compte existant")
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
+  const handleInputChange = () => {
+    if (error) setError("")
+  }
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-green-50 to-white p-4">
-      <Link to="/" className="mb-8 transform hover:scale-105 transition-transform duration-200">
-        <img src="/logo-vilmar.png" alt="Logo Vilmar" className="h-16 w-auto" />
+    <div className="flex min-h-screen items-center justify-center p-4 bg-gradient-to-b from-background via-background/95 to-background/90 dark:from-background dark:via-background dark:to-black">
+      <Link to="/" className="absolute top-4 left-4 transform hover:scale-105 transition-transform duration-200">
+        <img
+          src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/output-onlinepngtools-6Op0lM7vaXM8Q1f4QQ3GZoaRPc2GAv.png"
+          alt="Logo"
+          className="h-8 w-8"
+        />
+        <span className="sr-only">Retour à l'accueil</span>
       </Link>
 
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center text-green-700">Gestionnaire de Tâches Vilmar</CardTitle>
-          <CardDescription className="text-center">Connectez-vous à votre compte</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {error && <div className="mb-4 p-2 text-sm text-red-600 bg-red-50 rounded-md">{error}</div>}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full"
-              />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <Card className="backdrop-blur-sm bg-background/95 dark:bg-zinc-900/90 shadow-xl border-border/50 dark:border-border/20">
+          <CardHeader className="space-y-4 pb-8">
+            <div className="flex justify-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="rounded-full bg-gradient-to-tr from-primary/90 to-primary dark:from-primary/70 dark:to-primary/90 p-3"
+              >
+                <LogIn className="h-6 w-6 text-primary-foreground" />
+              </motion.div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full"
-              />
+            <div className="space-y-2 text-center">
+              <CardTitle className="text-2xl font-bold tracking-tight">{t("login")}</CardTitle>
+              <CardDescription className="dark:text-muted-foreground">{t("loginDescription")}</CardDescription>
             </div>
-            <Button type="submit" className="w-full bg-green-600 hover:bg-green-700" disabled={isLoading}>
-              {isLoading ? "Connexion..." : "Se connecter"}
-            </Button>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-6">
+              <AnimatePresence mode="wait">
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    <Alert variant="destructive" className="border-red-500/50 bg-red-500/10">
+                      <AlertCircle className="h-5 w-5" />
+                      <AlertTitle className="mb-1 font-medium">Erreur de connexion</AlertTitle>
+                      <AlertDescription className="text-sm">{error}</AlertDescription>
+                    </Alert>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  {t("email")}
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={t("emailPlaceholder")}
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      handleInputChange()
+                    }}
+                    required
+                    className="pl-10 bg-background/50 dark:bg-background/10"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  {t("password")}
+                </Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      handleInputChange()
+                    }}
+                    required
+                    className="pl-10 bg-background/50 dark:bg-background/10"
+                  />
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4 pt-4">
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary dark:from-primary/80 dark:to-primary hover:dark:from-primary/70 hover:dark:to-primary/90 text-primary-foreground"
+                size="lg"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    {t("loggingIn")}
+                  </>
+                ) : (
+                  t("loginButton")
+                )}
+              </Button>
+              <div className="text-center text-sm">
+                <span className="text-muted-foreground">{t("noAccount")}</span>{" "}
+                <Link
+                  to="/register"
+                  className="font-medium text-primary hover:text-primary/90 dark:text-primary/90 dark:hover:text-primary transition-colors underline-offset-4 hover:underline"
+                >
+                  {t("createAccountLink")}
+                </Link>
+              </div>
+            </CardFooter>
           </form>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <div className="text-sm text-center text-gray-600">
-            Vous n'avez pas de compte ?{" "}
-            <Link to="/register" className="text-green-600 hover:text-green-700 font-medium">
-              Créer un compte
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
+        </Card>
+      </motion.div>
     </div>
   )
 }
