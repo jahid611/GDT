@@ -48,15 +48,11 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
   // Gestion des pièces jointes via localStorage
   useEffect(() => {
-    const storedAttachments = localStorage.getItem("attachments")
-    if (storedAttachments) {
-      setAttachments(JSON.parse(storedAttachments))
+    return () => {
+      // Nettoyage des attachements quand le composant est démonté
+      setAttachments([])
     }
   }, [])
-
-  useEffect(() => {
-    localStorage.setItem("attachments", JSON.stringify(attachments))
-  }, [attachments])
 
   // Initialisation du formulaire avec d'éventuelles données existantes
   useEffect(() => {
@@ -94,7 +90,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   }
 
   const compressFile = async (file) => {
-    const MAX_FILE_SIZE = 5242880 // 5MB
+    const MAX_FILE_SIZE = 26214400 // 25MB
 
     if (file.size <= MAX_FILE_SIZE) {
       return file
@@ -241,7 +237,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       }
       throw new Error(
         `Le fichier "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB) ` +
-          `et ne peut pas être compressé en dessous de 5MB.`,
+          `et ne peut pas être compressé en dessous de 25MB.`,
       )
     } catch (err) {
       console.error("File compression error:", err)
@@ -280,7 +276,12 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }
 
-  const handleViewFile = (file) => {
+  // Modifier la fonction handleViewFile pour mieux gérer les événements
+  const handleViewFile = (file, e) => {
+    if (e) {
+      e.preventDefault() // Empêche la soumission du formulaire
+      e.stopPropagation() // Empêche la propagation de l'événement
+    }
     setSelectedFile(file)
     setViewerOpen(true)
   }
@@ -290,21 +291,24 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
     const previewClasses =
       "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
-    const buttonClasses =
-      "absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity"
 
     if (att.file.type.startsWith("image/")) {
       return (
-        <div key={index} className={previewClasses} onClick={() => handleViewFile(att)}>
+        <div key={index} className={previewClasses}>
           <img src={att.dataUrl || "/placeholder.svg"} alt={`Aperçu ${index}`} className="w-full h-full object-cover" />
-          <button className={buttonClasses}>
-            <span className="text-white text-sm">Voir l'image</span>
-          </button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="absolute inset-0 w-full h-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white"
+            onClick={(e) => handleViewFile(att, e)}
+          >
+            Voir l'image
+          </Button>
         </div>
       )
     } else if (att.file.type === "application/pdf") {
       return (
-        <div key={index} className={previewClasses} onClick={() => handleViewFile(att)}>
+        <div key={index} className={previewClasses}>
           <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-4">
             <svg className="w-8 h-8 text-muted-foreground mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -318,9 +322,14 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
               {att.file.name}
             </span>
           </div>
-          <button className={buttonClasses}>
-            <span className="text-white text-sm">Voir le PDF</span>
-          </button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="absolute inset-0 w-full h-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white"
+            onClick={(e) => handleViewFile(att, e)}
+          >
+            Voir le PDF
+          </Button>
         </div>
       )
     }
@@ -386,7 +395,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 w-full max-w-full px-2 sm:px-4">
         <div className="space-y-2">
           <Label htmlFor="title" className="text-foreground">
             {t("title")}
@@ -558,12 +567,13 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             id="attachments"
             type="file"
             accept="image/*,application/pdf"
+            capture="environment"
             multiple
             onChange={handleFilesUpload}
             className="bg-background border-input text-foreground"
           />
           {attachments.length > 0 && (
-            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            <div className="mt-4 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
               {attachments.map((att, index) => renderAttachmentPreview(att, index))}
             </div>
           )}
@@ -596,7 +606,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       </form>
 
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-auto">
+        <DialogContent className="max-w-[95vw] md:max-w-4xl w-full max-h-[90vh] overflow-auto p-2 md:p-6">
           <DialogHeader>
             <DialogTitle>{selectedFile?.file.name}</DialogTitle>
           </DialogHeader>

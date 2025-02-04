@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import {
@@ -15,6 +16,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export default function HomePage() {
+  // Forcer le mode sombre par défaut en ajoutant la classe "dark" à l'élément <html>
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+  }, []);
+
   const features = [
     {
       icon: LayoutGrid,
@@ -72,7 +78,7 @@ export default function HomePage() {
         backgroundImage: `url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-4KL2vS2QGHHzL7OGIEJp1Jc4ShlVh4.png')`,
       }}
     >
-      {/* Overlay : en mode light, un voile blanc léger (10% opacité), en dark mode overlay sombre */}
+      {/* Overlay : filtre blanc léger en mode clair et overlay sombre en mode dark */}
       <div className="absolute inset-0 bg-white/10 dark:bg-black/70 backdrop-blur-sm" />
 
       {/* Contenu principal */}
@@ -99,7 +105,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="max-w-[700px] text-lg sm:text-xl text-gray-700 dark:text-gray-300 drop-shadow"
+                className="max-w-[700px] text-lg sm:text-xl text-black dark:text-white drop-shadow"
               >
                 Votre nouvel outil interne pour gérer vos tâches et projets au sein de Vilmar. Conçu spécifiquement pour
                 notre équipe, par notre équipe.
@@ -143,8 +149,8 @@ export default function HomePage() {
                 <motion.div key={index} variants={itemVariants}>
                   <Card className="relative overflow-hidden border-gray-200 dark:border-white/10 bg-white/60 dark:bg-black/40 backdrop-blur-md rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
                     <CardContent className="p-6">
-                      <feature.icon className="h-12 w-12 mb-5 text-[#C5D200]" />
-                      <h3 className="font-semibold text-xl mb-2 text-gray-800 dark:text-white drop-shadow">
+                      <feature.icon className="h-12 w-12 mb-5 text-black dark:text-[#C5D200]" />
+                      <h3 className="font-semibold text-xl mb-2 text-black dark:text-white drop-shadow">
                         {feature.title}
                       </h3>
                       <p className="text-gray-700 dark:text-gray-300 drop-shadow">
@@ -163,7 +169,7 @@ export default function HomePage() {
               transition={{ duration: 0.5, delay: 0.4 }}
               className="max-w-2xl mx-auto text-center space-y-8"
             >
-              <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white drop-shadow-lg">
+              <h2 className="text-2xl sm:text-3xl font-bold text-black dark:text-white drop-shadow-lg">
                 Vos avantages Vilmar
               </h2>
               <ul className="space-y-4 text-left">
@@ -181,8 +187,8 @@ export default function HomePage() {
                     transition={{ delay: 0.5 + index * 0.1 }}
                     className="flex items-center gap-3"
                   >
-                    <CheckCircle2 className="h-5 w-5 text-[#C5D200] flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300 drop-shadow">
+                    <CheckCircle2 className="h-5 w-5 text-black dark:text-[#C5D200] flex-shrink-0" />
+                    <span className="text-black dark:text-white drop-shadow">
                       {item}
                     </span>
                   </motion.li>
@@ -194,7 +200,7 @@ export default function HomePage() {
 
         {/* Footer */}
         <footer className="border-t border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-black/50 backdrop-blur-sm">
-          <div className="container py-8 text-center text-sm text-gray-700 dark:text-gray-400">
+          <div className="container py-8 text-center text-sm text-black dark:text-gray-400">
             <p>© 2025 Vilmar. Usage interne uniquement.</p>
           </div>
         </footer>
