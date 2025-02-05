@@ -22,23 +22,21 @@ import { sendAssignmentEmail } from "../utils/email"
 const DEFAULT_AVATAR =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
 
-// Le préfixe à utiliser pour les tâches maintenance
+// Le préfixe à toujours utiliser pour les tâches maintenance
 const DEFAULT_PREFIX = "Maintenance | "
 
 export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode = "create", initialData = null }) {
-  // Contrôle interne pour activer ou désactiver le préfixe maintenance.
+  // État pour activer/désactiver le préfixe maintenance.
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(true)
 
-  // Le champ titre démarre avec le préfixe par défaut
-  const [formData, setFormData] = useState({
-    title: DEFAULT_PREFIX,
-    description: "",
-    status: "todo",
-    priority: "medium",
-    deadline: "",
-    estimatedTime: "",
-    assignedTo: "",
-  })
+  // Pour le titre, nous gérons uniquement la partie modifiable (le suffixe)
+  const [titleSuffix, setTitleSuffix] = useState("")
+  const [description, setDescription] = useState("")
+  const [status, setStatus] = useState("todo")
+  const [priority, setPriority] = useState("medium")
+  const [deadline, setDeadline] = useState("")
+  const [estimatedTime, setEstimatedTime] = useState("")
+  const [assignedTo, setAssignedTo] = useState("")
 
   const [attachments, setAttachments] = useState([])
   const [users, setUsers] = useState([])
@@ -51,31 +49,22 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
   const { user } = useAuth()
   const { t } = useTranslation()
 
-  useEffect(() => {
-    return () => {
-      setAttachments([])
-    }
-  }, [])
-
-  // Lors d'une édition, on s'assure que le titre possède le préfixe si maintenanceEnabled est true
+  // Lors d'une édition, on extrait la partie suffixe du titre s'il commence par le préfixe maintenance
   useEffect(() => {
     if (initialData) {
-      setFormData({
-        title:
-          initialData.title && maintenanceEnabled
-            ? initialData.title.startsWith(DEFAULT_PREFIX)
-              ? initialData.title
-              : DEFAULT_PREFIX + initialData.title
-            : initialData.title || "",
-        description: initialData.description || "",
-        status: initialData.status || "todo",
-        priority: initialData.priority || "medium",
-        deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : "",
-        estimatedTime: initialData.estimatedTime || "",
-        assignedTo: initialData.assignedTo?._id || "",
-      })
+      if (initialData.title && initialData.title.startsWith(DEFAULT_PREFIX)) {
+        setTitleSuffix(initialData.title.slice(DEFAULT_PREFIX.length))
+      } else {
+        setTitleSuffix(initialData.title || "")
+      }
+      setDescription(initialData.description || "")
+      setStatus(initialData.status || "todo")
+      setPriority(initialData.priority || "medium")
+      setDeadline(initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : "")
+      setEstimatedTime(initialData.estimatedTime || "")
+      setAssignedTo(initialData.assignedTo?._id || "")
     }
-  }, [initialData, maintenanceEnabled])
+  }, [initialData])
 
   useEffect(() => {
     loadUsers()
@@ -250,16 +239,11 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
 
   const renderAttachmentPreview = (att, index) => {
     if (!att || !att.file || !att.dataUrl) return null
-    const previewClasses =
-      "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
+    const previewClasses = "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
     if (att.file.type.startsWith("image/")) {
       return (
         <div key={index} className={previewClasses}>
-          <img
-            src={att.dataUrl || "/placeholder.svg"}
-            alt={`Preview ${index}`}
-            className="w-full h-full object-cover"
-          />
+          <img src={att.dataUrl || "/placeholder.svg"} alt={`Preview ${index}`} className="w-full h-full object-cover" />
           <Button
             type="button"
             variant="ghost"
@@ -308,21 +292,16 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
       setLoading(true)
       const formDataToSend = new FormData()
 
-      // Si le mode maintenance est activé, forcer le préfixe dans le titre,
-      // sinon, on envoie tel quel.
-      const maintenanceTitle = maintenanceEnabled
-        ? formData.title.startsWith(DEFAULT_PREFIX)
-          ? formData.title
-          : DEFAULT_PREFIX + formData.title
-        : formData.title
+      // Concaténer le préfixe et le suffixe si le mode maintenance est activé
+      const finalTitle = maintenanceEnabled ? DEFAULT_PREFIX + titleSuffix : titleSuffix
+      formDataToSend.append("title", finalTitle)
 
-      formDataToSend.append("title", maintenanceTitle)
-
-      Object.keys(formData).forEach((key) => {
-        if (key !== "title" && formData[key]) {
-          formDataToSend.append(key, formData[key])
-        }
-      })
+      formDataToSend.append("description", description)
+      formDataToSend.append("status", status)
+      formDataToSend.append("priority", priority)
+      formDataToSend.append("deadline", deadline)
+      formDataToSend.append("estimatedTime", estimatedTime)
+      formDataToSend.append("assignedTo", assignedTo)
 
       if (attachments.length > 0) {
         formDataToSend.append("imageUrl", attachments[0].dataUrl)
@@ -340,8 +319,8 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
         result = await createTask(formDataToSend)
       }
 
-      if (formData.assignedTo) {
-        await sendAssignmentEmail(formData)
+      if (assignedTo) {
+        await sendAssignmentEmail({ title: finalTitle, description, status, priority, deadline, estimatedTime, assignedTo })
       }
 
       showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
@@ -367,56 +346,53 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
     <>
       {/* Contrôle pour activer/désactiver le préfixe Maintenance */}
       <div className="mb-4">
-        <Label className="text-foreground inline-block mr-2">{t("Maintenance Mode")}</Label>
+        <Label className="text-foreground inline-block mr-2">{t("maintenanceMode")}</Label>
         <input
           type="checkbox"
           checked={maintenanceEnabled}
           onChange={(e) => {
             setMaintenanceEnabled(e.target.checked)
-            // Si on active le mode maintenance, on force le préfixe
-            setFormData((prev) => ({
-              ...prev,
-              title: e.target.checked
-                ? prev.title.startsWith(DEFAULT_PREFIX)
-                  ? prev.title
-                  : DEFAULT_PREFIX + prev.title
-                : prev.title.replace(/^Maintenance \| /, ""),
-            }))
+            // Si le mode maintenance est activé, forcer le préfixe
+            setTitleSuffix((prev) =>
+              e.target.checked
+                ? prev // Conserver le suffixe existant
+                : prev.replace(/^Maintenance \| /, "")
+            )
           }}
         />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 w-full max-w-full px-2 sm:px-4">
         <div className="space-y-2">
-          <Label htmlFor="title" className="text-foreground">
-            {t("title")}
-          </Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) =>
-              setFormData((prev) => ({
-                ...prev,
-                title: maintenanceEnabled
-                  ? e.target.value.startsWith(DEFAULT_PREFIX)
-                    ? e.target.value
-                    : DEFAULT_PREFIX + e.target.value.replace(/^Maintenance \| /, "")
-                  : e.target.value,
-              }))
-            }
-            required
-            className="bg-background border-input text-foreground"
-          />
+          <Label htmlFor="title" className="text-foreground">{t("title")}</Label>
+          {/* Affichage de deux champs côte à côte */}
+          <div className="flex gap-2">
+            {/* Champ en lecture seule pour le préfixe */}
+            {maintenanceEnabled && (
+              <Input
+                value={DEFAULT_PREFIX}
+                readOnly
+                className="w-40 bg-gray-100 dark:bg-gray-700 border-input text-foreground cursor-not-allowed"
+              />
+            )}
+            {/* Champ pour la partie modifiable (suffixe) */}
+            <Input
+              id="title"
+              value={titleSuffix}
+              onChange={(e) => setTitleSuffix(e.target.value)}
+              required
+              className="flex-1 bg-background border-input text-foreground"
+              placeholder={maintenanceEnabled ? t("") : t("")}
+            />
+          </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description" className="text-foreground">
-            {t("description")}
-          </Label>
+          <Label htmlFor="description" className="text-foreground">{t("description")}</Label>
           <Textarea
             id="description"
-            value={formData.description}
-            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
             required
             className="min-h-[100px] bg-background border-input text-foreground resize-y"
           />
@@ -425,10 +401,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-foreground">{t("priority")}</Label>
-            <Select
-              value={formData.priority}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, priority: value }))}
-            >
+            <Select value={priority} onValueChange={(value) => setPriority(value)}>
               <SelectTrigger className="bg-background border-input text-foreground">
                 <SelectValue placeholder={t("selectPriority")} />
               </SelectTrigger>
@@ -441,10 +414,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
           </div>
           <div className="space-y-2">
             <Label className="text-foreground">{t("status")}</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
-            >
+            <Select value={status} onValueChange={(value) => setStatus(value)}>
               <SelectTrigger className="bg-background border-input text-foreground">
                 <SelectValue placeholder={t("selectStatus")} />
               </SelectTrigger>
@@ -463,22 +433,20 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             <Label className="text-foreground">{t("deadline")}</Label>
             <Input
               type="datetime-local"
-              value={formData.deadline}
-              onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))}
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
               className="bg-background border-input text-foreground"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="estimatedTime" className="text-foreground">
-              {t("estimatedTime")}
-            </Label>
+            <Label htmlFor="estimatedTime" className="text-foreground">{t("estimatedTime")}</Label>
             <Input
               id="estimatedTime"
               type="number"
               min="0"
               step="0.5"
-              value={formData.estimatedTime}
-              onChange={(e) => setFormData((prev) => ({ ...prev, estimatedTime: e.target.value }))}
+              value={estimatedTime}
+              onChange={(e) => setEstimatedTime(e.target.value)}
               className="bg-background border-input text-foreground"
             />
           </div>
@@ -488,24 +456,24 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
           <Label className="text-foreground">{t("assignedTo")}</Label>
           <div className="relative">
             <Select
-              value={formData.assignedTo}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, assignedTo: value }))}
+              value={assignedTo}
+              onValueChange={(value) => setAssignedTo(value)}
               disabled={loadingUsers}
             >
               <SelectTrigger className="w-full bg-background border-input text-foreground">
                 <SelectValue>
-                  {formData.assignedTo ? (
+                  {assignedTo ? (
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
                         <AvatarImage
-                          src={users.find((u) => u._id === formData.assignedTo)?.avatar || DEFAULT_AVATAR}
-                          alt={getUserDisplayName(users.find((u) => u._id === formData.assignedTo))}
+                          src={users.find((u) => u._id === assignedTo)?.avatar || DEFAULT_AVATAR}
+                          alt={getUserDisplayName(users.find((u) => u._id === assignedTo))}
                         />
                         <AvatarFallback>
                           <User className="h-4 w-4" />
                         </AvatarFallback>
                       </Avatar>
-                      <span>{getUserDisplayName(users.find((u) => u._id === formData.assignedTo))}</span>
+                      <span>{getUserDisplayName(users.find((u) => u._id === assignedTo))}</span>
                     </div>
                   ) : (
                     t("selectAssignee")
@@ -560,9 +528,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="attachments" className="text-foreground">
-            {t("uploadImagePDF")}
-          </Label>
+          <Label htmlFor="attachments" className="text-foreground">{t("uploadImagePDF")}</Label>
           <Input
             id="attachments"
             type="file"
