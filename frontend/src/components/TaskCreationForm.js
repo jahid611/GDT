@@ -18,7 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { PDFDocument } from "pdf-lib"
 
-// Importation de la fonction d'envoi d'email d'assignation (qui fonctionne correctement)
+// Import the assignment email sending function (which works correctly)
 import { sendAssignmentEmail } from "../utils/email"
 
 const DEFAULT_AVATAR =
@@ -46,15 +46,15 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   const { user } = useAuth()
   const { t } = useTranslation()
 
-  // Gestion des pièces jointes via localStorage
+  // Handle attachments via localStorage
   useEffect(() => {
     return () => {
-      // Nettoyage des attachements quand le composant est démonté
+      // Clean up attachments when component unmounts
       setAttachments([])
     }
   }, [])
 
-  // Initialisation du formulaire avec d'éventuelles données existantes
+  // Initialize form with existing data if available
   useEffect(() => {
     if (initialData) {
       setFormData({
@@ -69,7 +69,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }, [initialData])
 
-  // Chargement des utilisateurs
+  // Load users
   useEffect(() => {
     loadUsers()
   }, [])
@@ -81,7 +81,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       const fetchedUsers = await getUsers()
       setUsers(fetchedUsers)
     } catch (err) {
-      console.error("Erreur lors du chargement des utilisateurs :", err)
+      console.error("Error loading users:", err)
       setUserError(err.message)
       showToast(t("error"), t("errorLoadingUsers"), "destructive")
     } finally {
@@ -102,11 +102,11 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         // Start with higher quality settings
         const options = {
           maxSizeMB: 0.1,
-          maxWidthOrHeight: 2048, // Increased max dimension
-          initialQuality: 0.9, // Start with higher quality
+          maxWidthOrHeight: 2048,
+          initialQuality: 0.9,
           useWebWorker: true,
-          alwaysKeepResolution: true, // Try to maintain resolution
-          preserveExif: true, // Keep image metadata
+          alwaysKeepResolution: true,
+          preserveExif: true,
         }
 
         let compressedFile = await imageCompression(file, options)
@@ -127,10 +127,10 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         if (compressedFile.size <= MAX_FILE_SIZE) {
           return compressedFile
         }
-        throw new Error(`Impossible de compresser l'image "${file.name}" tout en maintenant une qualité acceptable`)
+        throw new Error(`Unable to compress image "${file.name}" while maintaining acceptable quality`)
       } catch (err) {
         console.error("Image compression error:", err)
-        throw new Error(`Erreur lors de la compression de l'image "${file.name}"`)
+        throw new Error(`Error compressing image "${file.name}"`)
       }
     }
 
@@ -140,7 +140,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         const arrayBuffer = await file.arrayBuffer()
         const pdfDoc = await PDFDocument.load(arrayBuffer)
 
-        // Première tentative - compression basique
+        // First attempt - basic compression
         let compressedBytes = await pdfDoc.save({
           useObjectStreams: true,
           addDefaultPage: false,
@@ -151,7 +151,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           return new File([compressedBytes], file.name, { type: file.type })
         }
 
-        // Deuxième tentative - compression des images
+        // Second attempt - compress images
         const pages = pdfDoc.getPages()
         for (const page of pages) {
           try {
@@ -193,7 +193,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           return new File([compressedBytes], file.name, { type: file.type })
         }
 
-        // Troisième tentative - compression agressive
+        // Third attempt - aggressive compression
         const aggressiveDoc = await PDFDocument.create()
         const copiedPages = await aggressiveDoc.copyPages(pdfDoc, pdfDoc.getPageIndices())
         copiedPages.forEach((page) => aggressiveDoc.addPage(page))
@@ -211,15 +211,13 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         }
 
         throw new Error(
-          `Le PDF "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB). ` +
-            `Même après compression, il fait ${(compressedBytes.length / 1024).toFixed(1)}KB. ` +
-            `Veuillez essayer un PDF plus petit ou avec moins d'images.`,
+          `PDF "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB). ` +
+            `Even after compression, it's ${(compressedBytes.length / 1024).toFixed(1)}KB. ` +
+            `Please try a smaller PDF or one with fewer images.`,
         )
       } catch (err) {
         console.error("PDF compression error:", err)
-        throw new Error(
-          `Impossible de compresser le PDF "${file.name}". ` + `Erreur: ${err.message || "Erreur inconnue"}`,
-        )
+        throw new Error(`Unable to compress PDF "${file.name}". ` + `Error: ${err.message || "Unknown error"}`)
       }
     }
 
@@ -236,12 +234,12 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         return new File([compressedBuffer], file.name, { type: file.type })
       }
       throw new Error(
-        `Le fichier "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB) ` +
-          `et ne peut pas être compressé en dessous de 25MB.`,
+        `File "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB) ` +
+          `and cannot be compressed below 25MB.`,
       )
     } catch (err) {
       console.error("File compression error:", err)
-      throw new Error(`Erreur lors de la compression de "${file.name}": ${err.message || "Erreur inconnue"}`)
+      throw new Error(`Error compressing "${file.name}": ${err.message || "Unknown error"}`)
     }
   }
 
@@ -265,10 +263,10 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           })
 
           newAttachments.push({ file: compressedFile, dataUrl })
-          showToast(t("success"), `${file.name} compressé avec succès`, "success")
+          showToast(t("success"), `${file.name} compressed successfully`, "success")
         } catch (err) {
           console.error("Error processing file:", err)
-          showToast(t("error"), err.message || `Erreur lors du traitement de ${file.name}`, "destructive")
+          showToast(t("error"), err.message || `Error processing ${file.name}`, "destructive")
           continue // Skip to next file instead of stopping completely
         }
       }
@@ -276,11 +274,10 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     }
   }
 
-  // Modifier la fonction handleViewFile pour mieux gérer les événements
   const handleViewFile = (file, e) => {
     if (e) {
-      e.preventDefault() // Empêche la soumission du formulaire
-      e.stopPropagation() // Empêche la propagation de l'événement
+      e.preventDefault()
+      e.stopPropagation()
     }
     setSelectedFile(file)
     setViewerOpen(true)
@@ -295,14 +292,18 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     if (att.file.type.startsWith("image/")) {
       return (
         <div key={index} className={previewClasses}>
-          <img src={att.dataUrl || "/placeholder.svg"} alt={`Aperçu ${index}`} className="w-full h-full object-cover" />
+          <img
+            src={att.dataUrl || "/placeholder.svg"}
+            alt={`Preview ${index}`}
+            className="w-full h-full object-cover"
+          />
           <Button
             type="button"
             variant="ghost"
             className="absolute inset-0 w-full h-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white"
             onClick={(e) => handleViewFile(att, e)}
           >
-            Voir l'image
+            View Image
           </Button>
         </div>
       )
@@ -328,7 +329,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             className="absolute inset-0 w-full h-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white"
             onClick={(e) => handleViewFile(att, e)}
           >
-            Voir le PDF
+            View PDF
           </Button>
         </div>
       )
@@ -336,14 +337,12 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
     return null
   }
 
-  // Gestion de la soumission du formulaire
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (loadingUsers) return
 
     try {
       setLoading(true)
-      // Préparation des données à envoyer (y compris les pièces jointes)
       const formDataToSend = new FormData()
 
       Object.keys(formData).forEach((key) => {
@@ -369,7 +368,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         result = await createTask(formDataToSend)
       }
 
-      // Envoi de l'email d'assignation immédiatement après la création/modification de la tâche
+      // Send assignment email immediately after task creation/modification
       if (formData.assignedTo) {
         await sendAssignmentEmail(formData)
       }
@@ -377,7 +376,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
       if (onSuccess) onSuccess(result)
     } catch (err) {
-      console.error("Erreur lors de la gestion de la tâche :", err)
+      console.error("Error handling task:", err)
       showToast(
         t("error"),
         err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
@@ -450,7 +449,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="todo">{t("todo")}</SelectItem>
-                <SelectItem value="in_progress">{t("in_progress")}</SelectItem>
+                <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
                 <SelectItem value="review">{t("review")}</SelectItem>
                 <SelectItem value="done">{t("done")}</SelectItem>
               </SelectContent>
@@ -561,7 +560,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
         <div className="space-y-2">
           <Label htmlFor="attachments" className="text-foreground">
-            {t("Upload Image / PDF")}
+            {t("uploadImagePDF")}
           </Label>
           <Input
             id="attachments"
