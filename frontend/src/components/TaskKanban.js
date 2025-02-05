@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useCallback } from "react"
 import { fetchTasks, updateTask } from "../utils/api"
 import { useUrlParams } from "../hooks/useUrlParams"
@@ -22,36 +24,37 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, AlertCircle, RotateCcw, ArrowLeftRight, X } from "lucide-react"
 import { format } from "date-fns"
-import { fr } from "date-fns/locale"
+import { enUS, fr, ro } from "date-fns/locale"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/hooks/useTranslation"
 
-const COLUMNS = {
+const getColumns = (t) => ({
   todo: {
     id: "todo",
-    title: "À faire",
+    title: t("todo"),
     className: "bg-card border-l-4 border-l-gray-400",
     icon: "📋",
   },
   in_progress: {
     id: "in_progress",
-    title: "En cours",
+    title: t("inProgress"),
     className: "bg-card border-l-4 border-l-blue-400",
     icon: "🔄",
   },
   review: {
     id: "review",
-    title: "En révision",
+    title: t("review"),
     className: "bg-card border-l-4 border-l-yellow-400",
     icon: "👀",
   },
   done: {
     id: "done",
-    title: "Terminé",
+    title: t("done"),
     className: "bg-card border-l-4 border-l-green-400",
     icon: "✅",
   },
-}
+})
 
 const PRIORITY_COLORS = {
   low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
@@ -60,6 +63,7 @@ const PRIORITY_COLORS = {
 }
 
 function DroppableColumn({ id, column, tasks, activeId }) {
+  const { t } = useTranslation()
   const { setNodeRef, isOver } = useDroppable({
     id: id,
     data: {
@@ -96,7 +100,7 @@ function DroppableColumn({ id, column, tasks, activeId }) {
             ${isOver ? "border-primary bg-primary/5" : "border-muted-foreground/20"}
             transition-colors duration-200`}
           >
-            <p className="text-sm text-muted-foreground">{isOver ? "Déposer ici" : "Aucune tâche"}</p>
+            <p className="text-sm text-muted-foreground">{isOver ? t("dropHere") : t("noTasks")}</p>
           </div>
         ) : (
           <div
@@ -118,6 +122,7 @@ function DroppableColumn({ id, column, tasks, activeId }) {
 }
 
 function DraggableTask({ task, isDragging }) {
+  const { t, language } = useTranslation()
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: task._id,
     data: {
@@ -129,6 +134,17 @@ function DraggableTask({ task, isDragging }) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+  }
+
+  const getLocale = () => {
+    switch (language) {
+      case "fr":
+        return fr
+      case "ro":
+        return ro
+      default:
+        return enUS
+    }
   }
 
   return (
@@ -143,7 +159,7 @@ function DraggableTask({ task, isDragging }) {
       className="touch-none"
     >
       <Card
-        id={`task-${task._id}`} // Add ID for task highlighting
+        id={`task-${task._id}`}
         className={`mb-2 group cursor-grab active:cursor-grabbing ${
           isDragging ? "shadow-lg scale-105 rotate-3" : "hover:shadow-md transition-all duration-200"
         }`}
@@ -154,7 +170,7 @@ function DraggableTask({ task, isDragging }) {
               <div className="flex items-start justify-between gap-2">
                 <h3 className="font-medium flex-1">{task.title}</h3>
                 <Badge className={PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}>
-                  {(task.priority || "medium").charAt(0).toUpperCase() + (task.priority || "medium").slice(1)}
+                  {t(task.priority || "medium")}
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{task.description}</p>
@@ -170,7 +186,7 @@ function DraggableTask({ task, isDragging }) {
                 {task.deadline && (
                   <span className="flex items-center">
                     <Calendar className="h-4 w-4 mr-1 text-primary" />
-                    {format(new Date(task.deadline), "Pp", { locale: fr })}
+                    {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
                   </span>
                 )}
               </div>
@@ -183,6 +199,7 @@ function DraggableTask({ task, isDragging }) {
 }
 
 export default function TaskKanban() {
+  const { t, language } = useTranslation()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -190,6 +207,7 @@ export default function TaskKanban() {
   const [showHint, setShowHint] = useState(true)
   const urlParams = useUrlParams()
   const focusedTaskId = urlParams.get("taskId")
+  const COLUMNS = getColumns(t)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -209,17 +227,17 @@ export default function TaskKanban() {
       const tasksData = await fetchTasks()
       setTasks(tasksData)
     } catch (err) {
-      console.error("Erreur lors du chargement des tâches:", err)
-      setError(err.message || "Une erreur est survenue lors du chargement des tâches")
+      console.error(t("errorLoadingTasksLog"), err)
+      setError(err.message || t("errorLoadingTasks"))
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de charger les tâches. Veuillez réessayer.",
+        title: t("error"),
+        description: t("cannotLoadTasks"),
       })
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [t])
 
   useEffect(() => {
     loadTasks()
@@ -228,7 +246,7 @@ export default function TaskKanban() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowHint(false)
-    }, 8000) // 8 secondes au lieu de 5
+    }, 8000)
     return () => clearTimeout(timer)
   }, [])
 
@@ -259,16 +277,16 @@ export default function TaskKanban() {
       await updateTask(activeTask._id, { status: newStatus })
 
       toast({
-        title: "Succès",
-        description: "Le statut de la tâche a été mis à jour",
+        title: t("success"),
+        description: t("taskStatusUpdated"),
       })
     } catch (err) {
       setTasks(tasks.map((task) => (task._id === activeTask._id ? { ...task, status: activeTask.status } : task)))
 
       toast({
         variant: "destructive",
-        title: "Erreur",
-        description: "Impos  sible de me ttre à jour le statut de la tâche",
+        title: t("error"),
+        description: t("cannotUpdateTaskStatus"),
       })
     }
   }
@@ -277,25 +295,20 @@ export default function TaskKanban() {
     if (focusedTaskId) {
       const taskElement = document.getElementById(`task-${focusedTaskId}`)
       if (taskElement) {
-        // Scroll to the task with a smooth animation
         taskElement.scrollIntoView({ behavior: "smooth", block: "center" })
-
-        // Add highlight animation
         taskElement.classList.add("highlight-task")
-
-        // Remove highlight after animation
         setTimeout(() => {
           taskElement.classList.remove("highlight-task")
         }, 2000)
       }
     }
-  }, [focusedTaskId]) // Removed unnecessary dependency: tasks
+  }, [focusedTaskId])
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-        <p className="text-muted-foreground">Chargement des tâches...</p>
+        <p className="text-muted-foreground">{t("loadingTasks")}</p>
       </div>
     )
   }
@@ -307,7 +320,7 @@ export default function TaskKanban() {
         <p className="text-destructive font-medium mb-4">{error}</p>
         <Button onClick={loadTasks} variant="outline" size="sm">
           <RotateCcw className="h-4 w-4 mr-2" />
-          Réessayer
+          {t("tryAgain")}
         </Button>
       </div>
     )
@@ -343,10 +356,8 @@ export default function TaskKanban() {
               </motion.div>
             </div>
             <div>
-              <p className="font-medium text-foreground">Glissez pour changer le statut</p>
-              <p className="text-muted-foreground text-xs mt-1">
-                Faites glisser une tâche vers une autre colonne pour mettre à jour son statut
-              </p>
+              <p className="font-medium text-foreground">{t("dragToChangeStatus")}</p>
+              <p className="text-muted-foreground text-xs mt-1">{t("dragToChangeStatusHint")}</p>
             </div>
             <Button
               size="icon"

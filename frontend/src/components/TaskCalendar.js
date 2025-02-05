@@ -30,7 +30,7 @@ import {
   endOfWeek,
   startOfDay,
 } from "date-fns"
-import { fr, enUS } from "date-fns/locale"
+import { fr, enUS, ro } from "date-fns/locale" // Added Romanian locale
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,7 +51,7 @@ import {
 import TaskEditDialog from "./TaskEditDialog"
 import { cn } from "@/lib/utils"
 
-const locales = { fr, en: enUS }
+const locales = { fr, en: enUS, ro } // Added Romanian locale
 
 const STATUS_STYLES = {
   todo: {
@@ -110,8 +110,8 @@ function TaskCalendar() {
       setTasks(tasksData)
     } catch (error) {
       toast({
-        title: t("Error"),
-        description: t("Failed to load tasks"),
+        title: t("error"),
+        description: t("failedToLoadTasks"),
         variant: "destructive",
       })
     } finally {
@@ -182,13 +182,13 @@ function TaskCalendar() {
       const updatedTask = await updateTask(taskId, { status: newStatus })
       setTasks(tasks.map((task) => (task._id === taskId ? updatedTask : task)))
       toast({
-        title: t("Success"),
-        description: t("Status updated"),
+        title: t("success"),
+        description: t("statusUpdated"),
       })
     } catch (error) {
       toast({
-        title: t("Error"),
-        description: t("Failed to update status"),
+        title: t("error"),
+        description: t("failedToUpdateStatus"),
         variant: "destructive",
       })
     }
@@ -199,7 +199,7 @@ function TaskCalendar() {
       const newFavorites = prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId]
 
       toast({
-        title: prev.includes(taskId) ? t("Removed from favorites") : t("Added to favorites"),
+        title: prev.includes(taskId) ? t("removedFromFavorites") : t("addedToFavorites"),
         description: tasks.find((t) => t._id === taskId)?.title,
       })
 
@@ -269,7 +269,7 @@ function TaskCalendar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSelectedTask(task)}>{t("Edit")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSelectedTask(task)}>{t("edit")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {Object.keys(STATUS_STYLES).map((status) => (
                   <DropdownMenuItem
@@ -304,7 +304,7 @@ function TaskCalendar() {
               onClick={() => setView("day")}
               className={cn("transition-colors", view === "day" && "bg-muted")}
             >
-              {t("Day")}
+              {t("day")}
             </Button>
             <Button
               variant="outline"
@@ -312,7 +312,7 @@ function TaskCalendar() {
               onClick={() => setView("week")}
               className={cn("transition-colors", view === "week" && "bg-muted")}
             >
-              {t("Week")}
+              {t("week")}
             </Button>
             <Button
               variant="outline"
@@ -321,7 +321,7 @@ function TaskCalendar() {
               className={cn("transition-colors", view === "favorites" && "bg-muted")}
             >
               <Star className={cn("h-4 w-4 mr-2", view === "favorites" && "fill-current")} />
-              {t("Favorites")}
+              {t("favorites")}
             </Button>
           </div>
 
@@ -356,7 +356,7 @@ function TaskCalendar() {
 
           <div className="flex items-center gap-2">
             <Input
-              placeholder={t("Search tasks...")}
+              placeholder={t("searchTasks")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full sm:w-[200px]"
@@ -369,7 +369,7 @@ function TaskCalendar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setFilterStatus("all")}>{t("All statuses")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setFilterStatus("all")}>{t("allStatuses")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {Object.keys(STATUS_STYLES).map((status) => (
                   <DropdownMenuItem key={status} onClick={() => setFilterStatus(status)}>
@@ -386,11 +386,11 @@ function TaskCalendar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSortBy("deadline")}>{t("Sort by deadline")}</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("title")}>{t("Sort by title")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("deadline")}>{t("sortByDeadline")}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("title")}>{t("sortByTitle")}</DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}>
-                  {sortDirection === "asc" ? t("Ascending") : t("Descending")}
+                  {sortDirection === "asc" ? t("ascending") : t("descending")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -433,12 +433,12 @@ function TaskCalendar() {
               {view === "favorites" ? (
                 <>
                   <Star className="h-12 w-12 text-muted-foreground/50" />
-                  <p className="mt-2 text-sm text-muted-foreground">{t("No favorite tasks")}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{t("noFavoriteTasks")}</p>
                 </>
               ) : (
                 <>
                   <CalendarIcon className="h-12 w-12 text-muted-foreground/50" />
-                  <p className="mt-2 text-sm text-muted-foreground">{t("No tasks found")}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">{t("noTasksFound")}</p>
                 </>
               )}
             </div>
@@ -456,8 +456,8 @@ function TaskCalendar() {
           setTasks(tasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
           setSelectedTask(null)
           toast({
-            title: t("Success"),
-            description: t("Task updated"),
+            title: t("success"),
+            description: t("taskUpdated"),
           })
         }}
       />

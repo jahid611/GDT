@@ -14,7 +14,7 @@ import {
   AlertCircle,
   Edit,
   ImageIcon,
-  FileText, // icône pour PDF
+  FileText,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
-import { enUS, fr } from "date-fns/locale"
+import { enUS, fr, ro } from "date-fns/locale" // Added Romanian locale
 import { Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -74,6 +74,17 @@ export default function TaskList({ newTask }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false)
+
+  const getLocale = () => {
+    switch (language) {
+      case "fr":
+        return fr
+      case "ro":
+        return ro
+      default:
+        return enUS
+    }
+  }
 
   const loadTasks = async () => {
     setLoading(true)
@@ -129,9 +140,7 @@ export default function TaskList({ newTask }) {
     const newStatus = getNextStatus(currentStatus)
     try {
       await updateTask(taskId, { status: newStatus })
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task))
-      )
+      setTasks((prevTasks) => prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task)))
       showToast("success", t("statusUpdated"))
     } catch (error) {
       console.error("Error updating task status:", error)
@@ -245,13 +254,10 @@ export default function TaskList({ newTask }) {
   })
 
   const handleTaskUpdated = (updatedTask) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
-    )
+    setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
     setIsEditDialogOpen(false)
   }
 
-  // Fonction pour ouvrir l'image
   const handleViewImage = (task) => {
     if (task.imageUrl) {
       fetch(task.imageUrl)
@@ -260,16 +266,14 @@ export default function TaskList({ newTask }) {
           const blobUrl = URL.createObjectURL(blob)
           window.open(blobUrl, "_blank")
         })
-        .catch((err) => console.error("Erreur lors de l'ouverture de l'image :", err))
+        .catch((err) => console.error("Error opening image:", err))
     }
   }
 
-  // Fonction pour ouvrir le PDF
   const handleViewPDF = (task) => {
     if (task.attachments && Array.isArray(task.attachments)) {
-      // Cherche le premier attachement dont la dataUrl commence par "data:application/pdf"
-      const pdfAttachment = task.attachments.find((att) =>
-        att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
+      const pdfAttachment = task.attachments.find(
+        (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf"),
       )
       if (pdfAttachment) {
         window.open(pdfAttachment.dataUrl, "_blank")
@@ -293,7 +297,7 @@ export default function TaskList({ newTask }) {
             <div className="space-y-1">
               <h2 className="text-lg sm:text-2xl font-bold tracking-tight">{t("taskList")}</h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
-                {sortedTasks.length} {t("tasks")} {t("total")}
+                {sortedTasks.length} {t("tasks")}
               </p>
             </div>
             <div className="flex gap-2">
@@ -315,7 +319,7 @@ export default function TaskList({ newTask }) {
                 className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600"
               >
                 <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2" />
-                <span className="text-xs sm:text-sm">{t("Delete all")}</span>
+                <span className="text-xs sm:text-sm">{t("deleteAll")}</span>
               </Button>
             </div>
           </div>
@@ -410,7 +414,7 @@ export default function TaskList({ newTask }) {
                       "group relative overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300",
                       "backdrop-blur-sm dark:backdrop-blur-md",
                       "border border-white/10 dark:border-white/5",
-                      getCardBackground(task.status)
+                      getCardBackground(task.status),
                     )}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -429,13 +433,13 @@ export default function TaskList({ newTask }) {
                               className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
                             >
                               <ImageIcon className="h-4 w-4" />
-                              <span className="text-xs">Voir image</span>
+                              <span className="text-xs">{t("viewImage")}</span>
                             </Button>
                           )}
                           {task.attachments &&
                             Array.isArray(task.attachments) &&
-                            task.attachments.some((att) =>
-                              att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
+                            task.attachments.some(
+                              (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf"),
                             ) && (
                               <Button
                                 variant="outline"
@@ -444,7 +448,7 @@ export default function TaskList({ newTask }) {
                                 className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
                               >
                                 <FileText className="h-4 w-4" />
-                                <span className="text-xs">Voir PDF</span>
+                                <span className="text-xs">{t("viewPDF")}</span>
                               </Button>
                             )}
                           <DropdownMenu>
@@ -508,12 +512,10 @@ export default function TaskList({ newTask }) {
                             <span
                               className={cn(
                                 "font-medium",
-                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400"
+                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400",
                               )}
                             >
-                              {format(new Date(task.deadline), "Pp", {
-                                locale: language === "fr" ? fr : enUS,
-                              })}
+                              {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
                             </span>
                           </div>
                         )}
@@ -533,7 +535,7 @@ export default function TaskList({ newTask }) {
                             <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                               <AvatarImage
                                 src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
-                                alt={`Avatar de ${task.createdBy?.email || "utilisateur"}`}
+                                alt={`${t("avatarOf")} ${task.createdBy?.email || t("user")}`}
                               />
                               <AvatarFallback className="text-xs sm:text-sm bg-primary/10 dark:bg-primary/20">
                                 {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
@@ -553,7 +555,7 @@ export default function TaskList({ newTask }) {
                             <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
                               <AvatarImage
                                 src={task.assignedTo?.avatar || getAvatarForUser(task.assignedTo?.email)}
-                                alt={`Avatar de ${task.assignedTo?.email || "utilisateur"}`}
+                                alt={`${t("avatarOf")} ${task.assignedTo?.email || t("user")}`}
                               />
                               <AvatarFallback className="text-xs sm:text-sm bg-secondary/10 dark:bg-secondary/20">
                                 {task.assignedTo?.email?.charAt(0).toUpperCase() || "?"}
@@ -573,20 +575,13 @@ export default function TaskList({ newTask }) {
                         <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-3.5 w-3.5" />
-                            <span>
-                              {format(new Date(task.createdAt || new Date()), "Pp", {
-                                locale: language === "fr" ? fr : enUS,
-                              })}
-                            </span>
+                            <span>{format(new Date(task.createdAt || new Date()), "Pp", { locale: getLocale() })}</span>
                           </div>
                           {task.updatedAt && task.updatedAt !== task.createdAt && (
                             <div className="flex items-center gap-2">
                               <Edit className="h-3.5 w-3.5" />
                               <span>
-                                {t("lastUpdated")}:{" "}
-                                {format(new Date(task.updatedAt), "Pp", {
-                                  locale: language === "fr" ? fr : enUS,
-                                })}
+                                {t("lastUpdated")}: {format(new Date(task.updatedAt), "Pp", { locale: getLocale() })}
                               </span>
                             </div>
                           )}
@@ -628,3 +623,4 @@ export default function TaskList({ newTask }) {
     </div>
   )
 }
+

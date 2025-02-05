@@ -163,12 +163,7 @@ export default function TaskStats() {
         <CardContent>
           <div className="text-2xl font-bold mb-2">{metrics.completed}</div>
           <Progress value={metrics.completionRate} className="h-2 bg-green-200" />
-          <p className="text-xs text-muted-foreground mt-2">
-            {t("tasksCompletedDesc")}
-            <span className="block mt-1 italic">
-              Montre le nombre total de tâches terminées et le taux de complétion global
-            </span>
-          </p>
+          <p className="text-xs text-muted-foreground mt-2">{t("completedTasksDesc")}</p>
         </CardContent>
       </Card>
 
@@ -183,10 +178,7 @@ export default function TaskStats() {
         <CardContent>
           <div className="text-2xl font-bold mb-2">{metrics.inProgress}</div>
           <Progress value={(metrics.inProgress / metrics.total) * 100} className="h-2 bg-blue-200" />
-          <p className="text-xs text-muted-foreground mt-2">
-            {t("tasksInProgressDesc")}
-            <span className="block mt-1 italic">Indique les tâches actuellement en cours de réalisation</span>
-          </p>
+          <p className="text-xs text-muted-foreground mt-2">{t("tasksInProgressDesc")}</p>
         </CardContent>
       </Card>
 
@@ -201,10 +193,7 @@ export default function TaskStats() {
         <CardContent>
           <div className="text-2xl font-bold mb-2">{metrics.overdue}</div>
           <Progress value={(metrics.overdue / metrics.total) * 100} className="h-2 bg-red-200" />
-          <p className="text-xs text-muted-foreground mt-2">
-            {t("overdueTasksDesc")}
-            <span className="block mt-1 italic">Signale les tâches qui ont dépassé leur date limite</span>
-          </p>
+          <p className="text-xs text-muted-foreground mt-2">{t("overdueTasksDesc")}</p>
         </CardContent>
       </Card>
 
@@ -221,10 +210,7 @@ export default function TaskStats() {
         <CardContent>
           <div className="text-2xl font-bold mb-2">{metrics.averageCompletionTime}</div>
           <Progress value={Math.min(100, (metrics.averageCompletionTime / 14) * 100)} className="h-2 bg-orange-200" />
-          <p className="text-xs text-muted-foreground mt-2">
-            {t("averageCompletionTimeDesc")}
-            <span className="block mt-1 italic">Représente le temps moyen nécessaire pour terminer une tâche</span>
-          </p>
+          <p className="text-xs text-muted-foreground mt-2">{t("averageCompletionTimeDesc")}</p>
         </CardContent>
       </Card>
     </div>
@@ -238,12 +224,7 @@ export default function TaskStats() {
             <TrendingUp className="h-5 w-5 text-primary" />
             {t("priorityDistribution")}
           </CardTitle>
-          <CardDescription>
-            {t("tasksByPriority")}
-            <span className="block mt-1 text-xs italic">
-              Visualisation de la répartition des tâches selon leur niveau de priorité
-            </span>
-          </CardDescription>
+          <CardDescription>{t("tasksByPriority")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -304,10 +285,7 @@ export default function TaskStats() {
             <BarChart2 className="h-5 w-5 text-primary" />
             {t("statusBreakdown")}
           </CardTitle>
-          <CardDescription>
-            {t("currentStatus")}
-            <span className="block mt-1 text-xs italic">Vue d'ensemble de l'état actuel de toutes les tâches</span>
-          </CardDescription>
+          <CardDescription>{t("currentStatus")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -377,12 +355,7 @@ export default function TaskStats() {
               <Timer className="h-5 w-5 text-primary" />
               {t("taskTimeline")}
             </CardTitle>
-            <CardDescription>
-              {t("last7Days")}
-              <span className="block mt-1 text-xs italic">
-                Évolution des tâches créées et terminées sur les 7 derniers jours
-              </span>
-            </CardDescription>
+            <CardDescription>{t("last7Days")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] mt-4">
@@ -442,10 +415,7 @@ export default function TaskStats() {
               <Activity className="h-5 w-5 text-primary" />
               {t("weeklyProgress")}
             </CardTitle>
-            <CardDescription>
-              {t("weeklyProgressDesc")}
-              <span className="block mt-1 text-xs italic">Résumé des performances de la semaine en cours</span>
-            </CardDescription>
+            <CardDescription>{t("weeklyProgressDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -480,10 +450,7 @@ export default function TaskStats() {
               <TrendingUp className="h-5 w-5 text-primary" />
               {t("productivity")}
             </CardTitle>
-            <CardDescription>
-              {t("productivityDesc")}
-              <span className="block mt-1 text-xs italic">Analyse de la productivité quotidienne moyenne</span>
-            </CardDescription>
+            <CardDescription>{t("productivityDesc")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -642,12 +609,7 @@ function StatsCard({ title, value, description, icon: Icon, color, trend }) {
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">
-          {description}
-          <span className="block mt-1 text-xs italic">
-            Taux d'efficacité basé sur le ratio de tâches terminées par membre
-          </span>
-        </p>
+        <p className="text-xs text-muted-foreground mt-1">{description}</p>
         {trend !== 0 && (
           <div className={`text-xs mt-2 ${trend > 0 ? "text-green-500" : "text-red-500"}`}>
             {trend > 0 ? "+" : ""}

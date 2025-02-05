@@ -96,7 +96,6 @@ function UserProfile() {
   }
 
   const handleContactAdmin = async (e) => {
-    // Empêcher la soumission par défaut seulement si c'est le bouton d'envoi
     if (e.nativeEvent.submitter?.type === "submit") {
       e.preventDefault()
       if (!subject.trim() || !message.trim() || !selectedAdmin) return
@@ -116,26 +115,26 @@ function UserProfile() {
         setMessage("")
         setSelectedAdmin("")
         toast({
-          title: "Message envoyé avec succès! 🎉",
-          description: `Votre message a bien été envoyé à ${selectedAdmin}`,
+          title: t("success"),
+          description: t("taskCreated"),
           variant: "success",
           duration: 5000,
           action: (
             <Button variant="outline" size="sm" onClick={() => setMessage("")}>
-              Nouveau message
+              {t("newTask")}
             </Button>
           ),
         })
       } catch (error) {
         console.error("Error sending message:", error)
         toast({
-          title: "Erreur lors de l'envoi",
-          description: "Une erreur est survenue. Veuillez réessayer.",
+          title: t("error"),
+          description: t("cannotCreateTask"),
           variant: "destructive",
           duration: 5000,
           action: (
             <Button variant="outline" size="sm" onClick={handleContactAdmin}>
-              Réessayer
+              {t("retry")}
             </Button>
           ),
         })
@@ -160,13 +159,9 @@ function UserProfile() {
   }
 
   const getFormattedMessage = () => {
-    // Convertir les retours à la ligne en <br> d'abord
     let formattedText = message.replace(/\n/g, "<br />")
-
-    // Appliquer le formatage en fonction de l'alignement
     formattedText = `<div style="text-align: ${messageFormat.align};">${formattedText}</div>`
 
-    // Appliquer les styles en ligne pour s'assurer qu'ils sont préservés dans l'email
     if (messageFormat.bold) {
       formattedText = `<div style="font-weight: bold;">${formattedText}</div>`
     }
@@ -238,7 +233,7 @@ function UserProfile() {
     )
   }
 
-  const displayName = profile.email ? profile.email.split("@")[0].replace(/[^a-zA-Z]/g, "") : "User"
+  const displayName = profile.email ? profile.email.split("@")[0].replace(/[^a-zA-Z]/g, "") : t("userProfile")
 
   return (
     <div className="min-h-screen bg-background">
@@ -279,8 +274,8 @@ function UserProfile() {
                 <div className="grid gap-6 md:grid-cols-2">
                   <ProfileField icon={User} label={t("name")} value={displayName} />
                   <ProfileField icon={Mail} label={t("email")} value={profile.email} />
-                  <ProfileField icon={Building} label={t("department")} value={t("Râmnicu Vâlcea")} />
-                  <ProfileField icon={MapPin} label={t("location")} value={t("Roumanie")} />
+                  <ProfileField icon={Building} label={t("department")} value="Râmnicu Vâlcea" />
+                  <ProfileField icon={MapPin} label={t("location")} value="România" />
                 </div>
               </div>
             </div>
@@ -291,30 +286,29 @@ function UserProfile() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                Contacter un administrateur
+                {t("adminCreateUser")}
               </CardTitle>
-              <CardDescription>Envoyez un message à l'équipe administrative</CardDescription>
+              <CardDescription>{t("adminCreateUserDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <form
                 onSubmit={handleContactAdmin}
                 className="space-y-4"
                 onClick={(e) => {
-                  // Empêcher la soumission du formulaire sur les clics qui ne sont pas sur le bouton d'envoi
                   if (e.target.type !== "submit") {
                     e.preventDefault()
                   }
                 }}
               >
                 <div className="space-y-2">
-                  <Label>Administrateur</Label>
+                  <Label>{t("adminArea")}</Label>
                   <select
                     value={selectedAdmin}
                     onChange={(e) => setSelectedAdmin(e.target.value)}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                     required
                   >
-                    <option value="">Sélectionner un administrateur</option>
+                    <option value="">{t("selectRole")}</option>
                     {admins.map((admin) => (
                       <option key={admin._id} value={admin.email}>
                         {admin.email}
@@ -324,9 +318,9 @@ function UserProfile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Objet</Label>
+                  <Label>{t("title")}</Label>
                   <Input
-                    placeholder="Objet de votre message"
+                    placeholder={t("title")}
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     required
@@ -336,8 +330,8 @@ function UserProfile() {
                 <Tabs defaultValue="edit" className="w-full">
                   <div className="flex items-center justify-between mb-4">
                     <TabsList className="grid w-[200px] grid-cols-2">
-                      <TabsTrigger value="edit">Éditer</TabsTrigger>
-                      <TabsTrigger value="preview">Aperçu</TabsTrigger>
+                      <TabsTrigger value="edit">{t("edit")}</TabsTrigger>
+                      <TabsTrigger value="preview">{t("preview")}</TabsTrigger>
                     </TabsList>
 
                     <div className="flex items-center gap-2">
@@ -427,7 +421,7 @@ function UserProfile() {
                   <TabsContent value="edit" className="mt-0">
                     <div className="relative">
                       <Textarea
-                        placeholder="Votre message..."
+                        placeholder={t("description")}
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         className={cn(
@@ -439,7 +433,7 @@ function UserProfile() {
                         required
                       />
                       <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
-                        {message.length} caractères
+                        {message.length} {t("characters")}
                       </div>
                     </div>
                   </TabsContent>
@@ -469,12 +463,12 @@ function UserProfile() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Envoi en cours...
+                      {t("creating")}
                     </>
                   ) : (
                     <>
                       <Send className="mr-2 h-4 w-4" />
-                      Envoyer le message
+                      {t("createTask")}
                     </>
                   )}
                 </Button>
