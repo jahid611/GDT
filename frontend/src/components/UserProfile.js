@@ -1,29 +1,42 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getUserProfile } from "../utils/api"
+import { getUserProfile, getUsers } from "../utils/api"
 import { useAuth } from "../contexts/AuthContext"
-import { Loader2, Mail, User, AlertCircle, RefreshCw, Building, MapPin } from "lucide-react"
+import { Loader2, Mail, User, AlertCircle, RefreshCw, Building, MapPin, Send } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { useTranslation } from "../hooks/useTranslation"
 import { motion } from "framer-motion"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import emailjs from "@emailjs/browser"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 function UserProfile() {
   const { user: authUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [admins, setAdmins] = useState([])
   const { t } = useTranslation()
 
+  // États pour le formulaire de contact
+  const [subject, setSubject] = useState("")
+  const [message, setMessage] = useState("")
+  const [selectedAdmin, setSelectedAdmin] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   useEffect(() => {
+    emailjs.init("FiWAOQdkaG34q5-hc") // Initialisation de EmailJS
     const token = localStorage.getItem("token")
     console.log("Current auth token:", token ? "Present" : "Missing")
     console.log("Current user ID:", authUser?.id)
     loadProfile()
-  }, [authUser?.id])
+    loadAdmins()
+  }, [authUser])
 
   const loadProfile = async () => {
     try {
@@ -41,6 +54,44 @@ function UserProfile() {
       setError(err.message || t("cannotLoadProfile"))
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadAdmins = async () => {
+    try {
+      const users = await getUsers()
+      const adminUsers = users.filter((user) => user.role === "admin")
+      setAdmins(adminUsers)
+    } catch (err) {
+      console.error("Error loading admins:", err)
+    }
+  }
+
+  const handleContactAdmin = async (e) => {
+    e.preventDefault()
+    if (!subject.trim() || !message.trim() || !selectedAdmin) return
+
+    setIsSubmitting(true)
+    try {
+      const templateParams = {
+        to_email: selectedAdmin,
+        from_name: profile.email,
+        subject: subject,
+        message: message,
+      }
+
+      await emailjs.send("service_profile", "template_profile", templateParams)
+
+      // Réinitialiser le formulaire
+      setSubject("")
+      setMessage("")
+      setSelectedAdmin("")
+      alert("Message envoyé avec succès")
+    } catch (error) {
+      console.error("Error sending message:", error)
+      alert("Erreur lors de l'envoi du message")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -104,7 +155,7 @@ function UserProfile() {
   return (
     <div className="min-h-screen bg-background">
       <div className="h-full max-w-7xl mx-auto px-4 py-8 md:px-6 lg:px-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-full">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-full space-y-6">
           <div className="bg-card rounded-xl shadow-lg overflow-hidden">
             {/* Banner et Avatar */}
             <div
@@ -146,6 +197,76 @@ function UserProfile() {
               </div>
             </div>
           </div>
+
+          {/* Formulaire de contact des admins */}
+          <Card className="max-w-3xl mx-auto">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="h-5 w-5" />
+                Contacter un administrateur
+              </CardTitle>
+              <CardDescription>Envoyez un message à l'équipe administrative</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleContactAdmin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Administrateur</Label>
+                  <select
+                    value={selectedAdmin}
+                    onChange={(e) => setSelectedAdmin(e.target.value)}
+                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    required
+                  >
+                    <option value="">Sélectionner un administrateur</option>
+                    {admins.map((admin) => (
+                      <option key={admin._id} value={admin.email}>
+                        {admin.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Objet</Label>
+                  <Input
+                    placeholder="Objet de votre message"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Message</Label>
+                  <Textarea
+                    placeholder="Votre message..."
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    className="min-h-[100px]"
+                    required
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={isSubmitting || !subject.trim() || !message.trim() || !selectedAdmin}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-4 w-4" />
+                      Envoyer le message
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </motion.div>
       </div>
     </div>

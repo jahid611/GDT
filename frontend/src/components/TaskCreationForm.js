@@ -394,8 +394,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   }
 
   return (
-    // Ajout d'un conteneur pour permettre le défilement sur mobile
-    <div className="max-h-screen overflow-y-auto p-4">
+    <>
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 w-full max-w-full px-2 sm:px-4">
         <div className="space-y-2">
           <Label htmlFor="title" className="text-foreground">
@@ -622,6 +621,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }
+
