@@ -17,16 +17,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { PDFDocument } from "pdf-lib"
-
-// Import the assignment email sending function (which works correctly)
 import { sendAssignmentEmail } from "../utils/email"
 
 const DEFAULT_AVATAR =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
 
-export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
+// Le préfixe à utiliser pour les tâches maintenance
+const DEFAULT_PREFIX = "Maintenance | "
+
+export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode = "create", initialData = null }) {
+  // Contrôle interne pour activer ou désactiver le préfixe maintenance.
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(true)
+
+  // Le champ titre démarre avec le préfixe par défaut
   const [formData, setFormData] = useState({
-    title: "",
+    title: DEFAULT_PREFIX,
     description: "",
     status: "todo",
     priority: "medium",
@@ -46,19 +51,22 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   const { user } = useAuth()
   const { t } = useTranslation()
 
-  // Handle attachments via localStorage
   useEffect(() => {
     return () => {
-      // Clean up attachments when component unmounts
       setAttachments([])
     }
   }, [])
 
-  // Initialize form with existing data if available
+  // Lors d'une édition, on s'assure que le titre possède le préfixe si maintenanceEnabled est true
   useEffect(() => {
     if (initialData) {
       setFormData({
-        title: initialData.title || "",
+        title:
+          initialData.title && maintenanceEnabled
+            ? initialData.title.startsWith(DEFAULT_PREFIX)
+              ? initialData.title
+              : DEFAULT_PREFIX + initialData.title
+            : initialData.title || "",
         description: initialData.description || "",
         status: initialData.status || "todo",
         priority: initialData.priority || "medium",
@@ -67,9 +75,8 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         assignedTo: initialData.assignedTo?._id || "",
       })
     }
-  }, [initialData])
+  }, [initialData, maintenanceEnabled])
 
-  // Load users
   useEffect(() => {
     loadUsers()
   }, [])
@@ -91,15 +98,9 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
   const compressFile = async (file) => {
     const MAX_FILE_SIZE = 26214400 // 25MB
-
-    if (file.size <= MAX_FILE_SIZE) {
-      return file
-    }
-
-    // Handle images
+    if (file.size <= MAX_FILE_SIZE) return file
     if (file.type.startsWith("image/")) {
       try {
-        // Start with higher quality settings
         const options = {
           maxSizeMB: 0.1,
           maxWidthOrHeight: 2048,
@@ -108,65 +109,49 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           alwaysKeepResolution: true,
           preserveExif: true,
         }
-
         let compressedFile = await imageCompression(file, options)
-
-        // If still too large, try progressive compression
         if (compressedFile.size > MAX_FILE_SIZE) {
           options.maxWidthOrHeight = 1600
           options.initialQuality = 0.8
           compressedFile = await imageCompression(file, options)
         }
-
         if (compressedFile.size > MAX_FILE_SIZE) {
           options.maxWidthOrHeight = 1200
           options.initialQuality = 0.7
           compressedFile = await imageCompression(file, options)
         }
-
-        if (compressedFile.size <= MAX_FILE_SIZE) {
-          return compressedFile
-        }
+        if (compressedFile.size <= MAX_FILE_SIZE) return compressedFile
         throw new Error(`Unable to compress image "${file.name}" while maintaining acceptable quality`)
       } catch (err) {
         console.error("Image compression error:", err)
         throw new Error(`Error compressing image "${file.name}"`)
       }
     }
-
-    // Handle PDFs
     if (file.type === "application/pdf") {
       try {
         const arrayBuffer = await file.arrayBuffer()
         const pdfDoc = await PDFDocument.load(arrayBuffer)
-
-        // First attempt - basic compression
         let compressedBytes = await pdfDoc.save({
           useObjectStreams: true,
           addDefaultPage: false,
           preserveEditability: false,
         })
-
         if (compressedBytes.length <= MAX_FILE_SIZE) {
           return new File([compressedBytes], file.name, { type: file.type })
         }
-
-        // Second attempt - compress images
         const pages = pdfDoc.getPages()
         for (const page of pages) {
           try {
             const resources = await page.node.Resources()
             if (!resources) continue
-
             const xObjects = await resources.lookup("XObject")
             if (!xObjects) continue
-
             const imageObjects = Object.entries(xObjects.dict).filter(
-              ([_, obj]) =>
-                obj.constructor.name === "PDFImage" || (obj.dictionary && obj.dictionary.get("Subtype") === "Image"),
+              ([, obj]) =>
+                obj.constructor.name === "PDFImage" ||
+                (obj.dictionary && obj.dictionary.get("Subtype") === "Image")
             )
-
-            for (const [_, imageObj] of imageObjects) {
+            for (const [, imageObj] of imageObjects) {
               try {
                 if (imageObj.dictionary && imageObj.dictionary.get("BitsPerComponent")) {
                   imageObj.dictionary.set("BitsPerComponent", 4)
@@ -181,23 +166,18 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
             continue
           }
         }
-
         compressedBytes = await pdfDoc.save({
           useObjectStreams: true,
           addDefaultPage: false,
           preserveEditability: false,
           objectsPerTick: 50,
         })
-
         if (compressedBytes.length <= MAX_FILE_SIZE) {
           return new File([compressedBytes], file.name, { type: file.type })
         }
-
-        // Third attempt - aggressive compression
         const aggressiveDoc = await PDFDocument.create()
         const copiedPages = await aggressiveDoc.copyPages(pdfDoc, pdfDoc.getPageIndices())
         copiedPages.forEach((page) => aggressiveDoc.addPage(page))
-
         compressedBytes = await aggressiveDoc.save({
           useObjectStreams: true,
           addDefaultPage: false,
@@ -205,23 +185,17 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           objectsPerTick: 25,
           updateFieldAppearances: false,
         })
-
         if (compressedBytes.length <= MAX_FILE_SIZE) {
           return new File([compressedBytes], file.name, { type: file.type })
         }
-
         throw new Error(
-          `PDF "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB). ` +
-            `Even after compression, it's ${(compressedBytes.length / 1024).toFixed(1)}KB. ` +
-            `Please try a smaller PDF or one with fewer images.`,
+          `PDF "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB). Even after compression, it's ${(compressedBytes.length / 1024).toFixed(1)}KB. Please try a smaller PDF or one with fewer images.`
         )
       } catch (err) {
         console.error("PDF compression error:", err)
-        throw new Error(`Unable to compress PDF "${file.name}". ` + `Error: ${err.message || "Unknown error"}`)
+        throw new Error(`Unable to compress PDF "${file.name}". Error: ${err.message || "Unknown error"}`)
       }
     }
-
-    // Handle other file types
     try {
       const arrayBuffer = await file.arrayBuffer()
       const compressedBuffer = pako.deflate(new Uint8Array(arrayBuffer), {
@@ -229,14 +203,10 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         memLevel: 9,
         strategy: 2,
       })
-
       if (compressedBuffer.length <= MAX_FILE_SIZE) {
         return new File([compressedBuffer], file.name, { type: file.type })
       }
-      throw new Error(
-        `File "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB) ` +
-          `and cannot be compressed below 25MB.`,
-      )
+      throw new Error(`File "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB) and cannot be compressed below 25MB.`)
     } catch (err) {
       console.error("File compression error:", err)
       throw new Error(`Error compressing "${file.name}": ${err.message || "Unknown error"}`)
@@ -249,25 +219,20 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       const newAttachments = []
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-
         try {
-          // Attempt to compress the file
           const compressedFile = await compressFile(file)
-
-          // Convert to dataUrl for preview
           const dataUrl = await new Promise((resolve, reject) => {
             const reader = new FileReader()
             reader.onload = (event) => resolve(event.target.result)
             reader.onerror = (error) => reject(error)
             reader.readAsDataURL(compressedFile)
           })
-
           newAttachments.push({ file: compressedFile, dataUrl })
           showToast(t("success"), `${file.name} compressed successfully`, "success")
         } catch (err) {
           console.error("Error processing file:", err)
           showToast(t("error"), err.message || `Error processing ${file.name}`, "destructive")
-          continue // Skip to next file instead of stopping completely
+          continue
         }
       }
       setAttachments((prev) => [...prev, ...newAttachments])
@@ -285,10 +250,8 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
 
   const renderAttachmentPreview = (att, index) => {
     if (!att || !att.file || !att.dataUrl) return null
-
     const previewClasses =
       "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
-
     if (att.file.type.startsWith("image/")) {
       return (
         <div key={index} className={previewClasses}>
@@ -345,8 +308,18 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       setLoading(true)
       const formDataToSend = new FormData()
 
+      // Si le mode maintenance est activé, forcer le préfixe dans le titre,
+      // sinon, on envoie tel quel.
+      const maintenanceTitle = maintenanceEnabled
+        ? formData.title.startsWith(DEFAULT_PREFIX)
+          ? formData.title
+          : DEFAULT_PREFIX + formData.title
+        : formData.title
+
+      formDataToSend.append("title", maintenanceTitle)
+
       Object.keys(formData).forEach((key) => {
-        if (formData[key]) {
+        if (key !== "title" && formData[key]) {
           formDataToSend.append(key, formData[key])
         }
       })
@@ -354,7 +327,6 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       if (attachments.length > 0) {
         formDataToSend.append("imageUrl", attachments[0].dataUrl)
       }
-
       attachments.forEach((att) => {
         formDataToSend.append("attachments", att.file)
       })
@@ -368,7 +340,6 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
         result = await createTask(formDataToSend)
       }
 
-      // Send assignment email immediately after task creation/modification
       if (formData.assignedTo) {
         await sendAssignmentEmail(formData)
       }
@@ -380,20 +351,41 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
       showToast(
         t("error"),
         err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
-        "destructive",
+        "destructive"
       )
     } finally {
       setLoading(false)
     }
   }
 
-  const getUserDisplayName = (user) => {
+  function getUserDisplayName(user) {
     if (!user) return ""
     return user.name || user.username || user.email.split("@")[0]
   }
 
   return (
     <>
+      {/* Contrôle pour activer/désactiver le préfixe Maintenance */}
+      <div className="mb-4">
+        <Label className="text-foreground inline-block mr-2">{t("Maintenance Mode")}</Label>
+        <input
+          type="checkbox"
+          checked={maintenanceEnabled}
+          onChange={(e) => {
+            setMaintenanceEnabled(e.target.checked)
+            // Si on active le mode maintenance, on force le préfixe
+            setFormData((prev) => ({
+              ...prev,
+              title: e.target.checked
+                ? prev.title.startsWith(DEFAULT_PREFIX)
+                  ? prev.title
+                  : DEFAULT_PREFIX + prev.title
+                : prev.title.replace(/^Maintenance \| /, ""),
+            }))
+          }}
+        />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 w-full max-w-full px-2 sm:px-4">
         <div className="space-y-2">
           <Label htmlFor="title" className="text-foreground">
@@ -402,7 +394,16 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
           <Input
             id="title"
             value={formData.title}
-            onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                title: maintenanceEnabled
+                  ? e.target.value.startsWith(DEFAULT_PREFIX)
+                    ? e.target.value
+                    : DEFAULT_PREFIX + e.target.value.replace(/^Maintenance \| /, "")
+                  : e.target.value,
+              }))
+            }
             required
             className="bg-background border-input text-foreground"
           />
@@ -624,3 +625,7 @@ export default function TaskCreationForm({ onSuccess, onCancel, mode = "create",
   )
 }
 
+function getUserDisplayName(user) {
+  if (!user) return ""
+  return user.name || user.username || user.email.split("@")[0]
+}

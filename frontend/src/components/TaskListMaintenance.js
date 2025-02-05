@@ -45,6 +45,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Définition des avatars par défaut
 const DEFAULT_AVATARS = {
   user1: "https://api.dicebear.com/7.x/initials/svg?seed=JD&backgroundColor=52,53,65,255",
   user2: "https://api.dicebear.com/7.x/initials/svg?seed=AB&backgroundColor=52,53,65,255",
@@ -62,7 +63,67 @@ const getAvatarForUser = (email) => {
   return avatarSet[index]
 }
 
-export default function TaskList({ newTask }) {
+/**
+ * Composant de modal pour confirmer l'accès à la section Maintenance.
+ * L'utilisateur doit confirmer qu'il fait partie de l'équipe maintenance.
+ */
+function MaintenanceAccessModal({ open, onConfirm, onReject }) {
+    if (!open) return null;
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 sm:p-8 max-w-lg w-full mx-4 relative"
+        >
+          <div className="absolute top-3 right-3">
+            <button 
+              onClick={onReject} 
+              className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            >
+              ✖
+            </button>
+          </div>
+  
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+            🔧 Accès à la Maintenance
+          </h2>
+          
+          <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
+            Seuls les membres de l'équipe de maintenance peuvent accéder à cette section.  
+            Confirmez-vous en faire partie ?
+          </p>
+  
+          <div className="flex justify-center gap-3 sm:gap-4">
+            <Button 
+              variant="outline"
+              className="border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+              onClick={onReject}
+            >
+              ❌ Non, je ne suis pas membre
+            </Button>
+  
+            <Button 
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg transition-all"
+              onClick={onConfirm}
+            >
+              ✅ Oui, je suis membre
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+  
+
+/**
+ * Composant TaskListMaintenance
+ * Affiche uniquement les tâches dont le titre commence par "Maintenance | ".
+ */
+export default function TaskListMaintenance({ newTask }) {
   const { t, language } = useTranslation()
   const { showToast } = useToast()
   const [tasks, setTasks] = useState([])
@@ -74,12 +135,21 @@ export default function TaskList({ newTask }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false)
+  // Contrôle de l'accès : par défaut l'accès est refusé
+  const [accessGranted, setAccessGranted] = useState(false)
+
+  // Seules les tâches dont le titre commence par "Maintenance | " seront affichées.
+  const filterMaintenanceTasks = (allTasks) =>
+    allTasks.filter((task) => task.title && task.title.startsWith("Maintenance | "))
 
   const getLocale = () => {
     switch (language) {
-      case "fr": return fr
-      case "ro": return ro
-      default: return enUS
+      case "fr":
+        return fr
+      case "ro":
+        return ro
+      default:
+        return enUS
     }
   }
 
@@ -88,8 +158,9 @@ export default function TaskList({ newTask }) {
     setError(null)
     try {
       const fetchedTasks = await fetchTasks()
-      console.log("Tasks fetched:", fetchedTasks)
-      setTasks(fetchedTasks)
+      console.log("Maintenance tasks fetched:", fetchedTasks)
+      const maintenanceTasks = filterMaintenanceTasks(fetchedTasks)
+      setTasks(maintenanceTasks)
     } catch (error) {
       setError(error)
       showToast("error", t("errorLoadingTasks"))
@@ -99,8 +170,10 @@ export default function TaskList({ newTask }) {
   }
 
   useEffect(() => {
-    loadTasks()
-  }, [newTask, sortBy, filterStatus, filterPriority, language])
+    if (accessGranted) {
+      loadTasks()
+    }
+  }, [newTask, sortBy, filterStatus, filterPriority, language, accessGranted])
 
   const handleEditTask = (task) => {
     setSelectedTask(task)
@@ -149,10 +222,14 @@ export default function TaskList({ newTask }) {
 
   const getNextStatus = (status) => {
     switch (status) {
-      case "todo": return "in_progress"
-      case "in_progress": return "review"
-      case "review": return "done"
-      default: return "todo"
+      case "todo":
+        return "in_progress"
+      case "in_progress":
+        return "review"
+      case "review":
+        return "done"
+      default:
+        return "todo"
     }
   }
 
@@ -160,11 +237,16 @@ export default function TaskList({ newTask }) {
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case "todo": return t("todo")
-      case "in_progress": return t("inProgress")
-      case "review": return t("review")
-      case "done": return t("done")
-      default: return ""
+      case "todo":
+        return t("todo")
+      case "in_progress":
+        return t("inProgress")
+      case "review":
+        return t("review")
+      case "done":
+        return t("done")
+      default:
+        return ""
     }
   }
 
@@ -172,26 +254,33 @@ export default function TaskList({ newTask }) {
 
   const getPriorityLabel = (priority) => {
     switch (priority) {
-      case "high": return t("high")
-      case "medium": return t("medium")
-      case "low": return t("low")
-      default: return ""
+      case "high":
+        return t("high")
+      case "medium":
+        return t("medium")
+      case "low":
+        return t("low")
+      default:
+        return ""
     }
   }
 
   const getCardBackground = (status) => {
     switch (status) {
-      case "todo": return "bg-red-100/80 dark:bg-red-950/40"
-      case "in_progress": return "bg-blue-100/80 dark:bg-blue-950/40"
-      case "review": return "bg-yellow-100/80 dark:bg-yellow-950/40"
-      case "done": return "bg-green-100/80 dark:bg-green-950/40"
-      default: return ""
+      case "todo":
+        return "bg-red-100/80 dark:bg-red-950/40"
+      case "in_progress":
+        return "bg-blue-100/80 dark:bg-blue-950/40"
+      case "review":
+        return "bg-yellow-100/80 dark:bg-yellow-950/40"
+      case "done":
+        return "bg-green-100/80 dark:bg-green-950/40"
+      default:
+        return ""
     }
   }
 
-  // Filtrer : exclure les tâches dont le titre commence par "Maintenance | "
   const filteredTasks = tasks.filter((task) => {
-    if (task.title && task.title.startsWith("Maintenance | ")) return false
     if (filterStatus !== "all" && task.status !== filterStatus) return false
     if (filterPriority !== "all" && task.priority !== filterPriority) return false
     return true
@@ -199,20 +288,29 @@ export default function TaskList({ newTask }) {
 
   const getPriorityOrder = (priority) => {
     switch (priority) {
-      case "high": return 3
-      case "medium": return 2
-      case "low": return 1
-      default: return 0
+      case "high":
+        return 3
+      case "medium":
+        return 2
+      case "low":
+        return 1
+      default:
+        return 0
     }
   }
 
   const getStatusOrder = (status) => {
     switch (status) {
-      case "todo": return 1
-      case "in_progress": return 2
-      case "review": return 3
-      case "done": return 4
-      default: return 0
+      case "todo":
+        return 1
+      case "in_progress":
+        return 2
+      case "review":
+        return 3
+      case "done":
+        return 4
+      default:
+        return 0
     }
   }
 
@@ -261,6 +359,17 @@ export default function TaskList({ newTask }) {
     }
   }
 
+  // Si l'accès à la section Maintenance n'est pas accordé, afficher la modal de confirmation.
+  if (!accessGranted) {
+    return (
+      <MaintenanceAccessModal
+        open={!accessGranted}
+        onConfirm={() => setAccessGranted(true)}
+        onReject={() => showToast("error", "Access denied. You are not a maintenance team member.")}
+      />
+    )
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <motion.div
@@ -271,7 +380,7 @@ export default function TaskList({ newTask }) {
         <div className="space-y-3 sm:space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
             <div className="space-y-1">
-              <h2 className="text-lg sm:text-2xl font-bold tracking-tight">{t("taskList")}</h2>
+              <h2 className="text-lg sm:text-2xl font-bold tracking-tight">{t("maintenanceTasks")}</h2>
               <p className="text-xs sm:text-sm text-muted-foreground">
                 {sortedTasks.length} {t("tasks")}
               </p>
