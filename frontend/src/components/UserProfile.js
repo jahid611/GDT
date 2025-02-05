@@ -3,7 +3,22 @@
 import { useState, useEffect } from "react"
 import { getUserProfile, getUsers } from "../utils/api"
 import { useAuth } from "../contexts/AuthContext"
-import { Loader2, Mail, User, AlertCircle, RefreshCw, Building, MapPin, Send } from "lucide-react"
+import {
+  Loader2,
+  Mail,
+  User,
+  AlertCircle,
+  RefreshCw,
+  Building,
+  MapPin,
+  Send,
+  Bold,
+  Italic,
+  List,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
@@ -14,6 +29,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import emailjs from "@emailjs/browser"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
+import { Separator } from "@/components/ui/separator"
+import { useToast } from "@/components/ui/use-toast"
 
 function UserProfile() {
   const { user: authUser } = useAuth()
@@ -22,6 +41,7 @@ function UserProfile() {
   const [error, setError] = useState(null)
   const [admins, setAdmins] = useState([])
   const { t } = useTranslation()
+  const { toast } = useToast()
 
   // États pour le formulaire de contact
   const [subject, setSubject] = useState("")
@@ -29,8 +49,16 @@ function UserProfile() {
   const [selectedAdmin, setSelectedAdmin] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // États pour le formatage du message
+  const [messageFormat, setMessageFormat] = useState({
+    bold: false,
+    italic: false,
+    align: "left",
+    isList: false,
+  })
+
   useEffect(() => {
-    emailjs.init("FiWAOQdkaG34q5-hc") // Initialisation de EmailJS
+    emailjs.init("FiWAOQdkaG34q5-hc")
     const token = localStorage.getItem("token")
     console.log("Current auth token:", token ? "Present" : "Missing")
     console.log("Current user ID:", authUser?.id)
@@ -68,31 +96,91 @@ function UserProfile() {
   }
 
   const handleContactAdmin = async (e) => {
-    e.preventDefault()
-    if (!subject.trim() || !message.trim() || !selectedAdmin) return
+    // Empêcher la soumission par défaut seulement si c'est le bouton d'envoi
+    if (e.nativeEvent.submitter?.type === "submit") {
+      e.preventDefault()
+      if (!subject.trim() || !message.trim() || !selectedAdmin) return
 
-    setIsSubmitting(true)
-    try {
-      const templateParams = {
-        to_email: selectedAdmin,
-        from_name: profile.email,
-        subject: subject,
-        message: message,
+      setIsSubmitting(true)
+      try {
+        const templateParams = {
+          to_email: selectedAdmin,
+          from_name: profile.email,
+          subject: subject,
+          message: getFormattedMessage(),
+        }
+
+        await emailjs.send("service_profile", "template_profile", templateParams)
+
+        setSubject("")
+        setMessage("")
+        setSelectedAdmin("")
+        toast({
+          title: "Message envoyé avec succès! 🎉",
+          description: `Votre message a bien été envoyé à ${selectedAdmin}`,
+          variant: "success",
+          duration: 5000,
+          action: (
+            <Button variant="outline" size="sm" onClick={() => setMessage("")}>
+              Nouveau message
+            </Button>
+          ),
+        })
+      } catch (error) {
+        console.error("Error sending message:", error)
+        toast({
+          title: "Erreur lors de l'envoi",
+          description: "Une erreur est survenue. Veuillez réessayer.",
+          variant: "destructive",
+          duration: 5000,
+          action: (
+            <Button variant="outline" size="sm" onClick={handleContactAdmin}>
+              Réessayer
+            </Button>
+          ),
+        })
+      } finally {
+        setIsSubmitting(false)
       }
-
-      await emailjs.send("service_profile", "template_profile", templateParams)
-
-      // Réinitialiser le formulaire
-      setSubject("")
-      setMessage("")
-      setSelectedAdmin("")
-      alert("Message envoyé avec succès")
-    } catch (error) {
-      console.error("Error sending message:", error)
-      alert("Erreur lors de l'envoi du message")
-    } finally {
-      setIsSubmitting(false)
     }
+  }
+
+  const applyFormat = (format) => {
+    setMessageFormat((prev) => ({
+      ...prev,
+      [format]: !prev[format],
+    }))
+  }
+
+  const applyAlignment = (alignment) => {
+    setMessageFormat((prev) => ({
+      ...prev,
+      align: alignment,
+    }))
+  }
+
+  const getFormattedMessage = () => {
+    // Convertir les retours à la ligne en <br> d'abord
+    let formattedText = message.replace(/\n/g, "<br />")
+
+    // Appliquer le formatage en fonction de l'alignement
+    formattedText = `<div style="text-align: ${messageFormat.align};">${formattedText}</div>`
+
+    // Appliquer les styles en ligne pour s'assurer qu'ils sont préservés dans l'email
+    if (messageFormat.bold) {
+      formattedText = `<div style="font-weight: bold;">${formattedText}</div>`
+    }
+    if (messageFormat.italic) {
+      formattedText = `<div style="font-style: italic;">${formattedText}</div>`
+    }
+    if (messageFormat.isList) {
+      formattedText = formattedText
+        .split("<br />")
+        .map((line) => (line.trim() ? `<div>• ${line}</div>` : "<br/>"))
+        .join("")
+    }
+
+    return formattedText
   }
 
   const ProfileField = ({ icon: Icon, label, value }) => {
@@ -208,7 +296,16 @@ function UserProfile() {
               <CardDescription>Envoyez un message à l'équipe administrative</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleContactAdmin} className="space-y-4">
+              <form
+                onSubmit={handleContactAdmin}
+                className="space-y-4"
+                onClick={(e) => {
+                  // Empêcher la soumission du formulaire sur les clics qui ne sont pas sur le bouton d'envoi
+                  if (e.target.type !== "submit") {
+                    e.preventDefault()
+                  }
+                }}
+              >
                 <div className="space-y-2">
                   <Label>Administrateur</Label>
                   <select
@@ -236,16 +333,133 @@ function UserProfile() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Message</Label>
-                  <Textarea
-                    placeholder="Votre message..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="min-h-[100px]"
-                    required
-                  />
-                </div>
+                <Tabs defaultValue="edit" className="w-full">
+                  <div className="flex items-center justify-between mb-4">
+                    <TabsList className="grid w-[200px] grid-cols-2">
+                      <TabsTrigger value="edit">Éditer</TabsTrigger>
+                      <TabsTrigger value="preview">Aperçu</TabsTrigger>
+                    </TabsList>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap gap-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyFormat("bold")}
+                          className={cn(
+                            "h-8 w-8 p-0",
+                            messageFormat.bold && "bg-primary text-primary-foreground hover:bg-primary/90",
+                          )}
+                        >
+                          <Bold className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyFormat("italic")}
+                          className={cn(
+                            "h-8 w-8 p-0",
+                            messageFormat.italic && "bg-primary text-primary-foreground hover:bg-primary/90",
+                          )}
+                        >
+                          <Italic className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyFormat("isList")}
+                          className={cn(
+                            "h-8 w-8 p-0",
+                            messageFormat.isList && "bg-primary text-primary-foreground hover:bg-primary/90",
+                          )}
+                        >
+                          <List className="h-4 w-4" />
+                        </Button>
+                      </div>
+
+                      <Separator orientation="vertical" className="h-6" />
+
+                      <div className="flex flex-wrap gap-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyAlignment("left")}
+                          className={cn(
+                            "h-8 w-8 p-0",
+                            messageFormat.align === "left" && "bg-primary text-primary-foreground hover:bg-primary/90",
+                          )}
+                        >
+                          <AlignLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyAlignment("center")}
+                          className={cn(
+                            "h-8 w-8 p-0",
+                            messageFormat.align === "center" &&
+                              "bg-primary text-primary-foreground hover:bg-primary/90",
+                          )}
+                        >
+                          <AlignCenter className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => applyAlignment("right")}
+                          className={cn(
+                            "h-8 w-8 p-0",
+                            messageFormat.align === "right" && "bg-primary text-primary-foreground hover:bg-primary/90",
+                          )}
+                        >
+                          <AlignRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <TabsContent value="edit" className="mt-0">
+                    <div className="relative">
+                      <Textarea
+                        placeholder="Votre message..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className={cn(
+                          "min-h-[200px] resize-none font-mono",
+                          messageFormat.bold && "font-bold",
+                          messageFormat.italic && "italic",
+                          `text-${messageFormat.align}`,
+                        )}
+                        required
+                      />
+                      <div className="absolute bottom-2 right-2 text-xs text-muted-foreground">
+                        {message.length} caractères
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="preview" className="mt-0">
+                    <div
+                      className={cn(
+                        "min-h-[200px] rounded-md border border-input bg-background px-3 py-2",
+                        `text-${messageFormat.align}`,
+                      )}
+                    >
+                      <div
+                        className="prose prose-sm dark:prose-invert"
+                        dangerouslySetInnerHTML={{
+                          __html: getFormattedMessage(),
+                        }}
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
 
                 <Button
                   type="submit"
