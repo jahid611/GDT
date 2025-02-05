@@ -58,3 +58,14 @@
   }
 }
 
+@media (hover: none) {
+  /* Désactive l'effet hover pour les éléments marqués avec .no-hover */
+  .no-hover:hover {
+    background-color: inherit !important;
+  }
+  /* Désactive la superposition qui apparaît au survol sur la carte */
+  .no-hover-overlay {
+    opacity: 0 !important;
+  }
+}
+
