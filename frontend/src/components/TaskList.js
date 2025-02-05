@@ -426,7 +426,7 @@ export default function TaskList({ newTask }) {
                               variant="outline"
                               size="sm"
                               onClick={() => handleViewImage(task)}
-                              className="p-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90 no-hover"
+                              className="p-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
                             >
                               <ImageIcon className="h-4 w-4" />
                               <span className="text-xs">Voir image</span>
