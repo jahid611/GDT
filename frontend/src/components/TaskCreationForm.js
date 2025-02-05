@@ -1,630 +1,627 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { fetchTasks, updateTask, deleteTask } from "../utils/api"
-import { motion, AnimatePresence } from "framer-motion"
-import {
-  CheckCircle,
-  Calendar,
-  Filter,
-  RefreshCw,
-  SortAsc,
-  Trash2,
-  MoreVertical,
-  AlertCircle,
-  Edit,
-  ImageIcon,
-  FileText, // icône pour PDF
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+import imageCompression from "browser-image-compression"
+import pako from "pako"
+import { createTask, updateTask, getUsers } from "../utils/api"
+import { useNotifications } from "../contexts/NotificationContext"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Loader2, User } from "lucide-react"
+import { useAuth } from "../contexts/AuthContext"
+import { useTranslation } from "../hooks/useTranslation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { format } from "date-fns"
-import { enUS, fr } from "date-fns/locale"
-import { Loader2 } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { useTranslation } from "@/hooks/useTranslation"
-import { useToast } from "@/hooks/useToast"
-import TaskEditDialog from "./TaskEditDialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { PDFDocument } from "pdf-lib"
 
-const DEFAULT_AVATARS = {
-  user1: "https://api.dicebear.com/7.x/initials/svg?seed=JD&backgroundColor=52,53,65,255",
-  user2: "https://api.dicebear.com/7.x/initials/svg?seed=AB&backgroundColor=52,53,65,255",
-  user3: "https://api.dicebear.com/7.x/initials/svg?seed=CD&backgroundColor=52,53,65,255",
-  user4: "https://api.dicebear.com/7.x/initials/svg?seed=EF&backgroundColor=52,53,65,255",
-}
+// Importation de la fonction d'envoi d'email d'assignation (qui fonctionne correctement)
+import { sendAssignmentEmail } from "../utils/email"
 
-const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgroundColor=52,53,65,255"
+const DEFAULT_AVATAR =
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
 
-const getAvatarForUser = (email) => {
-  if (!email) return DEFAULT_AVATAR
-  const hash = email.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0)
-  const avatarSet = Object.values(DEFAULT_AVATARS)
-  const index = Math.abs(hash) % avatarSet.length
-  return avatarSet[index]
-}
+export default function TaskCreationForm({ onSuccess, onCancel, mode = "create", initialData = null }) {
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    status: "todo",
+    priority: "medium",
+    deadline: "",
+    estimatedTime: "",
+    assignedTo: "",
+  })
 
-export default function TaskList({ newTask }) {
-  const { t, language } = useTranslation()
-  const { showToast } = useToast()
-  const [tasks, setTasks] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [sortBy, setSortBy] = useState("deadline")
-  const [filterStatus, setFilterStatus] = useState("all")
-  const [filterPriority, setFilterPriority] = useState("all")
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedTask, setSelectedTask] = useState(null)
-  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false)
+  const [attachments, setAttachments] = useState([])
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [userError, setUserError] = useState("")
+  const [viewerOpen, setViewerOpen] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const { showToast } = useNotifications()
+  const { user } = useAuth()
+  const { t } = useTranslation()
 
-  const loadTasks = async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const fetchedTasks = await fetchTasks()
-      console.log("Tasks fetched:", fetchedTasks)
-      setTasks(fetchedTasks)
-    } catch (error) {
-      setError(error)
-      showToast("error", t("errorLoadingTasks"))
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  // Gestion des pièces jointes via localStorage
   useEffect(() => {
-    loadTasks()
-  }, [newTask, sortBy, filterStatus, filterPriority, language])
+    return () => {
+      // Nettoyage des attachements quand le composant est démonté
+      setAttachments([])
+    }
+  }, [])
 
-  const handleEditTask = (task) => {
-    setSelectedTask(task)
-    setIsEditDialogOpen(true)
-  }
+  // Initialisation du formulaire avec d'éventuelles données existantes
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        title: initialData.title || "",
+        description: initialData.description || "",
+        status: initialData.status || "todo",
+        priority: initialData.priority || "medium",
+        deadline: initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : "",
+        estimatedTime: initialData.estimatedTime || "",
+        assignedTo: initialData.assignedTo?._id || "",
+      })
+    }
+  }, [initialData])
 
-  const handleDeleteTask = async (taskId) => {
+  // Chargement des utilisateurs
+  useEffect(() => {
+    loadUsers()
+  }, [])
+
+  const loadUsers = async () => {
     try {
-      await deleteTask(taskId)
-      setTasks((prevTasks) => prevTasks.filter((task) => task._id !== taskId))
-      showToast("success", t("taskDeleted"))
-    } catch (error) {
-      console.error("Error deleting task:", error)
-      showToast("error", t("taskDeleteError"))
+      setLoadingUsers(true)
+      setUserError("")
+      const fetchedUsers = await getUsers()
+      setUsers(fetchedUsers)
+    } catch (err) {
+      console.error("Erreur lors du chargement des utilisateurs :", err)
+      setUserError(err.message)
+      showToast(t("error"), t("errorLoadingUsers"), "destructive")
+    } finally {
+      setLoadingUsers(false)
     }
   }
 
-  const handleDeleteAllTasks = async () => {
+  const compressFile = async (file) => {
+    const MAX_FILE_SIZE = 26214400 // 25MB
+
+    if (file.size <= MAX_FILE_SIZE) {
+      return file
+    }
+
+    // Handle images
+    if (file.type.startsWith("image/")) {
+      try {
+        // Start with higher quality settings
+        const options = {
+          maxSizeMB: 0.1,
+          maxWidthOrHeight: 2048, // Increased max dimension
+          initialQuality: 0.9, // Start with higher quality
+          useWebWorker: true,
+          alwaysKeepResolution: true, // Try to maintain resolution
+          preserveExif: true, // Keep image metadata
+        }
+
+        let compressedFile = await imageCompression(file, options)
+
+        // If still too large, try progressive compression
+        if (compressedFile.size > MAX_FILE_SIZE) {
+          options.maxWidthOrHeight = 1600
+          options.initialQuality = 0.8
+          compressedFile = await imageCompression(file, options)
+        }
+
+        if (compressedFile.size > MAX_FILE_SIZE) {
+          options.maxWidthOrHeight = 1200
+          options.initialQuality = 0.7
+          compressedFile = await imageCompression(file, options)
+        }
+
+        if (compressedFile.size <= MAX_FILE_SIZE) {
+          return compressedFile
+        }
+        throw new Error(`Impossible de compresser l'image "${file.name}" tout en maintenant une qualité acceptable`)
+      } catch (err) {
+        console.error("Image compression error:", err)
+        throw new Error(`Erreur lors de la compression de l'image "${file.name}"`)
+      }
+    }
+
+    // Handle PDFs
+    if (file.type === "application/pdf") {
+      try {
+        const arrayBuffer = await file.arrayBuffer()
+        const pdfDoc = await PDFDocument.load(arrayBuffer)
+
+        // Première tentative - compression basique
+        let compressedBytes = await pdfDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          preserveEditability: false,
+        })
+
+        if (compressedBytes.length <= MAX_FILE_SIZE) {
+          return new File([compressedBytes], file.name, { type: file.type })
+        }
+
+        // Deuxième tentative - compression des images
+        const pages = pdfDoc.getPages()
+        for (const page of pages) {
+          try {
+            const resources = await page.node.Resources()
+            if (!resources) continue
+
+            const xObjects = await resources.lookup("XObject")
+            if (!xObjects) continue
+
+            const imageObjects = Object.entries(xObjects.dict).filter(
+              ([_, obj]) =>
+                obj.constructor.name === "PDFImage" || (obj.dictionary && obj.dictionary.get("Subtype") === "Image"),
+            )
+
+            for (const [_, imageObj] of imageObjects) {
+              try {
+                if (imageObj.dictionary && imageObj.dictionary.get("BitsPerComponent")) {
+                  imageObj.dictionary.set("BitsPerComponent", 4)
+                }
+              } catch (imgErr) {
+                console.warn("Failed to compress image in PDF:", imgErr)
+                continue
+              }
+            }
+          } catch (pageErr) {
+            console.warn("Failed to process page in PDF:", pageErr)
+            continue
+          }
+        }
+
+        compressedBytes = await pdfDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          preserveEditability: false,
+          objectsPerTick: 50,
+        })
+
+        if (compressedBytes.length <= MAX_FILE_SIZE) {
+          return new File([compressedBytes], file.name, { type: file.type })
+        }
+
+        // Troisième tentative - compression agressive
+        const aggressiveDoc = await PDFDocument.create()
+        const copiedPages = await aggressiveDoc.copyPages(pdfDoc, pdfDoc.getPageIndices())
+        copiedPages.forEach((page) => aggressiveDoc.addPage(page))
+
+        compressedBytes = await aggressiveDoc.save({
+          useObjectStreams: true,
+          addDefaultPage: false,
+          preserveEditability: false,
+          objectsPerTick: 25,
+          updateFieldAppearances: false,
+        })
+
+        if (compressedBytes.length <= MAX_FILE_SIZE) {
+          return new File([compressedBytes], file.name, { type: file.type })
+        }
+
+        throw new Error(
+          `Le PDF "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB). ` +
+            `Même après compression, il fait ${(compressedBytes.length / 1024).toFixed(1)}KB. ` +
+            `Veuillez essayer un PDF plus petit ou avec moins d'images.`,
+        )
+      } catch (err) {
+        console.error("PDF compression error:", err)
+        throw new Error(
+          `Impossible de compresser le PDF "${file.name}". ` + `Erreur: ${err.message || "Erreur inconnue"}`,
+        )
+      }
+    }
+
+    // Handle other file types
+    try {
+      const arrayBuffer = await file.arrayBuffer()
+      const compressedBuffer = pako.deflate(new Uint8Array(arrayBuffer), {
+        level: 9,
+        memLevel: 9,
+        strategy: 2,
+      })
+
+      if (compressedBuffer.length <= MAX_FILE_SIZE) {
+        return new File([compressedBuffer], file.name, { type: file.type })
+      }
+      throw new Error(
+        `Le fichier "${file.name}" est trop volumineux (${(file.size / 1024).toFixed(1)}KB) ` +
+          `et ne peut pas être compressé en dessous de 25MB.`,
+      )
+    } catch (err) {
+      console.error("File compression error:", err)
+      throw new Error(`Erreur lors de la compression de "${file.name}": ${err.message || "Erreur inconnue"}`)
+    }
+  }
+
+  const handleFilesUpload = async (e) => {
+    const files = e.target.files
+    if (files && files.length > 0) {
+      const newAttachments = []
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+
+        try {
+          // Attempt to compress the file
+          const compressedFile = await compressFile(file)
+
+          // Convert to dataUrl for preview
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = (event) => resolve(event.target.result)
+            reader.onerror = (error) => reject(error)
+            reader.readAsDataURL(compressedFile)
+          })
+
+          newAttachments.push({ file: compressedFile, dataUrl })
+          showToast(t("success"), `${file.name} compressé avec succès`, "success")
+        } catch (err) {
+          console.error("Error processing file:", err)
+          showToast(t("error"), err.message || `Erreur lors du traitement de ${file.name}`, "destructive")
+          continue // Skip to next file instead of stopping completely
+        }
+      }
+      setAttachments((prev) => [...prev, ...newAttachments])
+    }
+  }
+
+  // Modifier la fonction handleViewFile pour mieux gérer les événements
+  const handleViewFile = (file, e) => {
+    if (e) {
+      e.preventDefault() // Empêche la soumission du formulaire
+      e.stopPropagation() // Empêche la propagation de l'événement
+    }
+    setSelectedFile(file)
+    setViewerOpen(true)
+  }
+
+  const renderAttachmentPreview = (att, index) => {
+    if (!att || !att.file || !att.dataUrl) return null
+
+    const previewClasses =
+      "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
+
+    if (att.file.type.startsWith("image/")) {
+      return (
+        <div key={index} className={previewClasses}>
+          <img src={att.dataUrl || "/placeholder.svg"} alt={`Aperçu ${index}`} className="w-full h-full object-cover" />
+          <Button
+            type="button"
+            variant="ghost"
+            className="absolute inset-0 w-full h-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white"
+            onClick={(e) => handleViewFile(att, e)}
+          >
+            Voir l'image
+          </Button>
+        </div>
+      )
+    } else if (att.file.type === "application/pdf") {
+      return (
+        <div key={index} className={previewClasses}>
+          <div className="w-full h-full bg-muted flex flex-col items-center justify-center p-4">
+            <svg className="w-8 h-8 text-muted-foreground mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <span className="text-xs text-center text-muted-foreground font-medium truncate max-w-full px-2">
+              {att.file.name}
+            </span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            className="absolute inset-0 w-full h-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity text-white"
+            onClick={(e) => handleViewFile(att, e)}
+          >
+            Voir le PDF
+          </Button>
+        </div>
+      )
+    }
+    return null
+  }
+
+  // Gestion de la soumission du formulaire
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (loadingUsers) return
+
     try {
       setLoading(true)
-      await Promise.all(tasks.map((task) => deleteTask(task._id)))
-      setTasks([])
-      showToast("success", t("allTasksDeleted"))
-    } catch (error) {
-      console.error("Error deleting all tasks:", error)
-      showToast("error", t("errorDeletingAllTasks"))
+      // Préparation des données à envoyer (y compris les pièces jointes)
+      const formDataToSend = new FormData()
+
+      Object.keys(formData).forEach((key) => {
+        if (formData[key]) {
+          formDataToSend.append(key, formData[key])
+        }
+      })
+
+      if (attachments.length > 0) {
+        formDataToSend.append("imageUrl", attachments[0].dataUrl)
+      }
+
+      attachments.forEach((att) => {
+        formDataToSend.append("attachments", att.file)
+      })
+
+      formDataToSend.append("createdBy", user.id)
+
+      let result
+      if (mode === "edit" && initialData?._id) {
+        result = await updateTask(initialData._id, formDataToSend)
+      } else {
+        result = await createTask(formDataToSend)
+      }
+
+      // Envoi de l'email d'assignation immédiatement après la création/modification de la tâche
+      if (formData.assignedTo) {
+        await sendAssignmentEmail(formData)
+      }
+
+      showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
+      if (onSuccess) onSuccess(result)
+    } catch (err) {
+      console.error("Erreur lors de la gestion de la tâche :", err)
+      showToast(
+        t("error"),
+        err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
+        "destructive",
+      )
     } finally {
       setLoading(false)
-      setIsDeleteAllDialogOpen(false)
     }
   }
 
-  const handleStatusUpdate = async (taskId, currentStatus) => {
-    const newStatus = getNextStatus(currentStatus)
-    try {
-      await updateTask(taskId, { status: newStatus })
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task))
-      )
-      showToast("success", t("statusUpdated"))
-    } catch (error) {
-      console.error("Error updating task status:", error)
-      showToast("error", t("statusUpdateError"))
-    }
-  }
-
-  const getNextStatus = (status) => {
-    switch (status) {
-      case "todo":
-        return "in_progress"
-      case "in_progress":
-        return "review"
-      case "review":
-        return "done"
-      default:
-        return "todo"
-    }
-  }
-
-  const getStatusColor = (status) => "bg-muted/50 text-muted-foreground"
-
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case "todo":
-        return t("todo")
-      case "in_progress":
-        return t("inProgress")
-      case "review":
-        return t("review")
-      case "done":
-        return t("done")
-      default:
-        return ""
-    }
-  }
-
-  const getPriorityColor = (priority) => "bg-muted/50 text-muted-foreground"
-
-  const getPriorityLabel = (priority) => {
-    switch (priority) {
-      case "high":
-        return t("high")
-      case "medium":
-        return t("medium")
-      case "low":
-        return t("low")
-      default:
-        return ""
-    }
-  }
-
-  const getCardBackground = (status) => {
-    switch (status) {
-      case "todo":
-        return "bg-red-100/80 dark:bg-red-950/40"
-      case "in_progress":
-        return "bg-blue-100/80 dark:bg-blue-950/40"
-      case "review":
-        return "bg-yellow-100/80 dark:bg-yellow-950/40"
-      case "done":
-        return "bg-green-100/80 dark:bg-green-950/40"
-      default:
-        return ""
-    }
-  }
-
-  const filteredTasks = tasks.filter((task) => {
-    if (filterStatus !== "all" && task.status !== filterStatus) return false
-    if (filterPriority !== "all" && task.priority !== filterPriority) return false
-    return true
-  })
-
-  const getPriorityOrder = (priority) => {
-    switch (priority) {
-      case "high":
-        return 3
-      case "medium":
-        return 2
-      case "low":
-        return 1
-      default:
-        return 0
-    }
-  }
-
-  const getStatusOrder = (status) => {
-    switch (status) {
-      case "todo":
-        return 1
-      case "in_progress":
-        return 2
-      case "review":
-        return 3
-      case "done":
-        return 4
-      default:
-        return 0
-    }
-  }
-
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (sortBy === "deadline") {
-      return new Date(a.deadline) - new Date(b.deadline)
-    } else if (sortBy === "priority") {
-      return getPriorityOrder(b.priority) - getPriorityOrder(a.priority)
-    } else if (sortBy === "status") {
-      return getStatusOrder(a.status) - getStatusOrder(b.status)
-    }
-    return 0
-  })
-
-  const handleTaskUpdated = (updatedTask) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
-    )
-    setIsEditDialogOpen(false)
-  }
-
-  // Fonction pour ouvrir l'image
-  const handleViewImage = (task) => {
-    if (task.imageUrl) {
-      fetch(task.imageUrl)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const blobUrl = URL.createObjectURL(blob)
-          window.open(blobUrl, "_blank")
-        })
-        .catch((err) => console.error("Erreur lors de l'ouverture de l'image :", err))
-    }
-  }
-
-  // Fonction pour ouvrir le PDF
-  const handleViewPDF = (task) => {
-    if (task.attachments && Array.isArray(task.attachments)) {
-      const pdfAttachment = task.attachments.find((att) =>
-        att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
-      )
-      if (pdfAttachment) {
-        window.open(pdfAttachment.dataUrl, "_blank")
-      } else {
-        showToast("error", t("noPDFFound"))
-      }
-    } else {
-      showToast("error", t("noPDFFound"))
-    }
+  const getUserDisplayName = (user) => {
+    if (!user) return ""
+    return user.name || user.username || user.email.split("@")[0]
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 sm:py-4"
-      >
-        <div className="space-y-3 sm:space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-            <div className="space-y-1">
-              <h2 className="text-lg sm:text-2xl font-bold tracking-tight">{t("taskList")}</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground">
-                {sortedTasks.length} {t("tasks")} {t("total")}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={loadTasks}
-                variant="outline"
-                size="sm"
-                className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 hover:opacity-90"
-                disabled={loading}
-              >
-                <RefreshCw className={`h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2 ${loading ? "animate-spin" : ""}`} />
-                <span className="text-xs sm:text-sm">{t("refresh")}</span>
-              </Button>
-              <Button
-                onClick={() => setIsDeleteAllDialogOpen(true)}
-                variant="destructive"
-                size="sm"
-                disabled={tasks.length === 0 || loading}
-                className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600"
-              >
-                <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2" />
-                <span className="text-xs sm:text-sm">{t("Delete all")}</span>
-              </Button>
-            </div>
-          </div>
+    // Ajout d'un conteneur pour permettre le défilement sur mobile
+    <div className="max-h-screen overflow-y-auto p-4">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 w-full max-w-full px-2 sm:px-4">
+        <div className="space-y-2">
+          <Label htmlFor="title" className="text-foreground">
+            {t("title")}
+          </Label>
+          <Input
+            id="title"
+            value={formData.title}
+            onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+            required
+            className="bg-background border-input text-foreground"
+          />
+        </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
-                <SortAsc className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
-                <SelectValue placeholder={t("sortBy")} />
+        <div className="space-y-2">
+          <Label htmlFor="description" className="text-foreground">
+            {t("description")}
+          </Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+            required
+            className="min-h-[100px] bg-background border-input text-foreground resize-y"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-foreground">{t("priority")}</Label>
+            <Select
+              value={formData.priority}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, priority: value }))}
+            >
+              <SelectTrigger className="bg-background border-input text-foreground">
+                <SelectValue placeholder={t("selectPriority")} />
               </SelectTrigger>
-              <SelectContent sideOffset={8}>
-                <SelectItem value="deadline">{t("deadline")}</SelectItem>
-                <SelectItem value="priority">{t("priority")}</SelectItem>
-                <SelectItem value="status">{t("status")}</SelectItem>
+              <SelectContent>
+                <SelectItem value="low">{t("low")}</SelectItem>
+                <SelectItem value="medium">{t("medium")}</SelectItem>
+                <SelectItem value="high">{t("high")}</SelectItem>
               </SelectContent>
             </Select>
-
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
-                <Filter className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
-                <SelectValue placeholder={t("filterByStatus")} />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-foreground">{t("status")}</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, status: value }))}
+            >
+              <SelectTrigger className="bg-background border-input text-foreground">
+                <SelectValue placeholder={t("selectStatus")} />
               </SelectTrigger>
-              <SelectContent sideOffset={8}>
-                <SelectItem value="all">{t("allStatuses")}</SelectItem>
+              <SelectContent>
                 <SelectItem value="todo">{t("todo")}</SelectItem>
-                <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
+                <SelectItem value="in_progress">{t("in_progress")}</SelectItem>
                 <SelectItem value="review">{t("review")}</SelectItem>
                 <SelectItem value="done">{t("done")}</SelectItem>
               </SelectContent>
             </Select>
-
-            <Select value={filterPriority} onValueChange={setFilterPriority}>
-              <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
-                <AlertCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
-                <SelectValue placeholder={t("filterByPriority")} />
-              </SelectTrigger>
-              <SelectContent sideOffset={8}>
-                <SelectItem value="all">{t("allPriorities")}</SelectItem>
-                <SelectItem value="high">{t("high")}</SelectItem>
-                <SelectItem value="medium">{t("medium")}</SelectItem>
-                <SelectItem value="low">{t("low")}</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
-      </motion.div>
 
-      <div className="pt-4">
-        <AnimatePresence mode="popLayout">
-          {loading ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center p-8"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-foreground">{t("deadline")}</Label>
+            <Input
+              type="datetime-local"
+              value={formData.deadline}
+              onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))}
+              className="bg-background border-input text-foreground"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="estimatedTime" className="text-foreground">
+              {t("estimatedTime")}
+            </Label>
+            <Input
+              id="estimatedTime"
+              type="number"
+              min="0"
+              step="0.5"
+              value={formData.estimatedTime}
+              onChange={(e) => setFormData((prev) => ({ ...prev, estimatedTime: e.target.value }))}
+              className="bg-background border-input text-foreground"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-foreground">{t("assignedTo")}</Label>
+          <div className="relative">
+            <Select
+              value={formData.assignedTo}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, assignedTo: value }))}
+              disabled={loadingUsers}
             >
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="ml-2 text-muted-foreground">{t("loadingTasks")}</span>
-            </motion.div>
-          ) : error ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-destructive/10 text-destructive p-4 rounded-lg"
-            >
-              {error}
-              <Button variant="link" onClick={loadTasks} className="ml-2 text-destructive">
-                {t("tryAgain")}
-              </Button>
-            </motion.div>
-          ) : (
-            <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {sortedTasks.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="col-span-full p-8 text-center"
-                >
-                  <p className="text-muted-foreground">{t("noTasksFound")}</p>
-                </motion.div>
-              ) : (
-                sortedTasks.map((task, index) => (
-                  <motion.div
-                    key={task._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.05 }}
-                    className={cn(
-                      "group relative overflow-hidden rounded-xl shadow-sm transition-all duration-300",
-                      "backdrop-blur-sm dark:backdrop-blur-md",
-                      "border border-white/10 dark:border-white/5",
-                      getCardBackground(task.status)
-                    )}
-                  >
-                    {/* Supprime l'effet hover sur mobile pour la superposition */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity no-hover-overlay" />
-
-                    <div className="relative p-3 sm:p-4 space-y-3 sm:space-y-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <h3 className="font-semibold text-sm sm:text-base tracking-tight line-clamp-2 dark:text-white">
-                          {task.title}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          {task.imageUrl && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewImage(task)}
-                              className="p-3 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90 no-hover"
-                            >
-                              <ImageIcon className="h-4 w-4" />
-                              <span className="text-xs">Voir image</span>
-                            </Button>
-                          )}
-                          {task.attachments &&
-                            Array.isArray(task.attachments) &&
-                            task.attachments.some((att) =>
-                              att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
-                            ) && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewPDF(task)}
-                                className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
-                              >
-                                <FileText className="h-4 w-4" />
-                                <span className="text-xs">Voir PDF</span>
-                              </Button>
-                            )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-                                <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44 sm:w-48">
-                              <DropdownMenuItem onClick={() => handleEditTask(task)} className="text-xs sm:text-sm">
-                                <Edit className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                {t("edit")}
-                              </DropdownMenuItem>
-                              {task.status !== "done" && (
-                                <DropdownMenuItem
-                                  onClick={() => handleStatusUpdate(task._id, task.status)}
-                                  className="text-xs sm:text-sm"
-                                >
-                                  <CheckCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                  {t("advanceStatus")}
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteTask(task._id)}
-                                className="text-destructive text-xs sm:text-sm"
-                              >
-                                <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-3.5" />
-                                {t("delete")}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-
-                      <p className="text-xs sm:text-sm text-muted-foreground dark:text-white/70 line-clamp-2 sm:line-clamp-3">
-                        {task.description}
-                      </p>
-
-                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                        <Badge variant="outline" className={cn("text-xs", getStatusColor(task.status))}>
-                          {getStatusLabel(task.status)}
-                        </Badge>
-                        <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
-                          {getPriorityLabel(task.priority)}
-                        </Badge>
-                      </div>
-
-                      <div className="grid gap-2 mt-3">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">{t("status")}:</span>
-                          <span className="font-medium">{getStatusLabel(task.status)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">{t("priority")}:</span>
-                          <span className="font-medium">{getPriorityLabel(task.priority)}</span>
-                        </div>
-                        {task.deadline && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">{t("deadline")}:</span>
-                            <span
-                              className={cn(
-                                "font-medium",
-                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400"
-                              )}
-                            >
-                              {format(new Date(task.deadline), "Pp", {
-                                locale: language === "fr" ? fr : enUS,
-                              })}
-                            </span>
-                          </div>
-                        )}
-                        {task.estimatedTime && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">{t("estimatedTime")}:</span>
-                            <span className="font-medium">
-                              {task.estimatedTime}h {t("estimated")}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-3 sm:pt-4 border-t dark:border-white/10 space-y-3 sm:space-y-4">
-                        <div className="grid gap-2 sm:gap-3">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                              <AvatarImage
-                                src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
-                                alt={`Avatar de ${task.createdBy?.email || "utilisateur"}`}
-                              />
-                              <AvatarFallback className="text-xs sm:text-sm bg-primary/10 dark:bg-primary/20">
-                                {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
-                                {t("createdBy")}
-                              </span>
-                              <span className="text-xs sm:text-sm font-medium dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
-                                {task.createdBy?.email}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                              <AvatarImage
-                                src={task.assignedTo?.avatar || getAvatarForUser(task.assignedTo?.email)}
-                                alt={`Avatar de ${task.assignedTo?.email || "utilisateur"}`}
-                              />
-                              <AvatarFallback className="text-xs sm:text-sm bg-secondary/10 dark:bg-secondary/20">
-                                {task.assignedTo?.email?.charAt(0).toUpperCase() || "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
-                                {t("assignedTo")}
-                              </span>
-                              <span className="text-xs sm:text-sm font-medium dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
-                                {task.assignedTo?.email}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>
-                              {format(new Date(task.createdAt || new Date()), "Pp", {
-                                locale: language === "fr" ? fr : enUS,
-                              })}
-                            </span>
-                          </div>
-                          {task.updatedAt && task.updatedAt !== task.createdAt && (
-                            <div className="flex items-center gap-2">
-                              <Edit className="h-3.5 w-3.5" />
-                              <span>
-                                {t("lastUpdated")}:{" "}
-                                {format(new Date(task.updatedAt), "Pp", {
-                                  locale: language === "fr" ? fr : enUS,
-                                })}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              <SelectTrigger className="w-full bg-background border-input text-foreground">
+                <SelectValue>
+                  {formData.assignedTo ? (
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage
+                          src={users.find((u) => u._id === formData.assignedTo)?.avatar || DEFAULT_AVATAR}
+                          alt={getUserDisplayName(users.find((u) => u._id === formData.assignedTo))}
+                        />
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{getUserDisplayName(users.find((u) => u._id === formData.assignedTo))}</span>
                     </div>
-                  </motion.div>
-                ))
-              )}
+                  ) : (
+                    t("selectAssignee")
+                  )}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <ScrollArea className="h-[200px]">
+                  <SelectItem value="unassigned">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback>
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{t("unassigned")}</span>
+                    </div>
+                  </SelectItem>
+                  {users.map((user) => (
+                    <SelectItem key={user._id} value={user._id}>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={user.avatar || DEFAULT_AVATAR} alt={getUserDisplayName(user)} />
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{getUserDisplayName(user)}</span>
+                          <span className="text-xs text-muted-foreground dark:text-white/70">{user.email}</span>
+                        </div>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </ScrollArea>
+              </SelectContent>
+            </Select>
+            {loadingUsers && (
+              <div className="absolute right-3 top-2">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          {userError && (
+            <p className="text-sm text-destructive mt-1">
+              {userError}
+              <button type="button" onClick={loadUsers} className="ml-2 underline hover:no-underline">
+                {t("retry")}
+              </button>
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="attachments" className="text-foreground">
+            {t("Upload Image / PDF")}
+          </Label>
+          <Input
+            id="attachments"
+            type="file"
+            accept="image/*,application/pdf"
+            capture="environment"
+            multiple
+            onChange={handleFilesUpload}
+            className="bg-background border-input text-foreground"
+          />
+          {attachments.length > 0 && (
+            <div className="mt-4 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+              {attachments.map((att, index) => renderAttachmentPreview(att, index))}
             </div>
           )}
-        </AnimatePresence>
-      </div>
+        </div>
 
-      <TaskEditDialog
-        task={selectedTask}
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        onTaskUpdated={handleTaskUpdated}
-      />
-
-      <AlertDialog open={isDeleteAllDialogOpen} onOpenChange={setIsDeleteAllDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("deleteAllTasks")}</AlertDialogTitle>
-            <AlertDialogDescription>{t("deleteAllTasksConfirmation")}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteAllTasks}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        <div className="flex justify-end gap-2">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              className="bg-background border-input text-foreground hover:bg-accent"
             >
-              {t("delete")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+              {t("cancel")}
+            </Button>
+          )}
+          <Button type="submit" disabled={loading || loadingUsers} className="bg-primary text-primary-foreground">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {mode === "edit" ? t("modifying") : t("creating")}
+              </>
+            ) : mode === "edit" ? (
+              t("editTask")
+            ) : (
+              t("createTask")
+            )}
+          </Button>
+        </div>
+      </form>
+
+      <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-4xl w-full max-h-[90vh] overflow-auto p-2 md:p-6">
+          <DialogHeader>
+            <DialogTitle>{selectedFile?.file.name}</DialogTitle>
+          </DialogHeader>
+          {selectedFile?.file.type.startsWith("image/") ? (
+            <img
+              src={selectedFile.dataUrl || "/placeholder.svg"}
+              alt="Preview"
+              className="w-full h-auto max-h-[70vh] object-contain"
+            />
+          ) : (
+            <iframe src={selectedFile?.dataUrl} className="w-full h-[70vh]" title="PDF Preview" />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
