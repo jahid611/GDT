@@ -257,7 +257,7 @@ function UserProfile() {
             >
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 text-center transform translate-y-1/2">
-                <Avatar className="h-32 w-32 border-4 border-background mx-auto">
+                <Avatar className="h-20 w-20 border-4 border-background mx-auto">
                   <AvatarImage
                     src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AEcjwHjVlLNBd0ayFs7YNUVPQwreMy.png"
                     alt={t("userProfile")}
@@ -269,7 +269,7 @@ function UserProfile() {
             </div>
 
             {/* Contenu du profil */}
-            <div className="pt-20 px-4 pb-8 md:px-8">
+            <div className="pt-12 px-4 pb-8 md:px-8">
               <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold tracking-tight">{displayName}</h1>
                 <p className="text-muted-foreground mt-1">{profile.email}</p>
