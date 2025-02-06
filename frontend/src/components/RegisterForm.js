@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { User, Mail, Lock, UserPlus, Loader2 } from "lucide-react"
+import { User, Mail, Lock, UserPlus, Loader2, Eye, EyeOff } from "lucide-react"
 import { register } from "../utils/api"
 import { useTranslation } from "../hooks/useTranslation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,6 +27,10 @@ function RegisterForm() {
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // États pour afficher/masquer les mots de passe
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   // Vérifier si le tutoriel a déjà été vu
   const [hasSeenTutorial] = useState(() => {
     if (typeof window !== "undefined") {
@@ -48,22 +52,22 @@ function RegisterForm() {
       text: "Remplissez ce formulaire pour rejoindre Vilmar",
     },
     {
-      targetId: "username-input",
+      targetId: "username",
       title: "Nom d'utilisateur",
       text: "Choisissez un nom d'utilisateur unique (minimum 3 caractères)",
     },
     {
-      targetId: "email-input",
+      targetId: "email",
       title: "Adresse email",
       text: "Entrez votre adresse email professionnelle",
     },
     {
-      targetId: "password-input",
+      targetId: "password",
       title: "Mot de passe",
       text: "Créez un mot de passe sécurisé (minimum 6 caractères)",
     },
     {
-      targetId: "confirm-password-input",
+      targetId: "confirmPassword",
       title: "Confirmation",
       text: "Confirmez votre mot de passe pour plus de sécurité",
     },
@@ -225,7 +229,7 @@ function RegisterForm() {
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     <Input
-                      id="username-input"
+                      id="username"
                       type="text"
                       required
                       value={formData.username}
@@ -247,7 +251,7 @@ function RegisterForm() {
                   <div className="relative">
                     <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     <Input
-                      id="email-input"
+                      id="email"
                       type="email"
                       required
                       value={formData.email}
@@ -269,17 +273,23 @@ function RegisterForm() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     <Input
-                      id="password-input"
-                      type="password"
+                      id="password"
+                      type={showPassword ? "text" : "password"}
                       required
                       value={formData.password}
                       onChange={handleChange}
                       placeholder={t("passwordPlaceholder")}
                       className={cn(
-                        "pl-10 bg-background dark:bg-background/50",
+                        "pl-10 pr-10 bg-background dark:bg-background/50",
                         errors.password && "border-destructive dark:border-destructive",
                       )}
                     />
+                    <div
+                      className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground cursor-pointer"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                    >
+                      {showPassword ? <EyeOff /> : <Eye />}
+                    </div>
                   </div>
                   {errors.password && <p className="text-sm text-destructive mt-1">{errors.password}</p>}
                 </div>
@@ -291,17 +301,23 @@ function RegisterForm() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                     <Input
-                      id="confirm-password-input"
-                      type="password"
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
                       required
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       placeholder={t("confirmPasswordPlaceholder")}
                       className={cn(
-                        "pl-10 bg-background dark:bg-background/50",
+                        "pl-10 pr-10 bg-background dark:bg-background/50",
                         errors.confirmPassword && "border-destructive dark:border-destructive",
                       )}
                     />
+                    <div
+                      className="absolute right-3 top-2.5 h-5 w-5 text-muted-foreground cursor-pointer"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? <EyeOff /> : <Eye />}
+                    </div>
                   </div>
                   {errors.confirmPassword && <p className="text-sm text-destructive mt-1">{errors.confirmPassword}</p>}
                 </div>
@@ -350,4 +366,3 @@ function RegisterForm() {
 }
 
 export default RegisterForm
-

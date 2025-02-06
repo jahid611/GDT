@@ -22,44 +22,74 @@ import { CSS } from "@dnd-kit/utilities"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, AlertCircle, RotateCcw, ArrowLeftRight, X } from "lucide-react"
+import { Calendar, AlertCircle, RotateCcw, ArrowLeftRight, X, Clock, ImageIcon } from "lucide-react"
 import { format } from "date-fns"
 import { enUS, fr, ro } from "date-fns/locale"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "@/components/ui/use-toast"
 import { useTranslation } from "@/hooks/useTranslation"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Separator } from "@/components/ui/separator"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
+
+// Constantes pour les avatars par défaut
+const DEFAULT_AVATARS = {
+  user1: "https://api.dicebear.com/7.x/initials/svg?seed=JD&backgroundColor=52,53,65,255",
+  user2: "https://api.dicebear.com/7.x/initials/svg?seed=AB&backgroundColor=52,53,65,255",
+  user3: "https://api.dicebear.com/7.x/initials/svg?seed=CD&backgroundColor=52,53,65,255",
+  user4: "https://api.dicebear.com/7.x/initials/svg?seed=EF&backgroundColor=52,53,65,255",
+}
+
+const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgroundColor=52,53,65,255"
+
+const getAvatarForUser = (email) => {
+  if (!email) return DEFAULT_AVATAR
+  const hash = email.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0)
+  const avatarSet = Object.values(DEFAULT_AVATARS)
+  const index = Math.abs(hash) % avatarSet.length
+  return avatarSet[index]
+}
 
 const getColumns = (t) => ({
   todo: {
     id: "todo",
     title: t("todo"),
-    className: "bg-card border-l-4 border-l-gray-400",
-    icon: "📋",
+    className: "border-t-2 border-t-[#666666]",
+    color: "#666666",
   },
   in_progress: {
     id: "in_progress",
     title: t("inProgress"),
-    className: "bg-card border-l-4 border-l-blue-400",
-    icon: "🔄",
+    className: "border-t-2 border-t-[#2F7FE6]",
+    color: "#2F7FE6",
   },
   review: {
     id: "review",
     title: t("review"),
-    className: "bg-card border-l-4 border-l-yellow-400",
-    icon: "👀",
+    className: "border-t-2 border-t-[#FDB40A]",
+    color: "#FDB40A",
   },
   done: {
     id: "done",
     title: t("done"),
-    className: "bg-card border-l-4 border-l-green-400",
-    icon: "✅",
+    className: "border-t-2 border-t-[#0AB924]",
+    color: "#0AB924",
   },
 })
 
 const PRIORITY_COLORS = {
-  low: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-  medium: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
-  high: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+  low: {
+    light: "bg-green-100 text-green-800",
+    dark: "dark:bg-green-900 dark:text-green-100",
+  },
+  medium: {
+    light: "bg-yellow-100 text-yellow-800",
+    dark: "dark:bg-yellow-900 dark:text-yellow-100",
+  },
+  high: {
+    light: "bg-red-100 text-red-800",
+    dark: "dark:bg-red-900 dark:text-red-100",
+  },
 }
 
 function DroppableColumn({ id, column, tasks, activeId }) {
@@ -73,12 +103,16 @@ function DroppableColumn({ id, column, tasks, activeId }) {
   })
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between px-3 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-xl">{column.icon}</span>
-          <h2 className="font-bold text-lg">{column.title}</h2>
-          <Badge variant="secondary" className="ml-2">
+          <span className="text-sm font-medium" style={{ color: column.color }}>
+            {column.title}
+          </span>
+          <Badge
+            variant="secondary"
+            className="bg-gray-100 dark:bg-[#2D2D2D] text-gray-600 dark:text-[#999999] text-xs"
+          >
             {tasks.length}
           </Badge>
         </div>
@@ -86,27 +120,25 @@ function DroppableColumn({ id, column, tasks, activeId }) {
       <motion.div
         ref={setNodeRef}
         animate={{
-          backgroundColor: isOver ? "rgba(var(--primary) / 0.1)" : "transparent",
+          backgroundColor: isOver ? "rgba(255, 255, 255, 0.05)" : "transparent",
         }}
         transition={{ duration: 0.2 }}
-        className={`min-h-[200px] p-4 rounded-lg ${column.className} transition-all duration-200
-          ${isOver ? "ring-2 ring-primary ring-offset-2 scale-[1.02]" : ""}
-          ${tasks.length === 0 ? "flex items-center justify-center" : ""}`}
+        className={`min-h-[200px] rounded-lg transition-all duration-200
+          ${column.className}
+          ${isOver ? "ring-2 ring-primary/50" : ""}
+          bg-white dark:bg-[#1A1A1A]`}
       >
-        {tasks.length === 0 ? (
-          <div
-            className={`w-full h-full min-h-[200px] flex items-center justify-center 
-            border-2 border-dashed rounded-lg
-            ${isOver ? "border-primary bg-primary/5" : "border-muted-foreground/20"}
-            transition-colors duration-200`}
-          >
-            <p className="text-sm text-muted-foreground">{isOver ? t("dropHere") : t("noTasks")}</p>
-          </div>
-        ) : (
-          <div
-            className={`space-y-3 h-full min-h-[200px] 
-            ${isOver ? "bg-primary/5 rounded-lg border-2 border-dashed border-primary" : ""}`}
-          >
+        <div className="h-full p-2 space-y-2">
+          {tasks.length === 0 ? (
+            <div
+              className={`h-full flex items-center justify-center 
+              border-2 border-dashed rounded-lg
+              ${isOver ? "border-primary bg-primary/5" : "border-black/10 dark:border-white/10"}
+              transition-colors duration-200`}
+            >
+              <p className="text-xs text-gray-500 dark:text-white/40">{isOver ? t("dropHere") : t("noTasks")}</p>
+            </div>
+          ) : (
             <SortableContext items={tasks.map((task) => task._id)} strategy={verticalListSortingStrategy}>
               <AnimatePresence>
                 {tasks.map((task) => (
@@ -114,8 +146,8 @@ function DroppableColumn({ id, column, tasks, activeId }) {
                 ))}
               </AnimatePresence>
             </SortableContext>
-          </div>
-        )}
+          )}
+        </div>
       </motion.div>
     </div>
   )
@@ -123,6 +155,8 @@ function DroppableColumn({ id, column, tasks, activeId }) {
 
 function DraggableTask({ task, isDragging }) {
   const { t, language } = useTranslation()
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false)
+  const [imageUrl, setImageUrl] = useState(null)
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: task._id,
     data: {
@@ -136,6 +170,43 @@ function DraggableTask({ task, isDragging }) {
     transition,
   }
 
+  // Fonction pour récupérer l'URL de l'image
+  const getImageUrl = useCallback(async () => {
+    if (!task.imageUrl) return
+
+    try {
+      // Si c'est déjà une URL valide
+      if (task.imageUrl.startsWith("http") || task.imageUrl.startsWith("blob:")) {
+        setImageUrl(task.imageUrl)
+        return
+      }
+
+      // Si c'est en base64
+      if (task.imageUrl.startsWith("data:")) {
+        setImageUrl(task.imageUrl)
+        return
+      }
+
+      // Sinon, on essaie de récupérer l'image via fetch
+      const response = await fetch(task.imageUrl)
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      setImageUrl(url)
+    } catch (err) {
+      console.error("Error loading image:", err)
+    }
+  }, [task.imageUrl])
+
+  useEffect(() => {
+    getImageUrl()
+    return () => {
+      // Cleanup des URLs créées
+      if (imageUrl?.startsWith("blob:")) {
+        URL.revokeObjectURL(imageUrl)
+      }
+    }
+  }, [getImageUrl])
+
   const getLocale = () => {
     switch (language) {
       case "fr":
@@ -148,53 +219,138 @@ function DraggableTask({ task, isDragging }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="touch-none"
-    >
-      <Card
-        id={`task-${task._id}`}
-        className={`mb-2 group cursor-grab active:cursor-grabbing ${
-          isDragging ? "shadow-lg scale-105 rotate-3" : "hover:shadow-md transition-all duration-200"
-        }`}
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className="touch-none"
       >
-        <CardContent className="p-4">
-          <div className="flex items-start gap-2">
-            <div className="flex-1">
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="font-medium flex-1">{task.title}</h3>
-                <Badge className={PRIORITY_COLORS[task.priority] || PRIORITY_COLORS.medium}>
-                  {t(task.priority || "medium")}
-                </Badge>
+        <Card
+          id={`task-${task._id}`}
+          className={`group cursor-grab active:cursor-grabbing bg-white dark:bg-[#242424] border-gray-200 dark:border-[#333333] hover:shadow-md dark:hover:bg-[#2A2A2A] transition-all duration-200 ${
+            isDragging ? "shadow-lg scale-105 rotate-3" : ""
+          }`}
+        >
+          <CardContent className="p-3 space-y-3">
+            {/* Titre et Description */}
+            <div>
+              <h3 className="text-sm text-gray-900 dark:text-white/90 font-medium">{task.title}</h3>
+              {task.description && <p className="text-xs text-gray-600 dark:text-white/60 mt-1">{task.description}</p>}
+            </div>
+
+            {/* Image Preview */}
+            {imageUrl && (
+              <div className="relative group/image rounded-lg overflow-hidden">
+                <img
+                  src={imageUrl || "/placeholder.svg"}
+                  alt={task.title}
+                  className="w-full h-32 object-cover rounded-lg"
+                />
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setImagePreviewOpen(true)}
+                    className="text-white hover:text-white hover:bg-white/20"
+                  >
+                    <ImageIcon className="h-4 w-4 mr-2" />
+                    {t("viewImage")}
+                  </Button>
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{task.description}</p>
-              {task.assignedTo?.name && (
-                <div className="flex items-center gap-2 mt-3">
-                  <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                    {task.assignedTo.name.charAt(0).toUpperCase()}
+            )}
+
+            {/* Status et Priorité */}
+            <div className="flex items-center justify-between text-xs">
+              <Badge
+                variant="outline"
+                className="text-[10px] border-gray-200 dark:border-[#333333] text-gray-600 dark:text-gray-400"
+              >
+                {t(task.status)}
+              </Badge>
+              <Badge
+                className={`${PRIORITY_COLORS[task.priority]?.light} ${PRIORITY_COLORS[task.priority]?.dark} text-[10px] px-1.5`}
+              >
+                {t(task.priority)}
+              </Badge>
+            </div>
+
+            <Separator className="bg-gray-100 dark:bg-[#333333]" />
+
+            {/* Informations utilisateur et dates */}
+            <div className="space-y-2 text-xs">
+              {/* Créé par */}
+              <div className="flex items-center gap-2">
+                <Avatar className="h-5 w-5 border border-gray-200 dark:border-white/10">
+                  <AvatarImage
+                    src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
+                    alt={`${t("avatarOf")} ${task.createdBy?.email || t("user")}`}
+                  />
+                  <AvatarFallback className="text-[10px] bg-gray-100 dark:bg-[#2D2D2D] text-gray-600 dark:text-white/60">
+                    {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="text-gray-500 dark:text-gray-400">{t("createdBy")}</span>
+                  <span className="text-gray-700 dark:text-gray-200">{task.createdBy?.email}</span>
+                </div>
+                <div className="ml-auto flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                  <Calendar className="h-3 w-3" />
+                  <span>{format(new Date(task.createdAt), "dd/MM/yyyy", { locale: getLocale() })}</span>
+                </div>
+              </div>
+
+              {/* Assigné à */}
+              {task.assignedTo && (
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-5 w-5 border border-gray-200 dark:border-white/10">
+                    <AvatarImage
+                      src={task.assignedTo?.avatar || getAvatarForUser(task.assignedTo?.email)}
+                      alt={`${t("avatarOf")} ${task.assignedTo?.email || t("user")}`}
+                    />
+                    <AvatarFallback className="text-[10px] bg-gray-100 dark:bg-[#2D2D2D] text-gray-600 dark:text-white/60">
+                      {task.assignedTo?.email?.charAt(0).toUpperCase() || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-gray-500 dark:text-gray-400">{t("assignedTo")}</span>
+                    <span className="text-gray-700 dark:text-gray-200">{task.assignedTo?.email}</span>
                   </div>
-                  <span className="text-sm text-muted-foreground">{task.assignedTo.name}</span>
+                  {task.deadline && (
+                    <div className="ml-auto flex items-center gap-1 text-gray-500 dark:text-gray-400">
+                      <Clock className="h-3 w-3" />
+                      <span>{format(new Date(task.deadline), "dd/MM/yyyy", { locale: getLocale() })}</span>
+                    </div>
+                  )}
                 </div>
               )}
-              <div className="flex items-center gap-4 mt-3 text-sm text-muted-foreground">
-                {task.deadline && (
-                  <span className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1 text-primary" />
-                    {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
-                  </span>
-                )}
-              </div>
             </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Image Preview Dialog */}
+      <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
+        <DialogContent className="max-w-[95vw] md:max-w-4xl w-full max-h-[90vh] overflow-auto p-0">
+          <div className="relative w-full h-full">
+            <img src={imageUrl || "/placeholder.svg"} alt={task.title} className="w-full h-auto object-contain" />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white"
+              onClick={() => setImagePreviewOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -307,8 +463,8 @@ export default function TaskKanban() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-4"></div>
-        <p className="text-muted-foreground">{t("loadingTasks")}</p>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/20 mb-4"></div>
+        <p className="text-white/40">{t("loadingTasks")}</p>
       </div>
     )
   }
@@ -316,9 +472,14 @@ export default function TaskKanban() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
-        <AlertCircle className="h-8 w-8 text-destructive mb-4" />
-        <p className="text-destructive font-medium mb-4">{error}</p>
-        <Button onClick={loadTasks} variant="outline" size="sm">
+        <AlertCircle className="h-8 w-8 text-[#E74C3C] mb-4" />
+        <p className="text-[#E74C3C] font-medium mb-4">{error}</p>
+        <Button
+          onClick={loadTasks}
+          variant="outline"
+          size="sm"
+          className="border-white/20 text-white/60 hover:bg-white/5"
+        >
           <RotateCcw className="h-4 w-4 mr-2" />
           {t("tryAgain")}
         </Button>
@@ -326,10 +487,8 @@ export default function TaskKanban() {
     )
   }
 
-  const getTasksByStatus = (status) => tasks.filter((task) => task.status === status)
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white min-h-screen p-6">
       <AnimatePresence>
         {showHint && (
           <motion.div
@@ -337,9 +496,9 @@ export default function TaskKanban() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="fixed top-4 right-4 z-50 bg-background/80 backdrop-blur-sm border rounded-lg p-4 shadow-lg flex items-center gap-3 text-sm max-w-sm"
+            className="fixed top-4 right-4 z-50 bg-[#242424]/90 backdrop-blur-sm border border-white/10 rounded-lg p-4 shadow-lg flex items-center gap-3 text-sm max-w-sm"
           >
-            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10">
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/5">
               <motion.div
                 animate={{
                   x: [0, 10, 0],
@@ -352,20 +511,20 @@ export default function TaskKanban() {
                   ease: "easeInOut",
                 }}
               >
-                <ArrowLeftRight className="h-4 w-4 text-primary" />
+                <ArrowLeftRight className="h-4 w-4 text-white/60" />
               </motion.div>
             </div>
             <div>
-              <p className="font-medium text-foreground">{t("dragToChangeStatus")}</p>
-              <p className="text-muted-foreground text-xs mt-1">{t("dragToChangeStatusHint")}</p>
+              <p className="font-medium text-white/90">{t("dragToChangeStatus")}</p>
+              <p className="text-white/40 text-xs mt-1">{t("dragToChangeStatusHint")}</p>
             </div>
             <Button
               size="icon"
               variant="ghost"
-              className="absolute top-2 right-2 h-6 w-6"
+              className="absolute top-2 right-2 h-6 w-6 hover:bg-white/5"
               onClick={() => setShowHint(false)}
             >
-              <X className="h-4 w-4" />
+              <X className="h-4 w-4 text-white/40" />
             </Button>
           </motion.div>
         )}
@@ -377,9 +536,15 @@ export default function TaskKanban() {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(COLUMNS).map(([id, column]) => (
-            <DroppableColumn key={id} id={id} column={column} tasks={getTasksByStatus(id)} activeId={activeId} />
+            <DroppableColumn
+              key={id}
+              id={id}
+              column={column}
+              tasks={tasks.filter((task) => task.status === id)}
+              activeId={activeId}
+            />
           ))}
         </div>
       </DndContext>

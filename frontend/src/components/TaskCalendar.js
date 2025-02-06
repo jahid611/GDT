@@ -3,42 +3,43 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { fetchTasks, updateTask } from "../utils/api"
 import {
-  CalendarIcon,
-  Loader2,
   RefreshCw,
   Clock,
-  AlertCircle,
   Edit,
-  Filter,
-  SortAsc,
-  SortDesc,
-  Star,
   CheckCircle2,
   AlertTriangle,
   Eye,
   ChevronLeft,
   ChevronRight,
+  Share2,
+  Printer,
+  Plus,
+  Search,
 } from "lucide-react"
 import {
   format,
   isSameDay,
-  isPast,
   addDays,
   subDays,
   isWithinInterval,
   startOfWeek,
-  endOfWeek,
   startOfDay,
+  endOfDay,
+  eachDayOfInterval,
+  addWeeks,
+  subWeeks,
+  getHours,
+  getMinutes,
+  setHours,
+  parseISO,
+  isValid,
 } from "date-fns"
-import { fr, enUS, ro } from "date-fns/locale" // Added Romanian locale
+import { fr, enUS, ro } from "date-fns/locale"
 import { Calendar } from "@/components/ui/calendar"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { useTranslation } from "../hooks/useTranslation"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { motion, AnimatePresence } from "framer-motion"
 import { Input } from "@/components/ui/input"
 import { toast } from "@/components/ui/use-toast"
 import {
@@ -48,67 +49,89 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip"
 import TaskEditDialog from "./TaskEditDialog"
 import { cn } from "@/lib/utils"
 
-const locales = { fr, en: enUS, ro } // Added Romanian locale
+const locales = { fr, en: enUS, ro }
+
+// Constants
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 9) // 9 AM to 9 PM
+const MINUTES_IN_HOUR = 60
+const HOUR_HEIGHT = 80 // pixels per hour
+const MINUTE_HEIGHT = HOUR_HEIGHT / MINUTES_IN_HOUR
+const AUTO_REFRESH_INTERVAL = 30000 // 30 seconds
+
+const VIEWS = [
+  { id: "day", label: "Day" },
+  { id: "work_week", label: "Work Week" },
+  { id: "week", label: "Week" },
+  { id: "month", label: "Month" },
+]
 
 const STATUS_STYLES = {
   todo: {
-    color: "bg-red-100 text-red-700 dark:bg-red-800/40 dark:text-red-100",
-    cardStyle: "border-red-200 bg-red-50 dark:border-red-700/40 dark:bg-red-800/20",
+    color: "bg-red-500/90 hover:bg-red-500",
+    border: "border-red-400",
+    text: "text-red-50",
     icon: AlertTriangle,
+    label: "À faire",
   },
   in_progress: {
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-700/40 dark:text-blue-100",
-    cardStyle: "border-blue-200 bg-blue-50 dark:border-blue-600/40 dark:bg-blue-700/20",
+    color: "bg-blue-500/90 hover:bg-blue-500",
+    border: "border-blue-400",
+    text: "text-blue-50",
     icon: Clock,
+    label: "En cours",
   },
   review: {
-    color: "bg-yellow-100 text-yellow-700 dark:bg-yellow-700/40 dark:text-yellow-100",
-    cardStyle: "border-yellow-200 bg-yellow-50 dark:border-yellow-600/40 dark:bg-yellow-700/20",
+    color: "bg-yellow-500/90 hover:bg-yellow-500",
+    border: "border-yellow-400",
+    text: "text-yellow-50",
     icon: Eye,
+    label: "En révision",
   },
   done: {
-    color: "bg-green-100 text-green-700 dark:bg-green-700/40 dark:text-green-100",
-    cardStyle: "border-green-200 bg-green-50 dark:border-green-600/40 dark:bg-green-700/20",
+    color: "bg-green-500/90 hover:bg-green-500",
+    border: "border-green-400",
+    text: "text-green-50",
     icon: CheckCircle2,
+    label: "Terminé",
   },
 }
 
-function TaskCalendar() {
+export default function TaskCalendar() {
   const { t, language } = useTranslation()
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [date, setDate] = useState(new Date())
-  const [view, setView] = useState("day")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterStatus, setFilterStatus] = useState("all")
-  const [sortBy, setSortBy] = useState("deadline")
-  const [sortDirection, setSortDirection] = useState("asc")
-  const [favorites, setFavorites] = useState(() => {
-    const saved = localStorage.getItem("taskFavorites")
-    return saved ? JSON.parse(saved) : []
-  })
+  const [view, setView] = useState("week")
   const [selectedTask, setSelectedTask] = useState(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [lastUpdate, setLastUpdate] = useState(new Date())
 
   const dateLocale = locales[language] || enUS
 
+  // Auto refresh
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
+    const interval = setInterval(() => {
+      loadTasks()
+    }, AUTO_REFRESH_INTERVAL)
+
+    return () => clearInterval(interval)
   }, [])
 
+  // Load tasks
   const loadTasks = useCallback(async () => {
     try {
       setLoading(true)
       const tasksData = await fetchTasks()
       setTasks(tasksData)
+      setLastUpdate(new Date())
     } catch (error) {
+      console.error("Failed to load tasks:", error)
       toast({
         title: t("error"),
         description: t("failedToLoadTasks"),
@@ -123,59 +146,81 @@ function TaskCalendar() {
     loadTasks()
   }, [loadTasks])
 
-  useEffect(() => {
-    localStorage.setItem("taskFavorites", JSON.stringify(favorites))
-  }, [favorites])
+  // Calculate week days based on view
+  const weekDays = useMemo(() => {
+    const start = startOfWeek(date, { weekStartsOn: 1 })
+    const end = view === "work_week" ? addDays(start, 4) : addDays(start, 6)
 
-  const filteredAndSortedTasks = useMemo(() => {
-    let filtered = tasks
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (task) => task.title.toLowerCase().includes(query) || task.description.toLowerCase().includes(query),
-      )
+    if (!isValid(start) || !isValid(end)) {
+      return []
     }
 
-    // Filter by status
-    if (filterStatus !== "all") {
-      filtered = filtered.filter((task) => task.status === filterStatus)
+    try {
+      return eachDayOfInterval({ start, end })
+    } catch (error) {
+      console.error("Error calculating week days:", error)
+      return []
     }
+  }, [date, view])
 
-    // Filter by view
-    if (view === "favorites") {
-      filtered = filtered.filter((task) => favorites.includes(task._id))
-    } else if (view === "day") {
-      filtered = filtered.filter((task) => {
-        const taskDate = task.deadline ? startOfDay(new Date(task.deadline)) : null
-        return taskDate && isSameDay(taskDate, date)
+  // Filter and organize tasks by day
+  const tasksByDay = useMemo(() => {
+    if (!weekDays.length) return []
+
+    return weekDays.map((day) => {
+      const dayStart = startOfDay(day)
+      const dayEnd = endOfDay(day)
+
+      const dayTasks = tasks.filter((task) => {
+        if (!task.deadline) return false
+        const taskDate = parseISO(task.deadline)
+        if (!isValid(taskDate)) return false
+
+        // Apply filters
+        if (filterStatus !== "all" && task.status !== filterStatus) return false
+        if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) return false
+
+        return isWithinInterval(taskDate, { start: dayStart, end: dayEnd })
       })
-    } else if (view === "week") {
-      filtered = filtered.filter((task) => {
-        const taskDate = task.deadline ? new Date(task.deadline) : null
-        if (!taskDate) return false
-        const weekStart = startOfWeek(date)
-        const weekEnd = endOfWeek(date)
-        return isWithinInterval(taskDate, { start: weekStart, end: weekEnd })
-      })
-    }
 
-    // Sort tasks
-    return filtered.sort((a, b) => {
-      if (favorites.includes(a._id) && !favorites.includes(b._id)) return -1
-      if (!favorites.includes(a._id) && favorites.includes(b._id)) return 1
-
-      let comparison = 0
-      if (sortBy === "deadline") {
-        comparison = new Date(a.deadline) - new Date(b.deadline)
-      } else if (sortBy === "title") {
-        comparison = a.title.localeCompare(b.title)
+      return {
+        date: day,
+        tasks: dayTasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline)),
       }
-
-      return sortDirection === "asc" ? comparison : -comparison
     })
-  }, [tasks, searchQuery, filterStatus, view, favorites, date, sortBy, sortDirection])
+  }, [tasks, weekDays, filterStatus, searchQuery])
+
+  // Calculate task position and height
+  const getTaskPosition = (deadline) => {
+    const date = parseISO(deadline)
+    if (!isValid(date)) return { top: 0, height: HOUR_HEIGHT }
+
+    const hours = getHours(date) - 9 // Offset from 9 AM
+    const minutes = getMinutes(date)
+    const top = hours * HOUR_HEIGHT + minutes * MINUTE_HEIGHT
+
+    return { top, height: HOUR_HEIGHT }
+  }
+
+  const handleTaskClick = (task) => {
+    setSelectedTask(task)
+    setIsEditDialogOpen(true)
+  }
+
+  const handleDateChange = (amount) => {
+    switch (view) {
+      case "day":
+        setDate(amount > 0 ? addDays(date, 1) : subDays(date, 1))
+        break
+      case "work_week":
+      case "week":
+        setDate(amount > 0 ? addWeeks(date, 1) : subWeeks(date, 1))
+        break
+      case "month":
+        setDate(amount > 0 ? addWeeks(date, 4) : subWeeks(date, 4))
+        break
+    }
+  }
 
   const handleStatusChange = async (taskId, newStatus) => {
     try {
@@ -186,6 +231,7 @@ function TaskCalendar() {
         description: t("statusUpdated"),
       })
     } catch (error) {
+      console.error("Failed to update task status:", error)
       toast({
         title: t("error"),
         description: t("failedToUpdateStatus"),
@@ -194,267 +240,299 @@ function TaskCalendar() {
     }
   }
 
-  const toggleFavorite = (taskId) => {
-    setFavorites((prev) => {
-      const newFavorites = prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId]
-
-      toast({
-        title: prev.includes(taskId) ? t("removedFromFavorites") : t("addedToFavorites"),
-        description: tasks.find((t) => t._id === taskId)?.title,
-      })
-
-      return newFavorites
-    })
-  }
-
-  const renderTaskCard = (task) => {
-    const StatusIcon = STATUS_STYLES[task.status]?.icon || AlertCircle
-    const isOverdue = task.deadline && isPast(new Date(task.deadline)) && task.status !== "done"
-    const isFavorite = favorites.includes(task._id)
-
-    return (
-      <motion.div
-        key={task._id}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className={cn(
-          "group p-4 rounded-lg border transition-all hover:shadow-lg",
-          STATUS_STYLES[task.status]?.cardStyle,
-          isOverdue && "border-red-500",
-          isFavorite && "ring-2 ring-yellow-400",
-        )}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <StatusIcon className="h-5 w-5 text-muted-foreground" />
-              <h3 className="font-medium text-base">{task.title}</h3>
-            </div>
-
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{task.description}</p>
-
-            <div className="flex flex-wrap gap-2 mb-3">
-              <Badge variant="secondary" className={cn(STATUS_STYLES[task.status]?.color, "font-medium")}>
-                {t(task.status)}
-              </Badge>
-              {task.deadline && (
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4 mr-1" />
-                  {format(new Date(task.deadline), "PPp", { locale: dateLocale })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toggleFavorite(task._id)}
-              className={cn(
-                "h-8 w-8 transition-colors",
-                isFavorite
-                  ? "text-yellow-500 hover:text-yellow-600 hover:bg-yellow-100/50 dark:hover:bg-yellow-900/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-              )}
-            >
-              <Star className={cn("h-4 w-4", isFavorite && "fill-current")} />
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted/50 transition-colors">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSelectedTask(task)}>{t("edit")}</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {Object.keys(STATUS_STYLES).map((status) => (
-                  <DropdownMenuItem
-                    key={status}
-                    onClick={() => handleStatusChange(task._id, status)}
-                    className={task.status === status ? "bg-muted" : ""}
-                  >
-                    {t(status)}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </motion.div>
-    )
-  }
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">{format(date, "MMMM yyyy", { locale: dateLocale })}</h2>
-        </div>
+    <div className="flex h-[calc(100vh-12rem)] bg-[#1B1A1A] text-white overflow-hidden rounded-lg border border-[#323131]">
+      {/* Mini Calendar Sidebar */}
+      <div className="w-64 border-r border-[#323131] flex flex-col">
+        <div className="p-4 border-b border-[#323131]">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-2 mb-4"
+            onClick={() => setIsEditDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            {t("newTask")}
+          </Button>
 
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setView("day")}
-              className={cn("transition-colors", view === "day" && "bg-muted")}
-            >
-              {t("day")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setView("week")}
-              className={cn("transition-colors", view === "week" && "bg-muted")}
-            >
-              {t("week")}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setView("favorites")}
-              className={cn("transition-colors", view === "favorites" && "bg-muted")}
-            >
-              <Star className={cn("h-4 w-4 mr-2", view === "favorites" && "fill-current")} />
-              {t("favorites")}
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDate(subDays(date, 1))}
-              className="hover:bg-muted/50 transition-colors"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="min-w-[130px] px-2 hover:bg-muted/50 transition-colors">
-                  {format(date, "PPP", { locale: dateLocale })}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar mode="single" selected={date} onSelect={setDate} initialFocus />
-              </PopoverContent>
-            </Popover>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDate(addDays(date, 1))}
-              className="hover:bg-muted/50 transition-colors"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder={t("searchTasks")}
+              placeholder={t("search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-[200px]"
+              className="pl-8 bg-[#252525] border-[#323131]"
             />
+          </div>
+        </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="hover:bg-muted/50 transition-colors">
-                  <Filter className="h-4 w-4" />
+        <ScrollArea className="flex-1 p-4">
+          <Calendar
+            mode="single"
+            selected={date}
+            onSelect={(newDate) => newDate && setDate(newDate)}
+            className="rounded-md border border-[#323131]"
+            locale={dateLocale}
+          />
+
+          <div className="mt-6 space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2 text-sm text-gray-400 uppercase tracking-wider">{t("filters")}</h3>
+              <div className="space-y-1">
+                <Button
+                  variant="ghost"
+                  className={cn("w-full justify-start", filterStatus === "all" && "bg-[#252525]")}
+                  onClick={() => setFilterStatus("all")}
+                >
+                  {t("allTasks")}
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setFilterStatus("all")}>{t("allStatuses")}</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {Object.keys(STATUS_STYLES).map((status) => (
-                  <DropdownMenuItem key={status} onClick={() => setFilterStatus(status)}>
-                    {t(status)}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                {Object.entries(STATUS_STYLES).map(([status, style]) => {
+                  const Icon = style.icon
+                  const count = tasks.filter((t) => t.status === status).length
+                  return (
+                    <Button
+                      key={status}
+                      variant="ghost"
+                      className={cn("w-full justify-start gap-2", filterStatus === status && "bg-[#252525]")}
+                      onClick={() => setFilterStatus(status)}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="flex-1 text-left">{style.label}</span>
+                      <Badge variant="secondary" className="ml-2">
+                        {count}
+                      </Badge>
+                    </Button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+      </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon" className="hover:bg-muted/50 transition-colors">
-                  {sortDirection === "asc" ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setSortBy("deadline")}>{t("sortByDeadline")}</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("title")}>{t("sortByTitle")}</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"))}>
-                  {sortDirection === "asc" ? t("ascending") : t("descending")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button variant="outline" size="icon" onClick={loadTasks} className="hover:bg-muted/50 transition-colors">
-              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+      {/* Main Calendar Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Command Bar */}
+        <div className="border-b border-[#323131] p-2 flex items-center justify-between bg-[#252525] sticky top-0 z-20">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDate(new Date())}
+              className="text-[#2F7FE6] font-medium"
+            >
+              {t("today")}
             </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={() => handleDateChange(-1)}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => handleDateChange(1)}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            <h2 className="text-lg font-semibold">
+              {format(weekDays[0] || date, "MMMM d")} - {format(weekDays[weekDays.length - 1] || date, "MMMM d, yyyy")}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {VIEWS.map((v) => (
+              <Button
+                key={v.id}
+                variant={view === v.id ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setView(v.id)}
+                className={view === v.id ? "bg-[#323131]" : ""}
+              >
+                {t(v.label)}
+              </Button>
+            ))}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={loadTasks}>
+                    <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("refresh")}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("share")}</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Printer className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("print")}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="flex-1 overflow-hidden">
+          <div className="grid grid-cols-[auto_1fr] h-full">
+            {/* Time Labels */}
+            <div className="w-16 border-r border-[#323131] bg-[#252525] sticky left-0 z-10">
+              {HOURS.map((hour) => (
+                <div key={hour} className="h-20 border-b border-[#323131] px-2 py-1">
+                  <span className="text-xs text-gray-400">{format(setHours(date, hour), "ha")}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Days Grid */}
+            <div className="relative">
+              {/* Day Headers */}
+              <div className="grid grid-cols-5 border-b border-[#323131] bg-[#252525] sticky top-0 z-10">
+                {weekDays.map((day) => (
+                  <div
+                    key={day.toISOString()}
+                    className={cn(
+                      "px-2 py-2 text-center border-r border-[#323131]",
+                      isSameDay(day, new Date()) && "bg-[#2F7FE6]/10",
+                    )}
+                  >
+                    <div className="text-sm font-medium">{format(day, "EEE", { locale: dateLocale })}</div>
+                    <div className={cn("text-xl mt-1", isSameDay(day, new Date()) && "text-[#2F7FE6]")}>
+                      {format(day, "d")}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Time Grid */}
+              <ScrollArea className="h-[calc(100%-3rem)]">
+                <div className="relative grid grid-cols-5">
+                  {weekDays.map((day, dayIndex) => (
+                    <div
+                      key={day.toISOString()}
+                      className={cn(
+                        "relative border-r border-[#323131]",
+                        isSameDay(day, new Date()) && "bg-[#2F7FE6]/5",
+                      )}
+                    >
+                      {/* Hour cells */}
+                      {HOURS.map((hour) => (
+                        <div key={hour} className="h-20 border-b border-[#323131] relative">
+                          {/* Half-hour marker */}
+                          <div className="absolute top-1/2 left-0 right-0 border-t border-dotted border-[#323131]" />
+                        </div>
+                      ))}
+
+                      {/* Tasks */}
+                      {tasksByDay[dayIndex]?.tasks.map((task) => {
+                        const { top, height } = getTaskPosition(task.deadline)
+                        const style = STATUS_STYLES[task.status]
+
+                        return (
+                          <div
+                            key={task._id}
+                            className={cn(
+                              "absolute left-1 right-1 p-2 rounded-md",
+                              style.color,
+                              style.text,
+                              "cursor-pointer transition-all duration-200",
+                              "hover:shadow-lg",
+                              "group",
+                            )}
+                            style={{
+                              top: `${top}px`,
+                              height: `${height}px`,
+                              zIndex: 1,
+                            }}
+                            onClick={() => handleTaskClick(task)}
+                          >
+                            <div className="font-medium truncate">{task.title}</div>
+                            <div className="text-xs opacity-90 truncate flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {format(parseISO(task.deadline), "h:mm a")}
+                            </div>
+
+                            {/* Quick actions on hover */}
+                            <div className="absolute top-1 right-1 hidden group-hover:flex items-center gap-1">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 hover:bg-white/20"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleTaskClick(task)
+                                    }}
+                                  >
+                                    {t("edit")}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  {Object.entries(STATUS_STYLES).map(([status, style]) => (
+                                    <DropdownMenuItem
+                                      key={status}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleStatusChange(task._id, status)
+                                      }}
+                                      className={task.status === status ? "bg-muted" : ""}
+                                    >
+                                      <style.icon className="mr-2 h-4 w-4" />
+                                      {style.label}
+                                    </DropdownMenuItem>
+                                  ))}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {/* Current time indicator */}
+                      {isSameDay(day, new Date()) && (
+                        <div
+                          className="absolute left-0 right-0 border-t-2 border-red-500 z-10"
+                          style={{
+                            top: `${(getHours(new Date()) - 9) * HOUR_HEIGHT + getMinutes(new Date()) * MINUTE_HEIGHT}px`,
+                          }}
+                        >
+                          <div className="absolute -left-1 -top-1 w-2 h-2 rounded-full bg-red-500" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {Object.entries(STATUS_STYLES).map(([status, style]) => {
-          const count = tasks.filter((t) => t.status === status).length
-          const Icon = style.icon
-          return (
-            <Card key={status} className={cn("transition-colors hover:shadow-md", style.cardStyle)}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{t(status)}</span>
-                  </div>
-                  <span className="text-2xl font-bold">{count}</span>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      <ScrollArea className="h-[600px]">
-        <div className="space-y-4">
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : filteredAndSortedTasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              {view === "favorites" ? (
-                <>
-                  <Star className="h-12 w-12 text-muted-foreground/50" />
-                  <p className="mt-2 text-sm text-muted-foreground">{t("noFavoriteTasks")}</p>
-                </>
-              ) : (
-                <>
-                  <CalendarIcon className="h-12 w-12 text-muted-foreground/50" />
-                  <p className="mt-2 text-sm text-muted-foreground">{t("noTasksFound")}</p>
-                </>
-              )}
-            </div>
-          ) : (
-            <AnimatePresence>{filteredAndSortedTasks.map(renderTaskCard)}</AnimatePresence>
-          )}
-        </div>
-      </ScrollArea>
-
+      {/* Task Edit Dialog */}
       <TaskEditDialog
         task={selectedTask}
-        open={Boolean(selectedTask)}
-        onOpenChange={(open) => !open && setSelectedTask(null)}
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          setIsEditDialogOpen(open)
+          if (!open) {
+            setSelectedTask(null)
+            loadTasks() // Refresh tasks when dialog closes
+          }
+        }}
         onTaskUpdated={(updatedTask) => {
           setTasks(tasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
-          setSelectedTask(null)
+          setIsEditDialogOpen(false)
           toast({
             title: t("success"),
             description: t("taskUpdated"),
@@ -464,6 +542,4 @@ function TaskCalendar() {
     </div>
   )
 }
-
-export default TaskCalendar
 
