@@ -1,12 +1,18 @@
-import mongoose from "mongoose"
+// src/models/Team.js
+import mongoose from "mongoose";
 
 const teamSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
+      trim: true,
     },
-    description: String,
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     leader: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -21,8 +27,7 @@ const teamSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
-)
+  }
+);
 
-export default mongoose.model("Team", teamSchema)
-
+export default mongoose.model("Team", teamSchema);

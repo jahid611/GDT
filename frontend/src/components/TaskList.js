@@ -62,7 +62,7 @@ const getAvatarForUser = (email) => {
   return avatarSet[index]
 }
 
-export default function TaskList({ newTask }) {
+export default function TaskList({ newTask, user }) {
   const { t, language } = useTranslation()
   const { showToast } = useToast()
   const [tasks, setTasks] = useState([])
@@ -77,9 +77,12 @@ export default function TaskList({ newTask }) {
 
   const getLocale = () => {
     switch (language) {
-      case "fr": return fr
-      case "ro": return ro
-      default: return enUS
+      case "fr":
+        return fr
+      case "ro":
+        return ro
+      default:
+        return enUS
     }
   }
 
@@ -137,9 +140,7 @@ export default function TaskList({ newTask }) {
     const newStatus = getNextStatus(currentStatus)
     try {
       await updateTask(taskId, { status: newStatus })
-      setTasks((prevTasks) =>
-        prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task))
-      )
+      setTasks((prevTasks) => prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task)))
       showToast("success", t("statusUpdated"))
     } catch (error) {
       console.error("Error updating task status:", error)
@@ -149,10 +150,14 @@ export default function TaskList({ newTask }) {
 
   const getNextStatus = (status) => {
     switch (status) {
-      case "todo": return "in_progress"
-      case "in_progress": return "review"
-      case "review": return "done"
-      default: return "todo"
+      case "todo":
+        return "in_progress"
+      case "in_progress":
+        return "review"
+      case "review":
+        return "done"
+      default:
+        return "todo"
     }
   }
 
@@ -160,11 +165,16 @@ export default function TaskList({ newTask }) {
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case "todo": return t("todo")
-      case "in_progress": return t("inProgress")
-      case "review": return t("review")
-      case "done": return t("done")
-      default: return ""
+      case "todo":
+        return t("todo")
+      case "in_progress":
+        return t("inProgress")
+      case "review":
+        return t("review")
+      case "done":
+        return t("done")
+      default:
+        return ""
     }
   }
 
@@ -172,20 +182,29 @@ export default function TaskList({ newTask }) {
 
   const getPriorityLabel = (priority) => {
     switch (priority) {
-      case "high": return t("high")
-      case "medium": return t("medium")
-      case "low": return t("low")
-      default: return ""
+      case "high":
+        return t("high")
+      case "medium":
+        return t("medium")
+      case "low":
+        return t("low")
+      default:
+        return ""
     }
   }
 
   const getCardBackground = (status) => {
     switch (status) {
-      case "todo": return "bg-red-100/80 dark:bg-red-950/40"
-      case "in_progress": return "bg-blue-100/80 dark:bg-blue-950/40"
-      case "review": return "bg-yellow-100/80 dark:bg-yellow-950/40"
-      case "done": return "bg-green-100/80 dark:bg-green-950/40"
-      default: return ""
+      case "todo":
+        return "bg-red-100/80 dark:bg-red-950/40"
+      case "in_progress":
+        return "bg-blue-100/80 dark:bg-blue-950/40"
+      case "review":
+        return "bg-yellow-100/80 dark:bg-yellow-950/40"
+      case "done":
+        return "bg-green-100/80 dark:bg-green-950/40"
+      default:
+        return ""
     }
   }
 
@@ -199,20 +218,29 @@ export default function TaskList({ newTask }) {
 
   const getPriorityOrder = (priority) => {
     switch (priority) {
-      case "high": return 3
-      case "medium": return 2
-      case "low": return 1
-      default: return 0
+      case "high":
+        return 3
+      case "medium":
+        return 2
+      case "low":
+        return 1
+      default:
+        return 0
     }
   }
 
   const getStatusOrder = (status) => {
     switch (status) {
-      case "todo": return 1
-      case "in_progress": return 2
-      case "review": return 3
-      case "done": return 4
-      default: return 0
+      case "todo":
+        return 1
+      case "in_progress":
+        return 2
+      case "review":
+        return 3
+      case "done":
+        return 4
+      default:
+        return 0
     }
   }
 
@@ -228,9 +256,7 @@ export default function TaskList({ newTask }) {
   })
 
   const handleTaskUpdated = (updatedTask) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
-    )
+    setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
     setIsEditDialogOpen(false)
   }
 
@@ -249,7 +275,7 @@ export default function TaskList({ newTask }) {
   const handleViewPDF = (task) => {
     if (task.attachments && Array.isArray(task.attachments)) {
       const pdfAttachment = task.attachments.find(
-        (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
+        (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf"),
       )
       if (pdfAttachment) {
         window.open(pdfAttachment.dataUrl, "_blank")
@@ -260,6 +286,8 @@ export default function TaskList({ newTask }) {
       showToast("error", t("noPDFFound"))
     }
   }
+
+  console.log("Current user:", user) // Pour déboguer
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -281,7 +309,7 @@ export default function TaskList({ newTask }) {
                 onClick={loadTasks}
                 variant="outline"
                 size="sm"
-                className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-0 hover:opacity-90"
+                className="flex-1 sm:flex-none bg-[#B7B949] hover:bg-[#B7B949]/90 text-white border-0"
                 disabled={loading}
               >
                 <RefreshCw className={`h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2 ${loading ? "animate-spin" : ""}`} />
@@ -291,8 +319,8 @@ export default function TaskList({ newTask }) {
                 onClick={() => setIsDeleteAllDialogOpen(true)}
                 variant="destructive"
                 size="sm"
-                disabled={tasks.length === 0 || loading}
-                className="flex-1 sm:flex-none bg-red-500 hover:bg-red-600"
+                disabled={tasks.length === 0 || loading || user?.role !== "admin"}
+                className="flex-1 sm:flex-none bg-[#B7B949] hover:bg-[#B7B949]/90 text-white border-0"
               >
                 <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2" />
                 <span className="text-xs sm:text-sm">{t("deleteAll")}</span>
@@ -390,7 +418,7 @@ export default function TaskList({ newTask }) {
                       "group relative overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300",
                       "backdrop-blur-sm dark:backdrop-blur-md",
                       "border border-white/10 dark:border-white/5",
-                      getCardBackground(task.status)
+                      getCardBackground(task.status),
                     )}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -415,7 +443,7 @@ export default function TaskList({ newTask }) {
                           {task.attachments &&
                             Array.isArray(task.attachments) &&
                             task.attachments.some(
-                              (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
+                              (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf"),
                             ) && (
                               <Button
                                 variant="outline"
@@ -488,7 +516,7 @@ export default function TaskList({ newTask }) {
                             <span
                               className={cn(
                                 "font-medium",
-                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400"
+                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400",
                               )}
                             >
                               {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
@@ -599,3 +627,4 @@ export default function TaskList({ newTask }) {
     </div>
   )
 }
+

@@ -11,6 +11,7 @@ import TaskCalendar from "./TaskCalendar";
 import TaskKanban from "./TaskKanban";
 import UserProfile from "./UserProfile";
 import AdminPanel from "./AdminPanel";
+import TeamManagement from "./TeamManagement"; // <-- Nouveau composant
 import { useNotifications } from "../contexts/NotificationContext";
 import { useTranslation } from "../hooks/useTranslation";
 
@@ -35,6 +36,7 @@ import {
   HelpCircle,
   MousePointer,
   Globe,
+  Users, // Icone pour le menu "Team"
 } from "lucide-react";
 
 import { Button } from "../components/ui/button";
@@ -52,7 +54,7 @@ import NotificationPopup from "./NotificationPopup";
 import TaskCreationDialog from "./TaskCreationDialog";
 import { cn } from "../lib/utils";
 
-// Insertion du style global pour l'animation heartbeat
+// Style global pour l'animation heartbeat
 const globalStyles = `
   @keyframes heartbeat {
     0%, 100% { transform: scale(1); }
@@ -68,12 +70,9 @@ if (typeof window !== "undefined") {
   document.head.appendChild(styleTag);
 }
 
-// Utilisez l'URL du logo fourni
 const logoSrc =
   "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-A4oA2peQSsUbnjIvgkqspXDTemvaV5.png";
 
-// Fonction utilitaire pour extraire le nom d'utilisateur depuis l'email
-// (la partie avant "@" avec les points remplacés par des espaces)
 const getUsernameFromEmail = (email) => {
   if (!email) return "";
   const prefix = email.split("@")[0];
@@ -81,8 +80,8 @@ const getUsernameFromEmail = (email) => {
 };
 
 export default function Dashboard() {
-  // États pour le mode dark/light, sidebar, etc.
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  // États principaux
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedView, setSelectedView] = useState("list");
   const [showNotifications, setShowNotifications] = useState(false);
@@ -91,7 +90,7 @@ export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // États pour le tutoriel avec Joyride
+  // États pour le tutoriel
   const [runTour, setRunTour] = useState(false);
   const [currentTutorialTarget, setCurrentTutorialTarget] = useState(null);
   const tourSteps = [
@@ -123,7 +122,7 @@ export default function Dashboard() {
         <div className="flex items-center">
           <Calendar className="h-5 w-5 mr-2" />
           <span>
-            Dans le menu <strong>Calendrier</strong>, vous pouvez planifier et visualiser les échéances.
+            Dans le menu <strong>Calendrier</strong>, planifiez et visualisez les échéances.
           </span>
         </div>
       ),
@@ -134,7 +133,7 @@ export default function Dashboard() {
         <div className="flex items-center">
           <BarChart2 className="h-5 w-5 mr-2" />
           <span>
-            Le menu <strong>Statistiques</strong> présente un aperçu de vos performances et de votre productivité.
+            Le menu <strong>Statistiques</strong> présente un aperçu de vos performances et productivité.
           </span>
         </div>
       ),
@@ -145,7 +144,7 @@ export default function Dashboard() {
         <div className="flex items-center">
           <Wrench className="h-5 w-5 mr-2" />
           <span>
-            Accédez aux <strong>tâches de maintenance</strong> pour surveiller et assurer le bon fonctionnement.
+            Accédez aux <strong>tâches de maintenance</strong> pour surveiller le système.
           </span>
         </div>
       ),
@@ -167,7 +166,18 @@ export default function Dashboard() {
         <div className="flex items-center">
           <Shield className="h-5 w-5 mr-2" />
           <span>
-            Le menu <strong>Administration</strong> est réservé aux administrateurs pour gérer l'ensemble de l'application.
+            Le menu <strong>Administration</strong> est réservé aux administrateurs.
+          </span>
+        </div>
+      ),
+    },
+    {
+      target: "#menu-team",
+      content: (
+        <div className="flex items-center">
+          <Users className="h-5 w-5 mr-2" />
+          <span>
+            Le menu <strong>Team</strong> vous permet de créer et gérer vos équipes.
           </span>
         </div>
       ),
@@ -192,9 +202,7 @@ export default function Dashboard() {
       content: (
         <div className="flex items-center">
           <Globe className="h-5 w-5 mr-2" />
-          <span>
-            Cliquez ici pour changer la langue de l'application.
-          </span>
+          <span>Cliquez ici pour changer la langue de l'application.</span>
         </div>
       ),
     },
@@ -204,7 +212,7 @@ export default function Dashboard() {
         <div className="flex items-center">
           <Plus className="h-5 w-5 mr-2" />
           <span>
-            Cliquez ici pour créer une <strong>Nouvelle tâche</strong> et ouvrir le formulaire de création.
+            Cliquez ici pour créer une <strong>Nouvelle tâche</strong>.
           </span>
         </div>
       ),
@@ -217,7 +225,7 @@ export default function Dashboard() {
           <div className="flex items-center">
             <HelpCircle className="h-5 w-5 mr-2" />
             <span>
-              Ce bouton vous permet de relancer le tutoriel pour revoir les fonctionnalités.
+              Cliquez ici pour relancer le tutoriel.
             </span>
           </div>
         </div>
@@ -230,12 +238,11 @@ export default function Dashboard() {
   const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications();
   const { t } = useTranslation();
 
-  // Bascule dark/light
+  // Bascule dark/light via le bouton
   const toggleColorMode = () => {
     setIsDarkMode((prev) => !prev);
   };
 
-  // Appliquer le mode dark/light dans le DOM
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add("dark");
@@ -244,7 +251,6 @@ export default function Dashboard() {
     }
   }, [isDarkMode]);
 
-  // Gestion du redimensionnement pour la sidebar
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
@@ -265,7 +271,7 @@ export default function Dashboard() {
     }
   };
 
-  // Définition des éléments du menu avec identifiants pour Joyride
+  // Menu principal
   const menuItems = useMemo(
     () => [
       { id: "list", label: t("list"), icon: ListTodo },
@@ -274,10 +280,12 @@ export default function Dashboard() {
       { id: "stats", label: t("stats"), icon: BarChart2 },
       { id: "maintenance", label: "Maintenance", icon: Wrench },
       { id: "profile", label: t("profile"), icon: User },
+      { id: "team", label: t("teamManagement"), icon: Users },
     ],
     [t]
   );
 
+  // Option d'administration
   const adminMenuItem = useMemo(
     () => ({
       id: "admin",
@@ -294,7 +302,6 @@ export default function Dashboard() {
     return menuItems;
   }, [user?.role, menuItems, adminMenuItem]);
 
-  // Fonction pour relancer le tutoriel
   const restartTour = () => {
     setRunTour(true);
   };
@@ -320,6 +327,8 @@ export default function Dashboard() {
         return <TaskListMaintenance newTask={newTask} />;
       case "profile":
         return <UserProfile />;
+      case "team":
+        return <TeamManagement />;
       case "admin":
         return user?.role === "admin" ? <AdminPanel /> : null;
       default:
@@ -329,10 +338,8 @@ export default function Dashboard() {
 
   return (
     <>
-      {/* Bouton invisible pour le tutoriel "Revoir le tuto" */}
       <div id="header-restart-tour" className="hidden" />
 
-      {/* Joyride pour le tutoriel interactif */}
       <Joyride
         callback={handleJoyrideCallback}
         continuous
@@ -342,11 +349,11 @@ export default function Dashboard() {
         styles={{
           options: {
             zIndex: 10000,
-            backgroundColor: "#201F1F", // Fond de la carte du tuto
+            backgroundColor: "#201F1F",
             textColor: "#fff",
-            arrowColor: "#C5D200", // Flèche en vert
-            primaryColor: "#C5D200", // Boutons verts
-            spotlightBorderColor: "#C5D200", // Contour vert pour l'élément ciblé
+            arrowColor: "#C5D200",
+            primaryColor: "#C5D200",
+            spotlightBorderColor: "#C5D200",
           },
           buttonNext: { backgroundColor: "#C5D200", color: "#000" },
           buttonSkip: { backgroundColor: "#C5D200", color: "#000" },
@@ -355,21 +362,20 @@ export default function Dashboard() {
 
       <div className={cn("min-h-screen", isDarkMode ? "bg-[#1B1A1A] text-white" : "bg-white text-black")}>
         <div className="w-full">
-          {/* Header en full width, aligné à gauche */}
+          {/* Header */}
           <header
             className={cn(
               "fixed top-0 left-0 right-0 h-12 z-50 flex items-center justify-between px-4 border-b",
               isDarkMode ? "bg-[#201F1A] border-[#323131]" : "bg-gray-100 border-gray-200"
             )}
           >
-            {/* Zone gauche : logo et message */}
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
                 <Menu className="h-5 w-5" />
               </Button>
               <Link to="/home" className="flex flex-col items-start mr-4">
-                <img src={logoSrc} alt="Logo" className="h-8 w-auto mt-1 mb-1" />
-                <span className="text-xs font-bold" style={{ color: "#C5D200" }}>
+                <img src={logoSrc} alt="Logo" className="h-8 w-auto mt-0.2 mb-0.2" />
+                <span className="text-xs font-bold" style={{ color: "#B7B949" }}>
                   VILMAR
                 </span>
               </Link>
@@ -379,7 +385,6 @@ export default function Dashboard() {
                 </span>
               </div>
             </div>
-            {/* Zone droite : boutons */}
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" className="relative" onClick={() => setShowNotifications(true)}>
                 <Bell className="h-5 w-5" />
@@ -392,19 +397,15 @@ export default function Dashboard() {
               <Button variant="ghost" size="icon" onClick={() => setIsTaskDialogOpen(true)}>
                 <Plus className="h-5 w-5" />
               </Button>
-              {/* Bouton dark/light */}
               <Button variant="ghost" size="icon" onClick={toggleColorMode}>
                 {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
               </Button>
-              {/* Bouton Traduction */}
               <Button variant="ghost" size="icon" id="translate-button">
                 <Globe className="h-5 w-5" />
               </Button>
-              {/* Bouton "Revoir le tuto" */}
               <Button variant="ghost" size="icon" onClick={restartTour} id="header-restart-tour" className="heartbeat">
                 <HelpCircle className="h-5 w-5" />
               </Button>
-              {/* Dropdown pour déconnexion */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -413,10 +414,7 @@ export default function Dashboard() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className={cn(
-                    isDarkMode ? "bg-[#323131] border-[#424242]" : "bg-white border-gray-300",
-                    "w-56"
-                  )}
+                  className={cn(isDarkMode ? "bg-[#323131] border-[#424242]" : "bg-white border-gray-300", "w-56")}
                 >
                   <DropdownMenuItem onClick={handleLogout} className="text-red-400">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -447,9 +445,7 @@ export default function Dashboard() {
                     }}
                     className={cn(
                       "w-full justify-start",
-                      selectedView === item.id
-                        ? (isDarkMode ? "bg-[#323131]" : "bg-gray-200")
-                        : "",
+                      selectedView === item.id ? (isDarkMode ? "bg-[#323131]" : "bg-gray-200") : "",
                       item.id === currentTutorialTarget && "border-2 border-green-500"
                     )}
                     id={`menu-${item.id}`}
@@ -470,7 +466,6 @@ export default function Dashboard() {
                   <h1 className="text-2xl font-semibold">
                     {selectedView.charAt(0).toUpperCase() + selectedView.slice(1)}
                   </h1>
-                  {/* Bouton "Nouvelle tâche" */}
                   <Button
                     id="new-task-button"
                     variant="outline"
@@ -483,12 +478,7 @@ export default function Dashboard() {
                   </Button>
                 </div>
               </div>
-              <div
-                className={cn(
-                  "rounded-lg border shadow-lg",
-                  isDarkMode ? "bg-[#1B1A1A] border-[#323131]" : "bg-white border-gray-300"
-                )}
-              >
+              <div className={cn("rounded-lg border shadow-lg", isDarkMode ? "bg-[#1B1A1A] border-[#323131]" : "bg-white border-gray-300")}>
                 {renderContent()}
               </div>
             </div>
@@ -496,12 +486,7 @@ export default function Dashboard() {
 
           {/* Notifications Panel */}
           <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
-            <SheetContent
-              className={cn(
-                "w-full sm:max-w-md",
-                isDarkMode ? "bg-[#201F1A] border-l border-[#323131]" : "bg-white border-l border-gray-200"
-              )}
-            >
+            <SheetContent className={cn("w-full sm:max-w-md", isDarkMode ? "bg-[#201F1A] border-l border-[#323131]" : "bg-white border-l border-gray-200")}>
               <NotificationPanel />
             </SheetContent>
           </Sheet>

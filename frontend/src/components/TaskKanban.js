@@ -11,6 +11,7 @@ import {
   useSensor,
   useSensors,
   useDroppable,
+  DragOverlay,
 } from "@dnd-kit/core"
 import {
   SortableContext,
@@ -123,20 +124,31 @@ function DroppableColumn({ id, column, tasks, activeId }) {
           backgroundColor: isOver ? "rgba(255, 255, 255, 0.05)" : "transparent",
         }}
         transition={{ duration: 0.2 }}
-        className={`min-h-[200px] rounded-lg transition-all duration-200
+        className={`relative min-h-[200px] rounded-lg transition-all duration-200
           ${column.className}
           ${isOver ? "ring-2 ring-primary/50" : ""}
           bg-white dark:bg-[#1A1A1A]`}
       >
+        {/* Overlay de drop */}
+        <AnimatePresence>
+          {isOver && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-primary/10 dark:bg-primary/20 border-2 border-dashed border-primary rounded-lg pointer-events-none z-10"
+            >
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="text-sm font-medium text-primary dark:text-primary/80">{t("dropHere")}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="h-full p-2 space-y-2">
           {tasks.length === 0 ? (
-            <div
-              className={`h-full flex items-center justify-center 
-              border-2 border-dashed rounded-lg
-              ${isOver ? "border-primary bg-primary/5" : "border-black/10 dark:border-white/10"}
-              transition-colors duration-200`}
-            >
-              <p className="text-xs text-gray-500 dark:text-white/40">{isOver ? t("dropHere") : t("noTasks")}</p>
+            <div className="h-full flex items-center justify-center">
+              <p className="text-xs text-gray-500 dark:text-white/40">{t("noTasks")}</p>
             </div>
           ) : (
             <SortableContext items={tasks.map((task) => task._id)} strategy={verticalListSortingStrategy}>
@@ -205,7 +217,7 @@ function DraggableTask({ task, isDragging }) {
         URL.revokeObjectURL(imageUrl)
       }
     }
-  }, [getImageUrl])
+  }, [getImageUrl, imageUrl])
 
   const getLocale = () => {
     switch (language) {
@@ -217,6 +229,19 @@ function DraggableTask({ task, isDragging }) {
         return enUS
     }
   }
+
+  const handleViewImage = useCallback(async () => {
+    if (!task.imageUrl) return
+    try {
+      const response = await fetch(task.imageUrl)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      setImageUrl(blobUrl)
+      setImagePreviewOpen(true)
+    } catch (err) {
+      console.error("Error opening image:", err)
+    }
+  }, [task.imageUrl])
 
   return (
     <>
@@ -244,7 +269,7 @@ function DraggableTask({ task, isDragging }) {
             </div>
 
             {/* Image Preview */}
-            {imageUrl && (
+            {task.imageUrl && (
               <div className="relative group/image rounded-lg overflow-hidden">
                 <img
                   src={imageUrl || "/placeholder.svg"}
@@ -255,7 +280,7 @@ function DraggableTask({ task, isDragging }) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setImagePreviewOpen(true)}
+                    onClick={handleViewImage}
                     className="text-white hover:text-white hover:bg-white/20"
                   >
                     <ImageIcon className="h-4 w-4 mr-2" />
@@ -360,6 +385,7 @@ export default function TaskKanban() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [activeId, setActiveId] = useState(null)
+  const [activeDraggedTask, setActiveDraggedTask] = useState(null)
   const [showHint, setShowHint] = useState(true)
   const urlParams = useUrlParams()
   const focusedTaskId = urlParams.get("taskId")
@@ -409,6 +435,8 @@ export default function TaskKanban() {
   const handleDragStart = (event) => {
     const { active } = event
     setActiveId(active.id)
+    const draggedTask = tasks.find((task) => task._id === active.id)
+    setActiveDraggedTask(draggedTask)
     document.body.style.cursor = "grabbing"
     setShowHint(false)
   }
@@ -416,6 +444,7 @@ export default function TaskKanban() {
   const handleDragEnd = async (event) => {
     const { active, over } = event
     setActiveId(null)
+    setActiveDraggedTask(null)
     document.body.style.cursor = ""
 
     if (!over || !active) return
@@ -547,6 +576,14 @@ export default function TaskKanban() {
             />
           ))}
         </div>
+
+        <DragOverlay>
+          {activeDraggedTask ? (
+            <div className="opacity-80 pointer-events-none">
+              <DraggableTask task={activeDraggedTask} isDragging={true} />
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </div>
   )
