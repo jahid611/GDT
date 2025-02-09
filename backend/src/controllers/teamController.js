@@ -1,13 +1,14 @@
-// src/controllers/teamController.js
 import Team from "../models/Team.js";
 import User from "../models/User.js";
 
-// Récupérer les équipes auxquelles un utilisateur appartient
+// Récupérer les équipes d'un utilisateur
 export const getUserTeams = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // id du leader (ou de l'utilisateur)
     console.log(`Fetching teams for user ID: ${id}`);
-    const teams = await Team.find({ members: id }).populate("leader members", "email name");
+    const teams = await Team.find({ members: id })
+      .populate("leader members", "name email")
+      .exec();
     if (!teams || teams.length === 0) {
       return res.status(404).json({ error: "Aucune équipe trouvée" });
     }
@@ -24,7 +25,7 @@ export const getUserTeams = async (req, res) => {
 // Créer une équipe pour un utilisateur (le leader est celui dont l'ID est dans l'URL)
 export const createTeamViaUserAPI = async (req, res) => {
   try {
-    const { id } = req.params; // ID du leader
+    const { id } = req.params; // ID du leader (chaîne)
     const { name, description, members } = req.body;
     console.log(`Creating team for user ID: ${id}`);
     // Vérifier que le leader existe

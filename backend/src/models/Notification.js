@@ -1,15 +1,16 @@
-import mongoose from 'mongoose';
+// src/models/Notification.js
+import mongoose from "mongoose";
 
 const NotificationSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   },
   type: {
     type: String,
     required: true,
-    enum: ['TASK_ASSIGNED', 'TASK_UPDATED', 'TASK_COMPLETED', 'COMMENT_ADDED'],
+    enum: ["TASK_ASSIGNED", "TASK_UPDATED", "TASK_COMPLETED", "COMMENT_ADDED"],
   },
   message: {
     type: String,
@@ -17,7 +18,7 @@ const NotificationSchema = new mongoose.Schema({
   },
   taskId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Task',
+    ref: "Task",
     default: null,
   },
   read: {
@@ -34,11 +35,10 @@ const NotificationSchema = new mongoose.Schema({
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: "User",
     required: true,
   },
 });
 
-// Exportation par défaut
-const Notification = mongoose.model('Notification', NotificationSchema);
+const Notification = mongoose.model("Notification", NotificationSchema);
 export default Notification;

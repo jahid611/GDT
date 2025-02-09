@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider } from "./contexts/AuthContext"
 import { NotificationProvider } from "./contexts/NotificationContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
-import { SocketProvider } from "./contexts/SocketContext"
 import { LanguageProvider } from "./hooks/useTranslation"
 import { Toaster } from "./components/ui/toaster"
 import Dashboard from "./components/Dashboard"
@@ -80,11 +79,10 @@ function App() {
       <Router>
         <AuthProvider>
           <NotificationProvider>
-            <SocketProvider>
+          
               <LanguageProvider>
                 <AppContent />
               </LanguageProvider>
-            </SocketProvider>
           </NotificationProvider>
         </AuthProvider>
       </Router>

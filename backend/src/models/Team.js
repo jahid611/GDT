@@ -1,4 +1,3 @@
-// src/models/Team.js
 import mongoose from "mongoose";
 
 const teamSchema = new mongoose.Schema(

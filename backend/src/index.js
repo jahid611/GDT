@@ -7,10 +7,15 @@ import morgan from "morgan";
 import multer from "multer";
 import bodyParser from "body-parser";
 
+// Importation des routes existantes
 import authRoutes from "./routes/authRoutes.js";
 import taskRoutes from "./routes/taskRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import notificationsRoutes from "./routes/notificationsRoutes.js";
+// Importation du routeur pour la gestion des équipes via l'API utilisateurs
+import teamRoutes from "./routes/teamRoutes.js";
+import teamTaskRoutes from "./routes/teamTaskRoutes.js";
+
 
 dotenv.config();
 
@@ -18,6 +23,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const LIMIT = "50mb";
 
+// Configuration de body-parser avec des limites augmentées
 app.use(bodyParser.json({ limit: LIMIT }));
 app.use(
   bodyParser.urlencoded({
@@ -27,6 +33,7 @@ app.use(
   })
 );
 
+// Configuration d'Express avec des limites augmentées
 app.use(express.json({ limit: LIMIT }));
 app.use(
   express.urlencoded({
@@ -36,6 +43,7 @@ app.use(
   })
 );
 
+// Middleware personnalisé pour augmenter la limite de payload
 app.use((req, res, next) => {
   req.setMaxListeners(0);
   if (req.headers["content-type"] && req.headers["content-type"].includes("multipart/form-data")) {
@@ -44,6 +52,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Configuration CORS
 const allowedOrigins = [
   "http://localhost:3000",
   "https://gdt-mauve.vercel.app",
@@ -82,10 +91,12 @@ app.use((req, res, next) => {
   next();
 });
 
+// Route keep-alive
 app.get("/keepalive", (req, res) => {
   res.status(200).send("OK");
 });
 
+// Connexion à MongoDB
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
@@ -128,6 +139,7 @@ app.use((req, res, next) => {
   next();
 });
 
+// Route principale
 app.get("/", (req, res) => {
   res.json({
     message: "Welcome to the Task Manager API",
@@ -137,11 +149,17 @@ app.get("/", (req, res) => {
   });
 });
 
+// Application des routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationsRoutes);
+// Montage du routeur pour la gestion des équipes sous l'URL "/api/users/teams"
+app.use("/api/users", teamRoutes); 
+app.use("/api/teams", teamTaskRoutes);
 
+
+// Middleware pour les routes non trouvées
 app.use((req, res) => {
   res.status(404).json({
     error: "Not Found",
@@ -150,6 +168,7 @@ app.use((req, res) => {
   });
 });
 
+// Gestion des erreurs globales
 app.use((err, req, res, next) => {
   console.error("❌ Erreur détectée :", err);
   if (err instanceof multer.MulterError) {

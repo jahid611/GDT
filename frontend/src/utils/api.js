@@ -1,4 +1,4 @@
-// utils/api.js
+// src/utils/api.js
 import axios from "axios";
 
 // Configuration de l'instance axios
@@ -14,16 +14,14 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Intercepteur de requête avec log détaillé
+// Intercepteur de requête avec logging détaillé
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     config.metadata = { startTime: new Date() };
-
     console.log("API Request Details:", {
       url: `${config.baseURL}${config.url}`,
       method: config.method,
@@ -44,7 +42,7 @@ api.interceptors.request.use(
   }
 );
 
-// Intercepteur de réponse avec log détaillé
+// Intercepteur de réponse avec timing et logging d'erreur détaillé
 api.interceptors.response.use(
   (response) => {
     const duration = new Date() - response.config.metadata.startTime;
@@ -110,207 +108,60 @@ const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
   throw lastError;
 };
 
-// ------------------------
-// Authentification
-// ------------------------
+// --- Authentification ---
 export const login = async (credentials) => {
   return withRetry(async () => {
     try {
       console.log("Tentative de connexion...");
       const { data } = await api.post("/api/auth/login", credentials);
-
       if (!data || !data.token) {
         throw new Error("Réponse invalide du serveur");
       }
-
       localStorage.setItem("token", data.token);
-      const userData = {
-        ...data.user,
-        role: data.user?.role || "user",
-      };
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      console.log("Connexion réussie:", { user: userData });
+      localStorage.setItem("user", JSON.stringify(data.user));
+      console.log("Connexion réussie:", { user: data.user });
       return data;
     } catch (error) {
       console.error("Erreur de connexion:", error);
-      if (error.response) {
-        switch (error.response.status) {
-          case 401:
-            throw new Error("Email ou mot de passe incorrect");
-          case 404:
-            throw new Error("Compte non trouvé");
-          case 429:
-            throw new Error("Trop de tentatives de connexion. Veuillez réessayer plus tard.");
-          default:
-            throw new Error(error.response.data?.message || "Une erreur est survenue lors de la connexion");
-        }
-      }
-      if (error.code === "ECONNABORTED") {
-        throw new Error("La connexion a pris trop de temps. Veuillez réessayer.");
-      }
-      throw new Error("Impossible de se connecter. Vérifiez votre connexion internet.");
+      throw new Error(error.response?.data?.message || "Échec de la connexion");
     }
-  }, 2);
+  });
 };
 
 export const register = async (userData) => {
   return withRetry(async () => {
     try {
-      const dataToSend = {
-        ...userData,
-        role: "user",
-      };
-
-      console.log("Création d'un nouveau compte...");
-      const { data } = await api.post("/api/auth/register", dataToSend);
-
-      if (!data || !data.token) {
-        throw new Error("Réponse invalide du serveur");
-      }
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...data.user,
-          role: data.user.role || "user",
-        })
-      );
-
+      const { data } = await api.post("/api/auth/register", userData);
       return data;
     } catch (error) {
       console.error("Erreur d'inscription:", error);
-      if (error.response) {
-        switch (error.response.status) {
-          case 400:
-            throw new Error("Données d'inscription invalides");
-          case 409:
-            throw new Error("Cette adresse email est déjà utilisée");
-          default:
-            throw new Error(error.response.data?.message || "Erreur lors de l'inscription");
-        }
-      }
-      throw new Error("Impossible de créer le compte. Veuillez réessayer.");
+      throw new Error(error.response?.data?.message || "Échec de l'inscription");
     }
   });
 };
 
-export const logout = () => {
-  try {
-    console.log("Déconnexion...");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    console.log("Déconnexion réussie");
-  } catch (error) {
-    console.error("Erreur de déconnexion:", error);
-    throw new Error("Erreur lors de la déconnexion");
-  }
-};
-
-// ------------------------
-// Gestion des tâches
-// ------------------------
-export const fetchTasks = async () => {
+export const logout = async () => {
   return withRetry(async () => {
     try {
-      console.log("Chargement des tâches...");
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Session expirée. Veuillez vous reconnecter.");
-      }
-      const { data } = await api.get("/api/tasks");
-      if (!Array.isArray(data)) {
-        throw new Error("Format de données invalide reçu du serveur");
-      }
-      console.log(`${data.length} tâches chargées avec succès`);
-      return data;
+      await api.post("/api/auth/logout");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
     } catch (error) {
-      console.error("Erreur lors du chargement des tâches:", error);
-      throw new Error(error.message || "Impossible de charger les tâches");
+      console.error("Erreur de déconnexion:", error);
+      throw new Error(error.response?.data?.message || "Échec de la déconnexion");
     }
   });
 };
 
-export const createTask = async (taskData) => {
-  return withRetry(async () => {
-    try {
-      console.log("Création d'une nouvelle tâche...");
-      const { data } = await api.post("/api/tasks", taskData);
-      console.log("Tâche créée avec succès");
-      return data;
-    } catch (error) {
-      console.error("Erreur lors de la création de la tâche:", error);
-      throw new Error(error.response?.data?.message || "Impossible de créer la tâche");
-    }
-  });
-};
-
-export const updateTask = async (taskId, taskData) => {
-  return withRetry(async () => {
-    try {
-      console.log("Mise à jour de la tâche...");
-      const { data } = await api.put(`/api/tasks/${taskId}`, taskData);
-      console.log("Tâche mise à jour avec succès");
-      return data;
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour de la tâche:", error);
-      throw new Error(error.response?.data?.message || "Impossible de mettre à jour la tâche");
-    }
-  });
-};
-
-export const deleteTask = async (taskId) => {
-  return withRetry(async () => {
-    try {
-      console.log("Suppression de la tâche...");
-      const { data } = await api.delete(`/api/tasks/${taskId}`);
-      console.log("Tâche supprimée avec succès");
-      return data;
-    } catch (error) {
-      console.error("Erreur lors de la suppression de la tâche:", error);
-      throw new Error(error.response?.data?.message || "Impossible de supprimer la tâche");
-    }
-  });
-};
-
-// ------------------------
-// Gestion des commentaires
-// ------------------------
-export const addComment = async (taskId, content) => {
-  return withRetry(async () => {
-    try {
-      console.log("Ajout d'un commentaire...");
-      const { data } = await api.post(`/api/tasks/${taskId}/comments`, { content });
-      console.log("Commentaire ajouté avec succès");
-      return data;
-    } catch (error) {
-      console.error("Erreur lors de l'ajout du commentaire:", error);
-      throw new Error(error.response?.data?.message || "Impossible d'ajouter le commentaire");
-    }
-  });
-};
-
-// ------------------------
-// Gestion des utilisateurs
-// ------------------------
+// --- Utilisateurs ---
 export const getUsers = async () => {
   return withRetry(async () => {
     try {
-      console.log("Chargement des utilisateurs...");
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("Session expirée");
-      }
       const { data } = await api.get("/api/users");
-      if (!Array.isArray(data)) {
-        throw new Error("Format de données invalide");
-      }
-      console.log(`${data.length} utilisateurs chargés avec succès`);
       return data;
     } catch (error) {
-      console.error("Erreur lors du chargement des utilisateurs:", error);
-      throw new Error(error.response?.data?.message || "Impossible de charger les utilisateurs");
+      console.error("Erreur lors de la récupération des utilisateurs:", error);
+      throw new Error(error.response?.data?.message || "Impossible de récupérer les utilisateurs");
     }
   });
 };
@@ -318,13 +169,11 @@ export const getUsers = async () => {
 export const getUserProfile = async (userId) => {
   return withRetry(async () => {
     try {
-      console.log("Chargement du profil utilisateur...");
-      const { data } = await api.get(`/api/users/${userId}`);
-      console.log("Profil chargé avec succès");
+      const { data } = await api.get(`/api/users/${userId}/profile`);
       return data;
     } catch (error) {
-      console.error("Erreur lors du chargement du profil:", error);
-      throw new Error(error.response?.data?.message || "Impossible de charger le profil");
+      console.error("Erreur lors de la récupération du profil:", error);
+      throw new Error(error.response?.data?.message || "Impossible de récupérer le profil");
     }
   });
 };
@@ -335,9 +184,7 @@ export const updateUserProfile = async (userId, userData) => {
       if (!userId) {
         throw new Error("ID utilisateur requis");
       }
-      console.log("Mise à jour du profil...");
       const { data } = await api.put(`/api/users/${userId}`, userData);
-      console.log("Profil mis à jour avec succès");
       return data;
     } catch (error) {
       console.error("Erreur lors de la mise à jour du profil:", error);
@@ -352,9 +199,7 @@ export const deleteUser = async (userId) => {
       if (!userId) {
         throw new Error("ID utilisateur requis");
       }
-      console.log("Suppression de l'utilisateur...");
       const { data } = await api.delete(`/api/users/${userId}`);
-      console.log("Utilisateur supprimé avec succès");
       return data;
     } catch (error) {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
@@ -363,33 +208,64 @@ export const deleteUser = async (userId) => {
   });
 };
 
-// ------------------------
-// Gestion des notifications
-// ------------------------
-export const createNotification = async (notificationData) => {
+// --- Tâches ---
+export const fetchTasks = async (filters = {}) => {
   return withRetry(async () => {
     try {
-      console.log("Création d'une notification...");
-      const { data } = await api.post("/api/notifications", notificationData);
-      console.log("Notification créée avec succès");
+      const { data } = await api.get("/api/tasks", { params: filters });
       return data;
     } catch (error) {
-      console.error("Erreur lors de la création de la notification:", error);
-      throw new Error(error.response?.data?.message || "Impossible de créer la notification");
+      console.error("Erreur lors du chargement des tâches:", error);
+      throw new Error(error.response?.data?.message || "Impossible de charger les tâches");
     }
   });
 };
 
+export const createTask = async (taskData) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.post("/api/tasks", taskData);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la création de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible de créer la tâche");
+    }
+  });
+};
+
+export const updateTask = async (taskId, taskData) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.put(`/api/tasks/${taskId}`, taskData);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible de mettre à jour la tâche");
+    }
+  });
+};
+
+export const deleteTask = async (taskId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.delete(`/api/tasks/${taskId}`);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible de supprimer la tâche");
+    }
+  });
+};
+
+// --- Notifications ---
 export const getNotifications = async () => {
   return withRetry(async () => {
     try {
-      console.log("Chargement des notifications...");
       const { data } = await api.get("/api/notifications");
-      console.log("Notifications chargées avec succès");
       return data;
     } catch (error) {
-      console.error("Erreur lors du chargement des notifications:", error);
-      throw new Error(error.response?.data?.message || "Impossible de charger les notifications");
+      console.error("Erreur lors de la récupération des notifications:", error);
+      throw new Error(error.response?.data?.message || "Impossible de récupérer les notifications");
     }
   });
 };
@@ -397,9 +273,7 @@ export const getNotifications = async () => {
 export const markNotificationAsRead = async (notificationId) => {
   return withRetry(async () => {
     try {
-      console.log("Marquage de la notification comme lue...");
       const { data } = await api.put(`/api/notifications/${notificationId}/read`);
-      console.log("Notification marquée comme lue avec succès");
       return data;
     } catch (error) {
       console.error("Erreur lors du marquage de la notification:", error);
@@ -408,15 +282,251 @@ export const markNotificationAsRead = async (notificationId) => {
   });
 };
 
-// ------------------------
-// Statistiques
-// ------------------------
-export const getTaskStats = async () => {
+// --- Équipes ---
+export const fetchUserTeams = async (userId) => {
   return withRetry(async () => {
     try {
-      console.log("Chargement des statistiques...");
-      const { data } = await api.get("/api/tasks/stats");
-      console.log("Statistiques chargées avec succès");
+      const { data } = await api.get(`/api/users/${userId}/teams`);
+      console.log(`${data.length} équipes chargées avec succès`);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors du chargement des équipes:", error);
+      throw new Error(error.response?.data?.message || "Impossible de charger les équipes");
+    }
+  });
+};
+
+export const createTeamViaUserAPI = async (leaderId, teamData) => {
+  return withRetry(async () => {
+    try {
+      // Utilisation de l'ID leader dans l'URL
+      const { data } = await api.post(`/api/users/${leaderId}/teams`, teamData);
+      console.log("Équipe créée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la création de l'équipe:", error);
+      throw new Error(error.response?.data?.message || "Impossible de créer l'équipe");
+    }
+  });
+};
+
+export const updateTeam = async (teamId, teamData) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.put(`/api/teams/${teamId}`, teamData);
+      console.log("Équipe mise à jour avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'équipe:", error);
+      throw new Error(error.response?.data?.message || "Impossible de mettre à jour l'équipe");
+    }
+  });
+};
+
+export const deleteTeam = async (teamId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.delete(`/api/teams/${teamId}`);
+      console.log("Équipe supprimée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'équipe:", error);
+      throw new Error(error.response?.data?.message || "Impossible de supprimer l'équipe");
+    }
+  });
+};
+
+// --- Membres d'équipe ---
+export const addTeamMember = async (teamId, userId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.post(`/api/teams/${teamId}/members`, { userId });
+      console.log("Membre ajouté avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du membre:", error);
+      throw new Error(error.response?.data?.message || "Impossible d'ajouter le membre");
+    }
+  });
+};
+
+export const removeTeamMember = async (teamId, userId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.delete(`/api/teams/${teamId}/members/${userId}`);
+      console.log("Membre retiré avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors du retrait du membre:", error);
+      throw new Error(error.response?.data?.message || "Impossible de retirer le membre");
+    }
+  });
+};
+
+// --- Tâches d'équipe ---
+export const fetchTeamTasks = async (teamId) => {
+  return withRetry(async () => {
+    if (!teamId) {
+      throw new Error("teamId is undefined");
+    }
+    try {
+      const { data } = await api.get(`/api/teams/${teamId}/tasks`);
+      console.log(`${data.length} tâches chargées avec succès pour l'équipe ${teamId}`);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors du chargement des tâches:", error);
+      throw new Error(error.response?.data?.message || "Impossible de charger les tâches");
+    }
+  });
+};
+
+export const createTeamTask = async (teamId, taskData) => {
+  return withRetry(async () => {
+    if (!teamId) {
+      throw new Error("teamId is undefined");
+    }
+    try {
+      const { data } = await api.post(`/api/teams/${teamId}/tasks`, {
+        ...taskData,
+        teamId: teamId,
+      });
+      console.log("Tâche créée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la création de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible de créer la tâche");
+    }
+  });
+};
+
+export const updateTeamTask = async (teamId, taskId, taskData) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.put(`/api/teams/${teamId}/tasks/${taskId}`, taskData);
+      console.log("Tâche mise à jour avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible de mettre à jour la tâche");
+    }
+  });
+};
+
+export const deleteTeamTask = async (teamId, taskId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.delete(`/api/teams/${teamId}/tasks/${taskId}`);
+      console.log("Tâche supprimée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible de supprimer la tâche");
+    }
+  });
+};
+
+export const assignTask = async (teamId, taskId, userId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.post(`/api/teams/${teamId}/tasks/${taskId}/assign`, { userId });
+      console.log("Tâche assignée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de l'assignation de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible d'assigner la tâche");
+    }
+  });
+};
+
+export const unassignTask = async (teamId, taskId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.post(`/api/teams/${teamId}/tasks/${taskId}/unassign`);
+      console.log("Tâche désassignée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la désassignation de la tâche:", error);
+      throw new Error(error.response?.data?.message || "Impossible de désassigner la tâche");
+    }
+  });
+};
+
+export const addTaskComment = async (teamId, taskId, comment) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.post(`/api/teams/${teamId}/tasks/${taskId}/comments`, { content: comment });
+      console.log("Commentaire ajouté avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de l'ajout du commentaire:", error);
+      throw new Error(error.response?.data?.message || "Impossible d'ajouter le commentaire");
+    }
+  });
+};
+
+export const deleteTaskComment = async (teamId, taskId, commentId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.delete(`/api/teams/${teamId}/tasks/${taskId}/comments/${commentId}`);
+      console.log("Commentaire supprimé avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la suppression du commentaire:", error);
+      throw new Error(error.response?.data?.message || "Impossible de supprimer le commentaire");
+    }
+  });
+};
+
+export const uploadTaskAttachment = async (teamId, taskId, file) => {
+  return withRetry(async () => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const { data } = await api.post(`/api/teams/${teamId}/tasks/${taskId}/attachments`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log("Pièce jointe uploadée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de l'upload de la pièce jointe:", error);
+      throw new Error(error.response?.data?.message || "Impossible d'uploader la pièce jointe");
+    }
+  });
+};
+
+export const deleteTaskAttachment = async (teamId, taskId, attachmentId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.delete(`/api/teams/${teamId}/tasks/${taskId}/attachments/${attachmentId}`);
+      console.log("Pièce jointe supprimée avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la pièce jointe:", error);
+      throw new Error(error.response?.data?.message || "Impossible de supprimer la pièce jointe");
+    }
+  });
+};
+
+export const fetchUserNotifications = async () => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.get("/api/notifications");
+      console.log(`${data.length} notifications chargées avec succès`);
+      return data;
+    } catch (error) {
+      console.error("Erreur lors du chargement des notifications:", error);
+      throw new Error(error.response?.data?.message || "Impossible de charger les notifications");
+    }
+  });
+};
+
+export const fetchTeamStats = async (teamId) => {
+  return withRetry(async () => {
+    try {
+      const { data } = await api.get(`/api/teams/${teamId}/stats`);
+      console.log("Statistiques d'équipe chargées avec succès");
       return data;
     } catch (error) {
       console.error("Erreur lors du chargement des statistiques:", error);
@@ -425,105 +535,17 @@ export const getTaskStats = async () => {
   });
 };
 
-// ------------------------
-// Messagerie
-// ------------------------
-export const getMessages = async (userId) => {
+export const fetchUserStats = async (userId) => {
   return withRetry(async () => {
     try {
-      console.log("Chargement des messages...");
-      const { data } = await api.get(`/api/users/${userId}/messages`);
-      console.log("Messages chargés avec succès");
+      const { data } = await api.get(`/api/users/${userId}/stats`);
+      console.log("Statistiques utilisateur chargées avec succès");
       return data;
     } catch (error) {
-      console.error("Erreur lors du chargement des messages:", error);
-      throw new Error(error.response?.data?.message || "Impossible de charger les messages");
+      console.error("Erreur lors du chargement des statistiques:", error);
+      throw new Error(error.response?.data?.message || "Impossible de charger les statistiques");
     }
   });
 };
 
-export const addMessage = async (userId, messageData) => {
-  return withRetry(async () => {
-    try {
-      console.log("Envoi du message...");
-      const { data } = await api.post(`/api/users/${userId}/messages`, messageData);
-      console.log("Message envoyé avec succès");
-      return data;
-    } catch (error) {
-      console.error("Erreur lors de l'envoi du message:", error);
-      throw new Error(error.response?.data?.message || "Impossible d'envoyer le message");
-    }
-  });
-};
-
-export const markMessageAsRead = async (userId, messageId) => {
-  return withRetry(async () => {
-    try {
-      console.log("Marquage du message comme lu...");
-      const { data } = await api.put(`/api/users/${userId}/messages/${messageId}/read`);
-      console.log("Message marqué comme lu avec succès");
-      return data;
-    } catch (error) {
-      console.error("Erreur lors du marquage du message:", error);
-      throw new Error(error.response?.data?.message || "Impossible de marquer le message comme lu");
-    }
-  });
-};
-
-export const getUnreadMessagesCount = async (userId) => {
-  return withRetry(async () => {
-    try {
-      console.log("Chargement du nombre de messages non lus...");
-      const { data } = await api.get(`/api/users/${userId}/messages/unread/count`);
-      console.log("Nombre de messages non lus chargé avec succès");
-      return data.count;
-    } catch (error) {
-      console.error("Erreur lors du chargement du nombre de messages non lus:", error);
-      throw new Error(error.response?.data?.message || "Impossible de charger le nombre de messages non lus");
-    }
-  });
-};
-
-// ------------------------
-// Gestion des équipes (via l'API /api/teams)
-// ------------------------
-// Dans utils/api.js
-
-// ... (votre code existant dans utils/api.js)
-
-// Récupération des équipes associées à un utilisateur
-export const fetchUserTeams = async (userId) => {
-  return withRetry(async () => {
-    try {
-      console.log(`Fetching teams for user ID: ${userId}`);
-      const { data } = await api.get(`/api/users/${userId}/teams`);
-      console.log(`${data.length} équipes chargées avec succès`);
-      return data;
-    } catch (error) {
-      console.error("Erreur lors du chargement des équipes :", error);
-      throw new Error(error.response?.data?.message || "Impossible de charger les équipes");
-    }
-  });
-};
-
-// Créer une équipe via l'API utilisateurs
-export const createTeamViaUserAPI = async (teamData) => {
-  return withRetry(async () => {
-    try {
-      console.log("Création d'une nouvelle équipe via API Users...");
-      // Le teamData doit contenir le champ leader (ID du leader)
-      const { data } = await api.post(`/api/users/${teamData.leader}/teams`, teamData);
-      console.log("Équipe créée avec succès");
-      return data;
-    } catch (error) {
-      console.error("Erreur lors de la création de l'équipe :", error);
-      throw new Error(error.response?.data?.message || "Impossible de créer l'équipe");
-    }
-  });
-};
-
-// N'oubliez pas d'exporter toutes vos fonctions existantes ainsi que celles-ci
 export default api;
-
-
-
