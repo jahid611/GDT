@@ -5,7 +5,9 @@ import Task from "../models/Task.js";
 export const getTasks = async (req, res) => {
   try {
     console.log("Fetching tasks...");
+    // Utilisez .lean() pour obtenir des objets JS simples.
     const tasks = await Task.find()
+      .lean() // Retourne des objets simples
       .populate("assignedTo", "name email")
       .populate("createdBy", "name email");
     console.log(`Found ${tasks.length} tasks`);
