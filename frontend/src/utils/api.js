@@ -1,7 +1,9 @@
-// utils/api.js
+// src/utils/api.js
 import axios from "axios";
 
-// Configuration de l'instance axios
+// ----------------------------------------------------------------------
+//                Création de l'instance axios
+// ----------------------------------------------------------------------
 const api = axios.create({
   baseURL:
     process.env.NODE_ENV === "development"
@@ -14,16 +16,16 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Intercepteur de requête avec log détaillé
+// ----------------------------------------------------------------------
+//                   Intercepteur de requête (Request)
+// ----------------------------------------------------------------------
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
     config.metadata = { startTime: new Date() };
-
     console.log("API Request Details:", {
       url: `${config.baseURL}${config.url}`,
       method: config.method,
@@ -44,7 +46,9 @@ api.interceptors.request.use(
   }
 );
 
-// Intercepteur de réponse avec log détaillé
+// ----------------------------------------------------------------------
+//                Intercepteur de réponse (Response)
+// ----------------------------------------------------------------------
 api.interceptors.response.use(
   (response) => {
     const duration = new Date() - response.config.metadata.startTime;
@@ -73,22 +77,21 @@ api.interceptors.response.use(
     if (error.code === "ECONNABORTED") {
       throw new Error("La requête a pris trop de temps. Veuillez réessayer.");
     }
-
     if (!error.response) {
       throw new Error("Impossible de contacter le serveur. Vérifiez votre connexion internet.");
     }
-
     if (error.response.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       throw new Error("Session expirée. Veuillez vous reconnecter.");
     }
-
     throw error.response?.data || error;
   }
 );
 
-// Fonction de retry avec délai progressif
+// ----------------------------------------------------------------------
+//          Fonction de retry avec délai progressif (withRetry)
+// ----------------------------------------------------------------------
 const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
   let lastError;
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -110,6 +113,11 @@ const withRetry = async (fn, retries = 3, initialDelay = 1000) => {
   throw lastError;
 };
 
+// ----------------------------------------------------------------------
+// Cache en mémoire pour les tâches
+// ----------------------------------------------------------------------
+let tasksCache = null;
+
 // ------------------------
 // Authentification
 // ------------------------
@@ -118,18 +126,15 @@ export const login = async (credentials) => {
     try {
       console.log("Tentative de connexion...");
       const { data } = await api.post("/api/auth/login", credentials);
-
       if (!data || !data.token) {
         throw new Error("Réponse invalide du serveur");
       }
-
       localStorage.setItem("token", data.token);
       const userData = {
         ...data.user,
         role: data.user?.role || "user",
       };
       localStorage.setItem("user", JSON.stringify(userData));
-
       console.log("Connexion réussie:", { user: userData });
       return data;
     } catch (error) {
@@ -161,14 +166,11 @@ export const register = async (userData) => {
         ...userData,
         role: "user",
       };
-
       console.log("Création d'un nouveau compte...");
       const { data } = await api.post("/api/auth/register", dataToSend);
-
       if (!data || !data.token) {
         throw new Error("Réponse invalide du serveur");
       }
-
       localStorage.setItem("token", data.token);
       localStorage.setItem(
         "user",
@@ -177,7 +179,6 @@ export const register = async (userData) => {
           role: data.user.role || "user",
         })
       );
-
       return data;
     } catch (error) {
       console.error("Erreur d'inscription:", error);
@@ -211,7 +212,12 @@ export const logout = () => {
 // ------------------------
 // Gestion des tâches
 // ------------------------
+// Ici, nous utilisons un cache en mémoire pour ne charger les tâches qu'une seule fois
 export const fetchTasks = async () => {
+  if (tasksCache) {
+    console.log("Utilisation du cache pour les tâches");
+    return tasksCache;
+  }
   return withRetry(async () => {
     try {
       console.log("Chargement des tâches...");
@@ -224,6 +230,7 @@ export const fetchTasks = async () => {
         throw new Error("Format de données invalide reçu du serveur");
       }
       console.log(`${data.length} tâches chargées avec succès`);
+      tasksCache = data; // Stocke le résultat dans le cache
       return data;
     } catch (error) {
       console.error("Erreur lors du chargement des tâches:", error);
@@ -238,6 +245,8 @@ export const createTask = async (taskData) => {
       console.log("Création d'une nouvelle tâche...");
       const { data } = await api.post("/api/tasks", taskData);
       console.log("Tâche créée avec succès");
+      // Optionnel : invalider le cache ici si nécessaire
+      tasksCache = null;
       return data;
     } catch (error) {
       console.error("Erreur lors de la création de la tâche:", error);
@@ -252,6 +261,8 @@ export const updateTask = async (taskId, taskData) => {
       console.log("Mise à jour de la tâche...");
       const { data } = await api.put(`/api/tasks/${taskId}`, taskData);
       console.log("Tâche mise à jour avec succès");
+      // Optionnel : invalider le cache ici si nécessaire
+      tasksCache = null;
       return data;
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la tâche:", error);
@@ -266,6 +277,8 @@ export const deleteTask = async (taskId) => {
       console.log("Suppression de la tâche...");
       const { data } = await api.delete(`/api/tasks/${taskId}`);
       console.log("Tâche supprimée avec succès");
+      // Optionnel : invalider le cache ici si nécessaire
+      tasksCache = null;
       return data;
     } catch (error) {
       console.error("Erreur lors de la suppression de la tâche:", error);
@@ -487,9 +500,6 @@ export const getUnreadMessagesCount = async (userId) => {
 // ------------------------
 // Gestion des équipes (via l'API /api/teams)
 // ------------------------
-// Dans utils/api.js
-
-// ... (votre code existant dans utils/api.js)
 
 // Récupération des équipes associées à un utilisateur
 export const fetchUserTeams = async (userId) => {
@@ -524,6 +534,3 @@ export const createTeamViaUserAPI = async (teamData) => {
 
 // N'oubliez pas d'exporter toutes vos fonctions existantes ainsi que celles-ci
 export default api;
-
-
-
