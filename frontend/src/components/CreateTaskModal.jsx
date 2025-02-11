@@ -1,210 +1,236 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { useTranslation } from "../hooks/useTranslation";
-import { toast } from "@/components/ui/use-toast";
-import { createTask } from "../utils/api"; // Fonction qui effectue le POST sur /api/tasks
+import { useState, useEffect } from "react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useTranslation } from "../hooks/useTranslation"
+import { useToast } from "../hooks/useToast"
+import { createTask } from "../utils/api"
+import { Loader2, User } from "lucide-react"
 
-const DEFAULT_PREFIX = "Maintenance | ";
+const DEFAULT_AVATAR =
+  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
 
-const CreateTaskModal = ({ open, onClose, teamId, currentUser, onTaskCreated, mode = "create", initialData = null }) => {
-  const { t } = useTranslation();
-  
-  // Pour le titre, on gère le préfixe maintenance si activé
-  const [maintenanceEnabled, setMaintenanceEnabled] = useState(true);
-  const [titleSuffix, setTitleSuffix] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("todo");
-  const [priority, setPriority] = useState("medium");
-  const [deadline, setDeadline] = useState("");
-  const [estimatedTime, setEstimatedTime] = useState("");
+export default function CreateTaskModal({ open, onClose, onSuccess, team = {}, currentUser }) {
+  const { t } = useTranslation()
+  const { toast } = useToast()
 
-  // En mode édition, on remplit les champs avec les données existantes
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [status, setStatus] = useState("todo")
+  const [priority, setPriority] = useState("medium")
+  const [deadline, setDeadline] = useState("")
+  const [estimatedTime, setEstimatedTime] = useState("")
+  const [assignedTo, setAssignedTo] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+
+  // Add null check for team name
+  const teamPrefix = team?.name ? `${team.name} | ` : ""
+
   useEffect(() => {
-    if (initialData) {
-      if (initialData.title && initialData.title.startsWith(DEFAULT_PREFIX)) {
-        setTitleSuffix(initialData.title.slice(DEFAULT_PREFIX.length));
-      } else {
-        setTitleSuffix(initialData.title || "");
-      }
-      setDescription(initialData.description || "");
-      setStatus(initialData.status || "todo");
-      setPriority(initialData.priority || "medium");
-      setDeadline(initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : "");
-      setEstimatedTime(initialData.estimatedTime || "");
-      // Le champ assignedTo est omis, donc toujours null.
+    if (open) {
+      setTitle("")
+      setDescription("")
+      setStatus("todo")
+      setPriority("medium")
+      setDeadline("")
+      setEstimatedTime("")
+      setAssignedTo("")
     }
-  }, [initialData]);
+  }, [open])
 
-  const handleCreateTask = async () => {
-    if (!titleSuffix.trim() || !deadline) {
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!title.trim()) {
       toast({
         title: t("error"),
-        description: t("taskTitleAndDeadlineRequired") || "Le titre et la deadline sont requis.",
+        description: t("taskTitleRequired"),
         variant: "destructive",
-      });
-      return;
+      })
+      return
     }
-    if (!currentUser || !(currentUser._id || currentUser.id)) {
-      toast({
-        title: t("error"),
-        description: "Utilisateur non authentifié.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const userId = currentUser._id || currentUser.id;
-    const finalTitle = maintenanceEnabled ? DEFAULT_PREFIX + titleSuffix.trim() : titleSuffix.trim();
-
-    const newTask = {
-      title: finalTitle,
-      description: description.trim(),
-      status,
-      priority,
-      deadline, // Format "YYYY-MM-DDTHH:mm"
-      estimatedTime,
-      assignedTo: null, // Toujours null
-      createdBy: userId,
-      teamId,
-    };
 
     try {
-      console.log("Creating task with data:", newTask);
-      const created = await createTask(newTask);
+      setSubmitting(true)
+      const taskData = {
+        title: `${teamPrefix}${title.trim()}`,
+        description: description.trim(),
+        status,
+        priority,
+        deadline: deadline || null,
+        estimatedTime: estimatedTime || null,
+        assignedTo: assignedTo === "unassigned" ? team.name : assignedTo,
+        createdBy: currentUser._id,
+        teamId: team._id,
+      }
+
+      const createdTask = await createTask(taskData)
+      onSuccess(createdTask)
       toast({
         title: t("success"),
-        description: t("taskCreated") || "Tâche créée avec succès.",
-        variant: "success",
-      });
-      onTaskCreated(created);
-      // Réinitialiser les champs
-      setTitleSuffix("");
-      setDescription("");
-      setDeadline("");
-      setPriority("medium");
-      setEstimatedTime("");
-      onClose();
+        description: t("taskCreated"),
+      })
+      onClose()
     } catch (error) {
-      console.error("Erreur lors de la création de la tâche :", error);
+      console.error("Error creating task:", error)
       toast({
         title: t("error"),
-        description: error.message || t("failedToCreateTask") || "La création de la tâche a échoué.",
+        description: error.message || t("cannotCreateTask"),
         variant: "destructive",
-      });
+      })
+    } finally {
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg bg-white text-black p-6 rounded-md">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>{t("createTask") || "Créer une tâche"}</DialogTitle>
+          <DialogTitle>{t("createTask")}</DialogTitle>
+          <DialogDescription>{t("createTaskDescription")}</DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          {/* Contrôle pour activer/désactiver le préfixe Maintenance */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">{t("maintenanceMode")}</label>
-            <input
-              type="checkbox"
-              checked={maintenanceEnabled}
-              onChange={(e) => setMaintenanceEnabled(e.target.checked)}
-            />
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">{t("title")}</label>
-            <div className="flex gap-2">
-              {maintenanceEnabled && (
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">{t("title")}</Label>
+              <div className="flex gap-2">
                 <Input
-                  value={DEFAULT_PREFIX}
+                  value={teamPrefix}
                   readOnly
-                  className="w-40 bg-gray-100 border border-gray-300 text-gray-700 cursor-not-allowed"
+                  className="w-auto bg-gray-100 dark:bg-gray-700 border-input text-foreground cursor-not-allowed"
                 />
-              )}
-              <Input
-                value={titleSuffix}
-                onChange={(e) => setTitleSuffix(e.target.value)}
-                required
-                className="flex-1 bg-white border border-gray-300 text-gray-700"
-                placeholder={t("enterTaskTitle")}
+                <Input
+                  id="title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder={t("enterTaskTitle")}
+                  required
+                  className="flex-1"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">{t("description")}</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("enterTaskDescription")}
+                className="min-h-[100px]"
               />
             </div>
-          </div>
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">{t("description")}</label>
-            <Input
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              className="bg-white border border-gray-300 text-gray-700"
-              placeholder={t("enterTaskDescription")}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">{t("deadline")}</label>
-              <Input
-                type="datetime-local"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                className="bg-white border border-gray-300 text-gray-700"
-              />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t("priority")}</Label>
+                <Select value={priority} onValueChange={setPriority}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("selectPriority")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">{t("low")}</SelectItem>
+                    <SelectItem value="medium">{t("medium")}</SelectItem>
+                    <SelectItem value="high">{t("high")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>{t("status")}</Label>
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("selectStatus")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todo">{t("todo")}</SelectItem>
+                    <SelectItem value="in_progress">{t("inProgress")}</SelectItem>
+                    <SelectItem value="review">{t("review")}</SelectItem>
+                    <SelectItem value="done">{t("done")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t("deadline")}</Label>
+                <Input type="datetime-local" value={deadline} onChange={(e) => setDeadline(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="estimatedTime">{t("estimatedTime")}</Label>
+                <Input
+                  id="estimatedTime"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={estimatedTime}
+                  onChange={(e) => setEstimatedTime(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">{t("estimatedTime")}</label>
-              <Input
-                type="number"
-                min="0"
-                step="0.5"
-                value={estimatedTime}
-                onChange={(e) => setEstimatedTime(e.target.value)}
-                className="bg-white border border-gray-300 text-gray-700"
-                placeholder={t("enterEstimatedTime")}
-              />
+              <Label>{t("assignTo")}</Label>
+              <Select value={assignedTo} onValueChange={setAssignedTo}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t("selectAssignee")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <ScrollArea className="h-[200px]">
+                    <SelectItem value="unassigned">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{team.name}</span>
+                      </div>
+                    </SelectItem>
+                    {team.members?.map((member) => (
+                      <SelectItem key={member.id || member._id} value={member.id || member._id}>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={member.avatar || DEFAULT_AVATAR} />
+                            <AvatarFallback>
+                              <User className="h-4 w-4" />
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{member.name || member.username || member.email}</span>
+                            {member.name && <span className="text-xs text-muted-foreground">{member.email}</span>}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </ScrollArea>
+                </SelectContent>
+              </Select>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">{t("priority")}</label>
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-700"
-              >
-                <option value="low">{t("low") || "Faible"}</option>
-                <option value="medium">{t("medium") || "Moyenne"}</option>
-                <option value="high">{t("high") || "Élevée"}</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">{t("status")}</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-gray-700"
-              >
-                <option value="todo">{t("todo")}</option>
-                <option value="in_progress">{t("inProgress")}</option>
-                <option value="review">{t("review")}</option>
-                <option value="done">{t("done")}</option>
-              </select>
-            </div>
-          </div>
-          {/* Le champ AssignedTo est omis, il sera toujours null */}
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose} className="px-4 py-2 border-gray-400 text-gray-700">
-              {t("cancel") || "Annuler"}
+
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              {t("cancel")}
             </Button>
-            <Button onClick={handleCreateTask} className="px-4 py-2 bg-[#b7b949] hover:bg-[#a3a542] text-white">
-              {t("create") || "Créer"}
+            <Button type="submit" disabled={submitting}>
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t("createTask")}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default CreateTaskModal;

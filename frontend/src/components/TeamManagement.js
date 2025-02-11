@@ -1,283 +1,207 @@
-// src/components/TeamManagement.js
-"use client";
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import { fetchUserTeams, createTeamViaUserAPI as createTeam, getUsers } from "../utils/api";
-import { useToast } from "@/hooks/useToast";
-import { useTranslation } from "../hooks/useTranslation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "../contexts/AuthContext";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Users, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
-// Assurez-vous d'avoir créé/importé ce composant pour afficher les tâches de l'équipe
-import TeamTasks from "./TeamTasks";
+import { useState, useEffect } from "react"
+import { fetchUserTeams } from "../utils/api"
+import { useAuth } from "../contexts/AuthContext"
+import { useTranslation } from "../hooks/useTranslation"
+import { useToast } from "@/hooks/useToast"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Briefcase,
+  Building2,
+  Calendar,
+  ChevronRight,
+  Layout,
+  Loader2,
+  MessageSquare,
+  Plus,
+  Search,
+  Users,
+} from "lucide-react"
+import CreateTeamModal from "./CreateTeamModal"
+import TeamDetails from "./TeamDetails"
 
-const getUsernameFromEmail = (email) => (email ? email.split("@")[0] : "");
+// Helper function to generate team avatars
+const getTeamAvatar = (name) => {
+  const colors = ["bg-blue-500", "bg-purple-500", "bg-pink-500", "bg-orange-500", "bg-green-500", "bg-yellow-500"]
+  const color = colors[Math.floor(Math.random() * colors.length)]
+  return {
+    letter: name.charAt(0).toUpperCase(),
+    color,
+  }
+}
 
 export default function TeamManagement() {
-  const { t } = useTranslation();
-  const { showToast } = useToast();
-  const { user } = useAuth();
-  const userId = user ? (user.id || user._id) : "";
-  const [leader, setLeader] = useState(userId);
-  const [teams, setTeams] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [teamName, setTeamName] = useState("");
-  const [teamDescription, setTeamDescription] = useState("");
-  // Le leader est toujours inclus dans la liste des membres
-  const [members, setMembers] = useState(userId ? [userId] : []);
-  const [allUsers, setAllUsers] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState(null);
-  const [showTeamTasksModal, setShowTeamTasksModal] = useState(false);
-
-  // Chargement des équipes de l'utilisateur
-  const loadTeams = async () => {
-    if (!userId) {
-      console.warn("Utilisateur non défini, impossible de charger les équipes.");
-      return;
-    }
-    try {
-      setLoading(true);
-      const teamsData = await fetchUserTeams(userId);
-      setTeams(teamsData);
-    } catch (error) {
-      showToast({
-        title: t("error"),
-        description: t("failedToLoadTeams"),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Chargement de tous les utilisateurs pour la sélection des membres
-  const loadUsers = async () => {
-    try {
-      const usersData = await getUsers();
-      setAllUsers(usersData);
-    } catch (error) {
-      console.error("Erreur lors du chargement des utilisateurs", error);
-      showToast({
-        title: t("error"),
-        description: t("failedToLoadUsers") || "Impossible de charger les utilisateurs",
-        variant: "destructive",
-      });
-    }
-  };
+  const { user } = useAuth()
+  const { t } = useTranslation()
+  const { toast } = useToast()
+  const [teams, setTeams] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState(null)
+  const [view, setView] = useState("grid")
 
   useEffect(() => {
-    if (user && (user.id || user._id)) {
-      loadTeams();
-      loadUsers();
+    if (user) {
+      const loadTeams = async () => {
+        setLoading(true)
+        try {
+          const data = await fetchUserTeams(user.id || user._id)
+          setTeams(
+            data.map((team) => ({
+              ...team,
+              avatar: getTeamAvatar(team.name),
+              stats: {
+                tasks: Math.floor(Math.random() * 50),
+                members: team.members?.length || 0,
+                activity: Math.floor(Math.random() * 100),
+              },
+            })),
+          )
+        } catch (error) {
+          toast({
+            title: t("error"),
+            description: t("errorLoadingTeams"),
+            variant: "destructive",
+          })
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadTeams()
     }
-  }, [user]);
+  }, [user, toast, t])
 
-  // Lors du clic sur une équipe, on ouvre un modal avec l'interface des tâches de l'équipe
-  const handleTeamClick = (team) => {
-    setSelectedTeam(team);
-    setShowTeamTasksModal(true);
-  };
+  const filteredTeams = teams.filter((team) => team.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
-  // Lors de la création d'une équipe, le leader est toujours inclus dans les membres
-  const handleCreateTeam = async () => {
-    if (!teamName.trim()) {
-      showToast({
-        title: t("error"),
-        description: t("teamNameRequired"),
-        variant: "destructive",
-      });
-      return;
-    }
-    try {
-      const updatedMembers = Array.from(new Set([...members, leader]));
-      const newTeam = {
-        name: teamName.trim(),
-        description: teamDescription.trim(),
-        leader: leader,
-        members: updatedMembers,
-      };
-      await createTeam(leader, newTeam);
-      showToast({
-        title: t("success"),
-        description: t("teamCreated"),
-        variant: "success",
-      });
-      setTeamName("");
-      setTeamDescription("");
-      setMembers([leader]); // Réinitialise les membres pour qu'ils contiennent uniquement le leader
-      setShowModal(false);
-      loadTeams();
-    } catch (error) {
-      showToast({
-        title: t("error"),
-        description: error.message || t("failedToCreateTeam"),
-        variant: "destructive",
-      });
-    }
-  };
+  const handleTeamCreated = (newTeam) => {
+    setTeams((prevTeams) => [...prevTeams, { ...newTeam, avatar: getTeamAvatar(newTeam.name) }])
+    setIsModalOpen(false)
+    toast({
+      title: t("success"),
+      description: t("teamCreated"),
+    })
+  }
 
-  // Permet de basculer la sélection d'un membre
-  const handleToggleMember = (memberId) => {
-    if (memberId === leader) return; // Le leader est toujours sélectionné
-    if (members.includes(memberId)) {
-      setMembers(members.filter((id) => id !== memberId));
-    } else {
-      setMembers([...members, memberId]);
-    }
-  };
+  if (selectedTeam) {
+    return <TeamDetails team={selectedTeam} onBack={() => setSelectedTeam(null)} />
+  }
+
+  const renderTeamCard = (team) => (
+    <Card
+      key={team._id}
+      className="group cursor-pointer transition-all hover:shadow-lg"
+      onClick={() => setSelectedTeam(team)}
+    >
+      <CardHeader className="flex flex-row items-center gap-4">
+        <Avatar className={`h-9 w-9 ${team.avatar.color}`}>
+          <AvatarFallback>{team.avatar.letter}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 space-y-1">
+          <CardTitle className="text-base">{team.name}</CardTitle>
+          <CardDescription className="line-clamp-1">{team.description || t("noDescription")}</CardDescription>
+        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-1">
+            <Briefcase className="h-4 w-4 text-muted-foreground" />
+            <span>{team.stats.tasks}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            <span>{team.stats.members}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <span>{team.stats.activity}%</span>
+          </div>
+          {team.leader?.id === (user.id || user._id) && (
+            <Badge variant="secondary" className="ml-auto">
+              {t("leader")}
+            </Badge>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{t("teamManagement")}</h1>
-        <Button
-          onClick={() => setShowModal(true)}
-          className="bg-[#b7b949] hover:bg-[#a3a542] text-white shadow-lg transition-colors"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          {t("createTeam")}
-        </Button>
+    <div className="h-full flex flex-col">
+      <div className="border-b">
+        <div className="flex h-16 items-center px-4 gap-4">
+          <h1 className="text-xl font-semibold">{t("spaces")}</h1>
+          <Button onClick={() => setIsModalOpen(true)} size="sm" className="ml-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            {t("createSpace")}
+          </Button>
+        </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#b7b949]"></div>
-        </div>
-      ) : teams.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-64 space-y-4">
-          <Users className="h-12 w-12 text-gray-400" />
-          <p className="text-gray-500 dark:text-gray-400">{t("noTeamsFound")}</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {teams.map((team) => (
-            <div
-              key={team._id}
-              onClick={() => handleTeamClick(team)}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-transform duration-200 cursor-pointer border border-gray-100 dark:border-gray-700"
-            >
-              <div className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="bg-[#b7b949]/10 p-2 rounded-lg">
-                    <Users className="h-5 w-5 text-[#b7b949]" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{team.name}</h2>
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{team.description}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{t("leader")}:</span>
-                    <span className="text-sm text-gray-900 dark:text-white">
-                      {team.leader?.name || team.leader?.email || "N/A"}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {team.members?.map((member) => (
-                      <Avatar key={member._id} className="h-8 w-8 border-2 border-white dark:border-gray-800">
-                        <AvatarImage src={member.avatar} alt={member.name || member.email} />
-                        <AvatarFallback className="bg-[#b7b949]/10 text-[#b7b949]">
-                          {(member.name || member.email.split("@")[0]).charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Modal de création de nouvelle équipe */}
-      <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>{t("createTeam")}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-6 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="teamName" className="block text-gray-700 dark:text-gray-200">{t("teamName")}</Label>
-              <Input
-                id="teamName"
-                value={teamName}
-                onChange={(e) => setTeamName(e.target.value)}
-                placeholder={t("enterTeamName")}
-                className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-[#b7b949]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="teamDescription" className="block text-gray-700 dark:text-gray-200">{t("teamDescription")}</Label>
-              <Input
-                id="teamDescription"
-                value={teamDescription}
-                onChange={(e) => setTeamDescription(e.target.value)}
-                placeholder={t("enterTeamDescription")}
-                className="w-full px-3 py-2 border border-gray-300 rounded shadow-sm focus:outline-none focus:ring-2 focus:ring-[#b7b949]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="block text-gray-700 dark:text-gray-200 mb-1">{t("selectMembers")}</Label>
-              <ScrollArea className="h-[200px] rounded-md border border-gray-200 dark:border-gray-700 p-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {allUsers.map((u) => (
-                    <div
-                      key={u._id}
-                      onClick={() => handleToggleMember(u._id)}
-                      className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
-                        members.includes(u._id)
-                          ? "bg-[#b7b949]/10 border-[#b7b949] border"
-                          : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-[#b7b949]"
-                      }`}
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={u.avatar || ""} alt={u.name || u.email} />
-                        <AvatarFallback className="bg-[#b7b949]/10 text-[#b7b949]">
-                          {(u.name || u.email.split("@")[0]).charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium truncate">
-                          {u.name || u.email.split("@")[0]}
-                        </span>
-                        {u._id === leader && <span className="text-xs text-[#b7b949]">{t("leader")}</span>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowModal(false)} className="px-4 py-2 border-gray-400 text-gray-700 dark:text-gray-300">
-                {t("cancel")}
-              </Button>
-              <Button onClick={handleCreateTeam} className="px-4 py-2 bg-[#b7b949] hover:bg-[#a3a542] text-white">
-                {t("create")}
-              </Button>
-            </div>
+      <div className="flex-1 flex flex-col gap-4 p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t("searchSpaces")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
           </div>
-        </DialogContent>
-      </Dialog>
+          <Tabs value={view} onValueChange={setView} className="w-full sm:w-auto">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="grid">
+                <Layout className="h-4 w-4" />
+              </TabsTrigger>
+              <TabsTrigger value="list">
+                <MessageSquare className="h-4 w-4" />
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
 
-      {/* Modal d'affichage des tâches de l'équipe */}
-      <Dialog open={showTeamTasksModal} onOpenChange={setShowTeamTasksModal}>
-        <DialogContent className="max-w-7xl h-[90vh]">
-          <DialogHeader>
-            <DialogTitle>{t("teamDetails")}: {selectedTeam?.name}</DialogTitle>
-          </DialogHeader>
-          {selectedTeam && <TeamTasks team={selectedTeam} />}
-        </DialogContent>
-      </Dialog>
+        <ScrollArea className="flex-1">
+          {loading ? (
+            <div className="flex h-[200px] items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredTeams.length === 0 ? (
+            <div className="flex h-[200px] items-center justify-center flex-col gap-2 text-center">
+              <Building2 className="h-8 w-8 text-muted-foreground" />
+              <p className="text-muted-foreground">{searchQuery ? t("noSpacesFound") : t("noSpaces")}</p>
+              <Button onClick={() => setIsModalOpen(true)} variant="outline" size="sm">
+                {t("createYourFirstSpace")}
+              </Button>
+            </div>
+          ) : (
+            <Tabs defaultValue={view} className="w-full">
+              <TabsContent value="grid" className="mt-0">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{filteredTeams.map(renderTeamCard)}</div>
+              </TabsContent>
+              <TabsContent value="list" className="mt-0">
+                <div className="space-y-2">{filteredTeams.map(renderTeamCard)}</div>
+              </TabsContent>
+            </Tabs>
+          )}
+        </ScrollArea>
+      </div>
+
+      <CreateTeamModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onTeamCreated={handleTeamCreated}
+        currentUser={user}
+      />
     </div>
-  );
+  )
 }
 
-function getUserDisplayName(user) {
-  if (!user) return "";
-  return user.name || user.username || user.email.split("@")[0];
-}
