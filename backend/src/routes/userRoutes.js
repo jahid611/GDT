@@ -9,6 +9,9 @@ const router = express.Router();
 // Routes existantes pour les utilisateurs
 router.get("/", auth, getUsers);
 router.get("/:id", auth, getUserProfile);
+// Ajoutez cette ligne dans src/routes/userRoutes.js
+router.get("/:id/profile", auth, getUserProfile);
+
 
 // Routes pour la gestion des équipes via un utilisateur
 // Exemple : GET /api/users/:id/teams
