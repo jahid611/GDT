@@ -24,7 +24,6 @@
     "@radix-ui/react-toast": "^1.2.5",
     "@radix-ui/react-tooltip": "^1.0.7",
     "axios": "^1.7.9",
-    "axios-cache-adapter": "^2.7.3",
     "axios-cache-interceptor": "^1.6.2",
     "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.1",
