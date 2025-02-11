@@ -9,6 +9,7 @@
     "build": "npm install"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.66.0",
     "bcryptjs": "^2.4.3",
     "browser-image-compression": "^2.0.2",
     "cors": "^2.8.5",
