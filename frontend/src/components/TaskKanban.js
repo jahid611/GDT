@@ -23,7 +23,7 @@ import { CSS } from "@dnd-kit/utilities"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, AlertCircle, RotateCcw, ArrowLeftRight, X, Clock, ImageIcon } from "lucide-react"
+import { Calendar, AlertCircle, RotateCcw, ArrowLeftRight, X, Clock } from "lucide-react"
 import { format } from "date-fns"
 import { enUS, fr, ro } from "date-fns/locale"
 import { motion, AnimatePresence } from "framer-motion"
@@ -31,7 +31,7 @@ import { toast } from "@/components/ui/use-toast"
 import { useTranslation } from "@/hooks/useTranslation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 
 // Constantes pour les avatars par défaut
 const DEFAULT_AVATARS = {
@@ -167,8 +167,6 @@ function DroppableColumn({ id, column, tasks, activeId }) {
 
 function DraggableTask({ task, isDragging }) {
   const { t, language } = useTranslation()
-  const [imagePreviewOpen, setImagePreviewOpen] = useState(false)
-  const [imageUrl, setImageUrl] = useState(null)
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id: task._id,
     data: {
@@ -182,43 +180,6 @@ function DraggableTask({ task, isDragging }) {
     transition,
   }
 
-  // Fonction pour récupérer l'URL de l'image
-  const getImageUrl = useCallback(async () => {
-    if (!task.imageUrl) return
-
-    try {
-      // Si c'est déjà une URL valide
-      if (task.imageUrl.startsWith("http") || task.imageUrl.startsWith("blob:")) {
-        setImageUrl(task.imageUrl)
-        return
-      }
-
-      // Si c'est en base64
-      if (task.imageUrl.startsWith("data:")) {
-        setImageUrl(task.imageUrl)
-        return
-      }
-
-      // Sinon, on essaie de récupérer l'image via fetch
-      const response = await fetch(task.imageUrl)
-      const blob = await response.blob()
-      const url = URL.createObjectURL(blob)
-      setImageUrl(url)
-    } catch (err) {
-      console.error("Error loading image:", err)
-    }
-  }, [task.imageUrl])
-
-  useEffect(() => {
-    getImageUrl()
-    return () => {
-      // Cleanup des URLs créées
-      if (imageUrl?.startsWith("blob:")) {
-        URL.revokeObjectURL(imageUrl)
-      }
-    }
-  }, [getImageUrl, imageUrl])
-
   const getLocale = () => {
     switch (language) {
       case "fr":
@@ -229,19 +190,6 @@ function DraggableTask({ task, isDragging }) {
         return enUS
     }
   }
-
-  const handleViewImage = useCallback(async () => {
-    if (!task.imageUrl) return
-    try {
-      const response = await fetch(task.imageUrl)
-      const blob = await response.blob()
-      const blobUrl = URL.createObjectURL(blob)
-      setImageUrl(blobUrl)
-      setImagePreviewOpen(true)
-    } catch (err) {
-      console.error("Error opening image:", err)
-    }
-  }, [task.imageUrl])
 
   return (
     <>
@@ -257,9 +205,19 @@ function DraggableTask({ task, isDragging }) {
       >
         <Card
           id={`task-${task._id}`}
-          className={`group cursor-grab active:cursor-grabbing bg-white dark:bg-[#242424] border-gray-200 dark:border-[#333333] hover:shadow-md dark:hover:bg-[#2A2A2A] transition-all duration-200 ${
-            isDragging ? "shadow-lg scale-105 rotate-3" : ""
-          }`}
+          className={cn(
+            "group cursor-grab active:cursor-grabbing border-gray-200 dark:border-[#333333] hover:shadow-md transition-all duration-200",
+            {
+              "bg-red-50 dark:bg-red-900/20 hover:bg-red-100/80 dark:hover:bg-red-900/30": task.status === "todo",
+              "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100/80 dark:hover:bg-blue-900/30":
+                task.status === "in_progress",
+              "bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100/80 dark:hover:bg-yellow-900/30":
+                task.status === "review",
+              "bg-green-50 dark:bg-green-900/20 hover:bg-green-100/80 dark:hover:bg-green-900/30":
+                task.status === "done",
+            },
+            isDragging && "shadow-lg scale-105 rotate-3",
+          )}
         >
           <CardContent className="p-3 space-y-3">
             {/* Titre et Description */}
@@ -267,28 +225,6 @@ function DraggableTask({ task, isDragging }) {
               <h3 className="text-sm text-gray-900 dark:text-white/90 font-medium">{task.title}</h3>
               {task.description && <p className="text-xs text-gray-600 dark:text-white/60 mt-1">{task.description}</p>}
             </div>
-
-            {/* Image Preview */}
-            {task.imageUrl && (
-              <div className="relative group/image rounded-lg overflow-hidden">
-                <img
-                  src={imageUrl || "/placeholder.svg"}
-                  alt={task.title}
-                  className="w-full h-32 object-cover rounded-lg"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/image:opacity-100 transition-opacity flex items-center justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleViewImage}
-                    className="text-white hover:text-white hover:bg-white/20"
-                  >
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    {t("viewImage")}
-                  </Button>
-                </div>
-              </div>
-            )}
 
             {/* Status et Priorité */}
             <div className="flex items-center justify-between text-xs">
@@ -358,23 +294,6 @@ function DraggableTask({ task, isDragging }) {
           </CardContent>
         </Card>
       </motion.div>
-
-      {/* Image Preview Dialog */}
-      <Dialog open={imagePreviewOpen} onOpenChange={setImagePreviewOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-4xl w-full max-h-[90vh] overflow-auto p-0">
-          <div className="relative w-full h-full">
-            <img src={imageUrl || "/placeholder.svg"} alt={task.title} className="w-full h-auto object-contain" />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 bg-black/20 hover:bg-black/40 text-white"
-              onClick={() => setImagePreviewOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

@@ -210,7 +210,7 @@ export default function TaskList({ newTask, user }) {
 
   // Filtrer : exclure les tâches dont le titre commence par "Maintenance | "
   const filteredTasks = tasks.filter((task) => {
-    if (task.title && task.title.startsWith("Maintenance | ")) return false
+    if (task.title && task.title.includes("|")) return false
     if (filterStatus !== "all" && task.status !== filterStatus) return false
     if (filterPriority !== "all" && task.priority !== filterPriority) return false
     return true

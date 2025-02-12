@@ -11,3 +11,4 @@ router.get("/:id/teams", auth, getUserTeams);
 router.post("/:id/teams", auth, createTeamViaUserAPI);
 
 export default router;
+ 

@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2, User } from "lucide-react"
-import { useAuth } from "../contexts/AuthContext"
 import { useTranslation } from "../hooks/useTranslation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
@@ -19,17 +18,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { PDFDocument } from "pdf-lib"
 import { sendAssignmentEmail } from "../utils/email"
 
-const DEFAULT_AVATAR =
-  "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-L1LHIDu8Qzc1p3IctdN9zpykntVGxf.png"
+// Définition de DEFAULT_AVATAR
+const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgroundColor=52,53,65,255"
 
-// Définition du préfixe dynamique basé sur le nom de l'équipe : toujours activé
-// (Le mode maintenance est supprimé)
-  
-export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode = "create", initialData = null, team }) {
-  // Le préfixe est toujours activé, on n’utilise plus de toggle
-  const teamPrefix = `${team?.name || ""} | `
+// Ce composant crée une tâche dans la collection "tasks" en utilisant le nom de l'équipe comme préfixe pour le titre.
+export default function TaskCreationForm({
+  onSuccess,
+  onCancel,
+  mode = "create",
+  initialData = null,
+  team,
+  currentUser,
+}) {
+  // On active le préfixe par défaut (ici, toujours activé)
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(true)
 
-  // Pour le titre, nous gérons uniquement la partie modifiable (le suffixe)
+  // État pour le suffixe du titre et autres champs
   const [titleSuffix, setTitleSuffix] = useState("")
   const [description, setDescription] = useState("")
   const [status, setStatus] = useState("todo")
@@ -46,21 +50,28 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
   const [viewerOpen, setViewerOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState(null)
   const { showToast } = useNotifications()
-  const { user } = useAuth()
   const { t } = useTranslation()
 
-  // Lors d'une édition, on extrait la partie suffixe du titre s'il commence par le préfixe dynamique
+  // Calcul du préfixe dynamique : le nom de l'équipe suivi de " | "
+  const teamPrefix = `${team?.name || ""} | `
+
+  // Lors d'une édition, on extrait le suffixe du titre s'il commence par teamPrefix
   useEffect(() => {
     if (initialData) {
-      if (initialData.title && initialData.title.startsWith(teamPrefix)) {
-        setTitleSuffix(initialData.title.slice(teamPrefix.length))
+      const title = initialData.title || ""
+      if (title.startsWith(teamPrefix)) {
+        setTitleSuffix(title.slice(teamPrefix.length))
       } else {
-        setTitleSuffix(initialData.title || "")
+        setTitleSuffix(title)
       }
       setDescription(initialData.description || "")
       setStatus(initialData.status || "todo")
       setPriority(initialData.priority || "medium")
-      setDeadline(initialData.deadline ? new Date(initialData.deadline).toISOString().slice(0, 16) : "")
+      setDeadline(
+        initialData.deadline
+          ? new Date(initialData.deadline).toISOString().slice(0, 16)
+          : ""
+      )
       setEstimatedTime(initialData.estimatedTime || "")
       setAssignedTo(initialData.assignedTo?._id || "")
     }
@@ -203,43 +214,44 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
   }
 
   const handleFilesUpload = async (e) => {
-    const files = e.target.files;
+    const files = e.target.files
     if (files && files.length > 0) {
-      const newAttachments = [];
+      const newAttachments = []
       for (let i = 0; i < files.length; i++) {
-        const file = files[i];
+        const file = files[i]
         try {
-          const compressedFile = await compressFile(file);
+          const compressedFile = await compressFile(file)
           const dataUrl = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (event) => resolve(event.target.result);
-            reader.onerror = (error) => reject(error);
-            reader.readAsDataURL(compressedFile);
-          });
-          newAttachments.push({ file: compressedFile, dataUrl });
-          showToast(t("success"), `${file.name} compressed successfully`, "success");
+            const reader = new FileReader()
+            reader.onload = (event) => resolve(event.target.result)
+            reader.onerror = (error) => reject(error)
+            reader.readAsDataURL(compressedFile)
+          })
+          newAttachments.push({ file: compressedFile, dataUrl })
+          showToast(t("success"), `${file.name} compressed successfully`, "success")
         } catch (err) {
-          console.error("Error processing file:", err);
-          showToast(t("error"), err.message || `Error processing ${file.name}`, "destructive");
-          continue;
+          console.error("Error processing file:", err)
+          showToast(t("error"), err.message || `Error processing ${file.name}`, "destructive")
+          continue
         }
       }
-      setAttachments((prev) => [...prev, ...newAttachments]);
+      setAttachments((prev) => [...prev, ...newAttachments])
     }
-  };
+  }
 
   const handleViewFile = (file, e) => {
     if (e) {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault()
+      e.stopPropagation()
     }
-    setSelectedFile(file);
-    setViewerOpen(true);
-  };
+    setSelectedFile(file)
+    setViewerOpen(true)
+  }
 
   const renderAttachmentPreview = (att, index) => {
-    if (!att || !att.file || !att.dataUrl) return null;
-    const previewClasses = "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200";
+    if (!att || !att.file || !att.dataUrl) return null
+    const previewClasses =
+      "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
     if (att.file.type.startsWith("image/")) {
       return (
         <div key={index} className={previewClasses}>
@@ -253,7 +265,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             View Image
           </Button>
         </div>
-      );
+      )
     } else if (att.file.type === "application/pdf") {
       return (
         <div key={index} className={previewClasses}>
@@ -279,72 +291,80 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             View PDF
           </Button>
         </div>
-      );
+      )
     }
-    return null;
-  };
+    return null
+  }
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (loadingUsers) return;
+    e.preventDefault()
+    if (loadingUsers) return
 
     try {
-      setLoading(true);
-      const formDataToSend = new FormData();
+      setLoading(true)
+      const formDataToSend = new FormData()
 
-      // Toujours utiliser le préfixe de l'équipe
-      const finalTitle = teamPrefix + titleSuffix;
-      formDataToSend.append("title", finalTitle);
+      // Concaténer le préfixe (nom de l'équipe) et le suffixe pour le titre
+      const finalTitle = teamPrefix + titleSuffix
+      formDataToSend.append("title", finalTitle)
+      formDataToSend.append("description", description)
+      formDataToSend.append("status", status)
+      formDataToSend.append("priority", priority)
+      formDataToSend.append("deadline", deadline)
+      formDataToSend.append("estimatedTime", estimatedTime)
+      formDataToSend.append("assignedTo", assignedTo)
 
-      formDataToSend.append("description", description);
-      formDataToSend.append("status", status);
-      formDataToSend.append("priority", priority);
-      formDataToSend.append("deadline", deadline);
-      formDataToSend.append("estimatedTime", estimatedTime);
-      formDataToSend.append("assignedTo", assignedTo);
-
+      // Création dans la collection tasks (aucune association d'équipe)
       if (attachments.length > 0) {
-        formDataToSend.append("imageUrl", attachments[0].dataUrl);
+        formDataToSend.append("imageUrl", attachments[0].dataUrl)
       }
       attachments.forEach((att) => {
-        formDataToSend.append("attachments", att.file);
-      });
+        formDataToSend.append("attachments", att.file)
+      })
 
-      formDataToSend.append("createdBy", user.id || user._id);
+      // Utilisation de la même syntaxe que dans la version qui fonctionne pour currentUser
+      formDataToSend.append("createdBy", currentUser?.id || currentUser?._id)
 
-      let result;
+      let result
       if (mode === "edit" && initialData?._id) {
-        result = await updateTask(initialData._id, formDataToSend);
+        result = await updateTask(initialData._id, formDataToSend)
       } else {
-        result = await createTask(formDataToSend);
+        result = await createTask(formDataToSend)
       }
 
       if (assignedTo) {
-        await sendAssignmentEmail({ title: finalTitle, description, status, priority, deadline, estimatedTime, assignedTo });
+        await sendAssignmentEmail({
+          title: finalTitle,
+          description,
+          status,
+          priority,
+          deadline,
+          estimatedTime,
+          assignedTo,
+        })
       }
 
-      showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"));
-      if (onSuccess) onSuccess(result);
+      showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
+      if (onSuccess) onSuccess(result)
     } catch (err) {
-      console.error("Error handling task:", err);
+      console.error("Error handling task:", err)
       showToast(
         t("error"),
         err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
         "destructive"
-      );
+      )
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   function getUserDisplayName(user) {
-    if (!user) return "";
-    return user.name || user.username || user.email.split("@")[0];
+    if (!user) return ""
+    return user.name || user.username || user.email.split("@")[0]
   }
 
   return (
     <>
-      {/* Le bouton de mode maintenance a été supprimé. Le préfixe est toujours défini par teamPrefix */}
       <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 w-full max-w-full px-2 sm:px-4">
         <div className="space-y-2">
           <Label htmlFor="title" className="text-foreground">{t("title")}</Label>
@@ -352,7 +372,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             <Input
               value={teamPrefix}
               readOnly
-              className="w-40 bg-gray-100 dark:bg-gray-700 border-input text-foreground cursor-not-allowed"
+              className="w-auto bg-gray-100 dark:bg-gray-700 border-input text-foreground cursor-not-allowed"
             />
             <Input
               id="title"
@@ -433,11 +453,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
         <div className="space-y-2">
           <Label className="text-foreground">{t("assignedTo")}</Label>
           <div className="relative">
-            <Select
-              value={assignedTo}
-              onValueChange={(value) => setAssignedTo(value)}
-              disabled={loadingUsers}
-            >
+            <Select value={assignedTo} onValueChange={(value) => setAssignedTo(value)} disabled={loadingUsers}>
               <SelectTrigger className="w-full bg-background border-input text-foreground">
                 <SelectValue>
                   {assignedTo ? (
@@ -566,10 +582,10 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
         </DialogContent>
       </Dialog>
     </>
-  );
+  )
 }
 
 function getUserDisplayName(user) {
-  if (!user) return "";
-  return user.name || user.username || user.email.split("@")[0];
+  if (!user) return ""
+  return user.name || user.username || user.email.split("@")[0]
 }

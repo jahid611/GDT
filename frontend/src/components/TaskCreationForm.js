@@ -137,8 +137,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             if (!xObjects) continue
             const imageObjects = Object.entries(xObjects.dict).filter(
               ([, obj]) =>
-                obj.constructor.name === "PDFImage" ||
-                (obj.dictionary && obj.dictionary.get("Subtype") === "Image")
+                obj.constructor.name === "PDFImage" || (obj.dictionary && obj.dictionary.get("Subtype") === "Image"),
             )
             for (const [, imageObj] of imageObjects) {
               try {
@@ -178,7 +177,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
           return new File([compressedBytes], file.name, { type: file.type })
         }
         throw new Error(
-          `PDF "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB). Even after compression, it's ${(compressedBytes.length / 1024).toFixed(1)}KB. Please try a smaller PDF or one with fewer images.`
+          `PDF "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB). Even after compression, it's ${(compressedBytes.length / 1024).toFixed(1)}KB. Please try a smaller PDF or one with fewer images.`,
         )
       } catch (err) {
         console.error("PDF compression error:", err)
@@ -195,7 +194,9 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
       if (compressedBuffer.length <= MAX_FILE_SIZE) {
         return new File([compressedBuffer], file.name, { type: file.type })
       }
-      throw new Error(`File "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB) and cannot be compressed below 25MB.`)
+      throw new Error(
+        `File "${file.name}" is too large (${(file.size / 1024).toFixed(1)}KB) and cannot be compressed below 25MB.`,
+      )
     } catch (err) {
       console.error("File compression error:", err)
       throw new Error(`Error compressing "${file.name}": ${err.message || "Unknown error"}`)
@@ -239,11 +240,16 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
 
   const renderAttachmentPreview = (att, index) => {
     if (!att || !att.file || !att.dataUrl) return null
-    const previewClasses = "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
+    const previewClasses =
+      "relative group aspect-square rounded-lg overflow-hidden hover:ring-2 hover:ring-primary/50 transition-all duration-200"
     if (att.file.type.startsWith("image/")) {
       return (
         <div key={index} className={previewClasses}>
-          <img src={att.dataUrl || "/placeholder.svg"} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+          <img
+            src={att.dataUrl || "/placeholder.svg"}
+            alt={`Preview ${index}`}
+            className="w-full h-full object-cover"
+          />
           <Button
             type="button"
             variant="ghost"
@@ -320,7 +326,15 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
       }
 
       if (assignedTo) {
-        await sendAssignmentEmail({ title: finalTitle, description, status, priority, deadline, estimatedTime, assignedTo })
+        await sendAssignmentEmail({
+          title: finalTitle,
+          description,
+          status,
+          priority,
+          deadline,
+          estimatedTime,
+          assignedTo,
+        })
       }
 
       showToast(t("success"), mode === "edit" ? t("taskModified") : t("taskCreated"))
@@ -330,7 +344,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
       showToast(
         t("error"),
         err.message || (mode === "edit" ? t("cannotModifyTask") : t("cannotCreateTask")),
-        "destructive"
+        "destructive",
       )
     } finally {
       setLoading(false)
@@ -343,66 +357,64 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
   }
 
   return (
-    <>
-      {/* Contrôle pour activer/désactiver le préfixe Maintenance */}
-      <div className="mb-4">
-        <Label className="text-foreground inline-block mr-2">{t("maintenanceMode")}</Label>
-        <input
-          type="checkbox"
-          checked={maintenanceEnabled}
-          onChange={(e) => {
-            setMaintenanceEnabled(e.target.checked)
-            // Si le mode maintenance est activé, forcer le préfixe
-            setTitleSuffix((prev) =>
-              e.target.checked
-                ? prev // Conserver le suffixe existant
-                : prev.replace(/^Maintenance \| /, "")
-            )
-          }}
-        />
+    <div className="w-full max-w-3xl mx-auto">
+      <div className="mb-4 px-4 sm:px-0">
+        <Label className="text-foreground inline-flex items-center gap-2">
+          <span>{t("maintenanceMode")}</span>
+          <input
+            type="checkbox"
+            checked={maintenanceEnabled}
+            onChange={(e) => {
+              setMaintenanceEnabled(e.target.checked)
+              setTitleSuffix((prev) => (e.target.checked ? prev : prev.replace(/^Maintenance \| /, "")))
+            }}
+            className="w-5 h-5 rounded border-input"
+          />
+        </Label>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 w-full max-w-full px-2 sm:px-4">
-        <div className="space-y-2">
-          <Label htmlFor="title" className="text-foreground">{t("title")}</Label>
-          {/* Affichage de deux champs côte à côte */}
-          <div className="flex gap-2">
-            {/* Champ en lecture seule pour le préfixe */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2 px-4 sm:px-0">
+          <Label htmlFor="title" className="text-foreground text-sm font-medium">
+            {t("title")}
+          </Label>
+          <div className="flex flex-col sm:flex-row gap-2">
             {maintenanceEnabled && (
               <Input
                 value={DEFAULT_PREFIX}
                 readOnly
-                className="w-40 bg-gray-100 dark:bg-gray-700 border-input text-foreground cursor-not-allowed"
+                className="w-full sm:w-40 bg-muted border-input text-muted-foreground cursor-not-allowed text-sm"
               />
             )}
-            {/* Champ pour la partie modifiable (suffixe) */}
             <Input
               id="title"
               value={titleSuffix}
               onChange={(e) => setTitleSuffix(e.target.value)}
               required
-              className="flex-1 bg-background border-input text-foreground"
-              placeholder={maintenanceEnabled ? t("") : t("")}
+              className="flex-1 bg-background border-input text-foreground text-sm"
+              placeholder={maintenanceEnabled ? t("enterTitle") : t("enterFullTitle")}
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description" className="text-foreground">{t("description")}</Label>
+        <div className="space-y-2 px-4 sm:px-0">
+          <Label htmlFor="description" className="text-foreground text-sm font-medium">
+            {t("description")}
+          </Label>
           <Textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             required
-            className="min-h-[100px] bg-background border-input text-foreground resize-y"
+            className="min-h-[120px] bg-background border-input text-foreground resize-y text-sm"
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-4 sm:px-0">
           <div className="space-y-2">
-            <Label className="text-foreground">{t("priority")}</Label>
+            <Label className="text-foreground text-sm font-medium">{t("priority")}</Label>
             <Select value={priority} onValueChange={(value) => setPriority(value)}>
-              <SelectTrigger className="bg-background border-input text-foreground">
+              <SelectTrigger className="bg-background border-input text-foreground h-10">
                 <SelectValue placeholder={t("selectPriority")} />
               </SelectTrigger>
               <SelectContent>
@@ -413,9 +425,9 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             </Select>
           </div>
           <div className="space-y-2">
-            <Label className="text-foreground">{t("status")}</Label>
+            <Label className="text-foreground text-sm font-medium">{t("status")}</Label>
             <Select value={status} onValueChange={(value) => setStatus(value)}>
-              <SelectTrigger className="bg-background border-input text-foreground">
+              <SelectTrigger className="bg-background border-input text-foreground h-10">
                 <SelectValue placeholder={t("selectStatus")} />
               </SelectTrigger>
               <SelectContent>
@@ -428,18 +440,20 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-4 sm:px-0">
           <div className="space-y-2">
-            <Label className="text-foreground">{t("deadline")}</Label>
+            <Label className="text-foreground text-sm font-medium">{t("deadline")}</Label>
             <Input
               type="datetime-local"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="bg-background border-input text-foreground"
+              className="bg-background border-input text-foreground h-10"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="estimatedTime" className="text-foreground">{t("estimatedTime")}</Label>
+            <Label htmlFor="estimatedTime" className="text-foreground text-sm font-medium">
+              {t("estimatedTime")}
+            </Label>
             <Input
               id="estimatedTime"
               type="number"
@@ -447,20 +461,16 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
               step="0.5"
               value={estimatedTime}
               onChange={(e) => setEstimatedTime(e.target.value)}
-              className="bg-background border-input text-foreground"
+              className="bg-background border-input text-foreground h-10"
             />
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label className="text-foreground">{t("assignedTo")}</Label>
+        <div className="space-y-2 px-4 sm:px-0">
+          <Label className="text-foreground text-sm font-medium">{t("assignedTo")}</Label>
           <div className="relative">
-            <Select
-              value={assignedTo}
-              onValueChange={(value) => setAssignedTo(value)}
-              disabled={loadingUsers}
-            >
-              <SelectTrigger className="w-full bg-background border-input text-foreground">
+            <Select value={assignedTo} onValueChange={(value) => setAssignedTo(value)} disabled={loadingUsers}>
+              <SelectTrigger className="w-full bg-background border-input text-foreground h-10">
                 <SelectValue>
                   {assignedTo ? (
                     <div className="flex items-center gap-2">
@@ -473,7 +483,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
                           <User className="h-4 w-4" />
                         </AvatarFallback>
                       </Avatar>
-                      <span>{getUserDisplayName(users.find((u) => u._id === assignedTo))}</span>
+                      <span className="truncate">{getUserDisplayName(users.find((u) => u._id === assignedTo))}</span>
                     </div>
                   ) : (
                     t("selectAssignee")
@@ -481,7 +491,7 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <ScrollArea className="h-[200px]">
+                <ScrollArea className="h-[200px] sm:h-[300px]">
                   <SelectItem value="unassigned">
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
@@ -501,9 +511,9 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
                             <User className="h-4 w-4" />
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex flex-col">
-                          <span className="font-medium">{getUserDisplayName(user)}</span>
-                          <span className="text-xs text-muted-foreground dark:text-white/70">{user.email}</span>
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-medium truncate">{getUserDisplayName(user)}</span>
+                          <span className="text-xs text-muted-foreground truncate">{user.email}</span>
                         </div>
                       </div>
                     </SelectItem>
@@ -518,17 +528,25 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             )}
           </div>
           {userError && (
-            <p className="text-sm text-destructive mt-1">
-              {userError}
-              <button type="button" onClick={loadUsers} className="ml-2 underline hover:no-underline">
+            <p className="text-sm text-destructive mt-1 flex items-center gap-2">
+              <span>{userError}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={loadUsers}
+                className="h-8 px-2 hover:bg-destructive/10"
+              >
                 {t("retry")}
-              </button>
+              </Button>
             </p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="attachments" className="text-foreground">{t("uploadImagePDF")}</Label>
+        <div className="space-y-2 px-4 sm:px-0">
+          <Label htmlFor="attachments" className="text-foreground text-sm font-medium">
+            {t("uploadImagePDF")}
+          </Label>
           <Input
             id="attachments"
             type="file"
@@ -536,58 +554,64 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
             capture="environment"
             multiple
             onChange={handleFilesUpload}
-            className="bg-background border-input text-foreground"
+            className="bg-background border-input text-foreground file:bg-transparent file:border-0 file:text-sm file:font-medium cursor-pointer"
           />
           {attachments.length > 0 && (
-            <div className="mt-4 grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {attachments.map((att, index) => renderAttachmentPreview(att, index))}
             </div>
           )}
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 px-4 sm:px-0 pb-4">
           {onCancel && (
             <Button
               type="button"
               variant="outline"
               onClick={onCancel}
-              className="bg-background border-input text-foreground hover:bg-accent"
+              className="w-full sm:w-auto bg-background border-input text-foreground hover:bg-accent"
             >
               {t("cancel")}
             </Button>
           )}
-          <Button type="submit" disabled={loading || loadingUsers} className="bg-primary text-primary-foreground">
+          <Button
+            type="submit"
+            disabled={loading || loadingUsers}
+            className="w-full sm:w-auto bg-primary text-primary-foreground"
+          >
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {mode === "edit" ? t("modifying") : t("creating")}
+                <span>{mode === "edit" ? t("modifying") : t("creating")}</span>
               </>
-            ) : mode === "edit" ? (
-              t("editTask")
             ) : (
-              t("createTask")
+              <span>{mode === "edit" ? t("editTask") : t("createTask")}</span>
             )}
           </Button>
         </div>
       </form>
 
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-[95vw] md:max-w-4xl w-full max-h-[90vh] overflow-auto p-2 md:p-6">
-          <DialogHeader>
-            <DialogTitle>{selectedFile?.file.name}</DialogTitle>
+        <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 gap-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle className="text-sm sm:text-base truncate pr-8">{selectedFile?.file.name}</DialogTitle>
           </DialogHeader>
-          {selectedFile?.file.type.startsWith("image/") ? (
-            <img
-              src={selectedFile.dataUrl || "/placeholder.svg"}
-              alt="Preview"
-              className="w-full h-auto max-h-[70vh] object-contain"
-            />
-          ) : (
-            <iframe src={selectedFile?.dataUrl} className="w-full h-[70vh]" title="PDF Preview" />
-          )}
+          <div className="flex-1 overflow-auto p-2 sm:p-4">
+            {selectedFile?.file.type.startsWith("image/") ? (
+              <div className="w-full h-full flex items-center justify-center">
+                <img
+                  src={selectedFile.dataUrl || "/placeholder.svg"}
+                  alt="Preview"
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+            ) : (
+              <iframe src={selectedFile?.dataUrl} className="w-full h-full" title="PDF Preview" />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   )
 }
 
@@ -595,3 +619,4 @@ function getUserDisplayName(user) {
   if (!user) return ""
   return user.name || user.username || user.email.split("@")[0]
 }
+

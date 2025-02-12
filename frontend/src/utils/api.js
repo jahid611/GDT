@@ -159,6 +159,24 @@ export const login = async (credentials) => {
   }, 2);
 };
 
+
+export const updateTeam = async (teamId, teamData) => {
+  return withRetry(async () => {
+    try {
+      // Supposons que votre backend expose une route PUT pour mettre à jour une équipe
+      const { data } = await api.put(`/api/teams/${teamId}`, teamData);
+      console.log("Équipe mise à jour avec succès");
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour de l'équipe:", error);
+      throw new Error(
+        error.response?.data?.message || "Impossible de mettre à jour l'équipe"
+      );
+    }
+  });
+};
+
+
 export const register = async (userData) => {
   return withRetry(async () => {
     try {
