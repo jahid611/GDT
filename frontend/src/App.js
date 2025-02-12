@@ -11,8 +11,6 @@ import UserManagement from "./components/UserManagement"
 import RegisterForm from "./components/RegisterForm"
 import PrivateRoute from "./components/PrivateRoute"
 import NotificationToast from "./components/NotificationToast"
-import { ThemeToggle } from "./components/ThemeToggle"
-import LanguageToggle from "./components/LanguageToggle"
 import HomePage from "./pages/Home"
 
 function AppContent() {
@@ -60,8 +58,6 @@ function AppContent() {
           path="/*"
           element={
             <div className="fixed bottom-4 right-4 flex items-center gap-2 z-50">
-              <ThemeToggle />
-              <LanguageToggle />
             </div>
           }
         />

@@ -37,6 +37,17 @@ const getTeamAvatar = (name) => {
   }
 }
 
+// Helper function to initialize team stats
+const initializeTeamStats = (team) => ({
+  ...team,
+  avatar: getTeamAvatar(team.name),
+  stats: {
+    tasks: team.tasks?.length || 0, // Use actual tasks length instead of random number
+    members: team.members?.length || 0,
+    activity: Math.floor(Math.random() * 100),
+  },
+})
+
 export default function TeamManagement() {
   const { user } = useAuth()
   const { t } = useTranslation()
@@ -54,17 +65,7 @@ export default function TeamManagement() {
         setLoading(true)
         try {
           const data = await fetchUserTeams(user.id || user._id)
-          setTeams(
-            data.map((team) => ({
-              ...team,
-              avatar: getTeamAvatar(team.name),
-              stats: {
-                tasks: Math.floor(Math.random() * 50),
-                members: team.members?.length || 0,
-                activity: Math.floor(Math.random() * 100),
-              },
-            })),
-          )
+          setTeams(data.map(initializeTeamStats))
         } catch (error) {
           toast({
             title: t("error"),
@@ -82,7 +83,8 @@ export default function TeamManagement() {
   const filteredTeams = teams.filter((team) => team.name.toLowerCase().includes(searchQuery.toLowerCase()))
 
   const handleTeamCreated = (newTeam) => {
-    setTeams((prevTeams) => [...prevTeams, { ...newTeam, avatar: getTeamAvatar(newTeam.name) }])
+    const teamWithStats = initializeTeamStats(newTeam)
+    setTeams((prevTeams) => [...prevTeams, teamWithStats])
     setIsModalOpen(false)
     toast({
       title: t("success"),
@@ -101,8 +103,8 @@ export default function TeamManagement() {
       onClick={() => setSelectedTeam(team)}
     >
       <CardHeader className="flex flex-row items-center gap-4">
-        <Avatar className={`h-9 w-9 ${team.avatar.color}`}>
-          <AvatarFallback>{team.avatar.letter}</AvatarFallback>
+        <Avatar className={`h-9 w-9 ${team.avatar?.color || "bg-primary"}`}>
+          <AvatarFallback>{team.avatar?.letter || "?"}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-1">
           <CardTitle className="text-base">{team.name}</CardTitle>
@@ -114,17 +116,17 @@ export default function TeamManagement() {
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1">
             <Briefcase className="h-4 w-4 text-muted-foreground" />
-            <span>{team.stats.tasks}</span>
+            <span>{team.stats?.tasks || 0}</span>
           </div>
           <div className="flex items-center gap-1">
             <Users className="h-4 w-4 text-muted-foreground" />
-            <span>{team.stats.members}</span>
+            <span>{team.stats?.members || 0}</span>
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4 text-muted-foreground" />
-            <span>{team.stats.activity}%</span>
+            <span>{team.stats?.activity || 0}%</span>
           </div>
-          {team.leader?.id === (user.id || user._id) && (
+          {team.leader === (user.id || user._id) && (
             <Badge variant="secondary" className="ml-auto">
               {t("leader")}
             </Badge>

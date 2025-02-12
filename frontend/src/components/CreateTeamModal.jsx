@@ -19,8 +19,7 @@ import { cn } from "@/lib/utils"
 
 export default function CreateTeamModal({ open, onClose, onTeamCreated, currentUser }) {
   const { t } = useTranslation()
-  const { toast } = useToast()
-
+  const { showToast } = useToast()
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
   const [members, setMembers] = useState([])
@@ -46,7 +45,7 @@ export default function CreateTeamModal({ open, onClose, onTeamCreated, currentU
       setUsers(fetchedUsers)
     } catch (err) {
       console.error("Error loading users:", err)
-      toast({
+      showToast({
         title: t("error"),
         description: t("errorLoadingUsers"),
         variant: "destructive",
@@ -64,13 +63,16 @@ export default function CreateTeamModal({ open, onClose, onTeamCreated, currentU
 
   const filteredUsers = users.filter((user) => {
     const searchTerm = searchQuery.toLowerCase()
-    return user.username?.toLowerCase().includes(searchTerm) || user.email.toLowerCase().includes(searchTerm)
+    return (
+      (user.username && user.username.toLowerCase().includes(searchTerm)) ||
+      user.email.toLowerCase().includes(searchTerm)
+    )
   })
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!name.trim()) {
-      toast({
+      showToast({
         title: t("error"),
         description: t("teamNameRequired"),
         variant: "destructive",
@@ -85,17 +87,18 @@ export default function CreateTeamModal({ open, onClose, onTeamCreated, currentU
         description: description.trim(),
         leader: currentUser.id || currentUser._id,
         members: members.length > 0 ? members : [currentUser.id || currentUser._id],
+        tasks: [], // Initialize with empty tasks array to prevent undefined error
       }
       const createdTeam = await createTeamViaUserAPI(teamData)
       onTeamCreated(createdTeam)
-      toast({
+      showToast({
         title: t("success"),
         description: t("teamCreated"),
       })
       onClose()
     } catch (error) {
       console.error("Error creating team:", error)
-      toast({
+      showToast({
         title: t("error"),
         description: error.message || t("cannotCreateTeam"),
         variant: "destructive",
@@ -169,7 +172,6 @@ export default function CreateTeamModal({ open, onClose, onTeamCreated, currentU
                       {filteredUsers.map((user) => {
                         const isLeader = (user.id || user._id) === (currentUser.id || currentUser._id)
                         const isSelected = members.includes(user.id || user._id)
-
                         return (
                           <div
                             key={user.id || user._id}
