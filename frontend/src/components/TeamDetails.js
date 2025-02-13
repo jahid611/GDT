@@ -63,7 +63,7 @@ import { useToast } from "@/hooks/useToast";
 import TaskEditDialog from "./TaskEditDialog";
 import CreateTaskModal from "./CreateTaskModal";
 
-// Avatars par défaut
+// Définition des avatars par défaut
 const DEFAULT_AVATARS = {
   user1: "https://api.dicebear.com/7.x/initials/svg?seed=JD&backgroundColor=52,53,65,255",
   user2: "https://api.dicebear.com/7.x/initials/svg?seed=AB&backgroundColor=52,53,65,255",
@@ -72,6 +72,7 @@ const DEFAULT_AVATARS = {
 };
 const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgroundColor=52,53,65,255";
 
+// Fonction pour obtenir l'avatar d'un utilisateur
 const getAvatarForUser = (email) => {
   if (!email) return DEFAULT_AVATAR;
   const hash = email.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
@@ -79,6 +80,32 @@ const getAvatarForUser = (email) => {
   const index = Math.abs(hash) % avatarSet.length;
   return avatarSet[index];
 };
+
+// Tableau de couleurs pour les icônes des membres
+const MEMBER_COLORS = [
+  "bg-blue-500",
+  "bg-green-500",
+  "bg-red-500",
+  "bg-purple-500",
+  "bg-yellow-500",
+  "bg-pink-500",
+  "bg-indigo-500",
+  "bg-teal-500",
+];
+
+// Fonction pour attribuer une couleur à partir de l'email du membre
+const getMemberIconColor = (email) => {
+  if (!email) return "bg-gray-500";
+  const hash = email.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
+  const index = Math.abs(hash) % MEMBER_COLORS.length;
+  return MEMBER_COLORS[index];
+};
+
+// Fonction utilitaire pour obtenir le nom à afficher d'un utilisateur
+function getUserDisplayName(user) {
+  if (!user) return "";
+  return user.name || user.username || (user.email ? user.email.split("@")[0] : "");
+}
 
 export default function TeamDetails({ team, onBack, currentUser, newTask }) {
   const { t, language } = useTranslation();
@@ -141,7 +168,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
     return true;
   });
 
-  // Calculer la liste des tâches complétées et le résumé par utilisateur (assignedTo)
+  // Tâches complétées et répartition par utilisateur
   const completedTasks = tasks.filter((task) => task.status === "done");
   const completedTasksByUser = completedTasks.reduce((acc, task) => {
     const key = task.assignedTo?.email || "Unknown";
@@ -336,23 +363,25 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
         <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{team.name}</h1>
       </div>
 
-      {/* Section Membres de l'équipe */}
+      {/* Section Membres de l'équipe avec icônes colorées */}
       <div className="px-4 sm:px-6">
         <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Membres de l'équipe</h2>
         <div className="flex items-center gap-4 mt-2">
           {team.members && team.members.length > 0 ? (
             team.members.map((member) => (
               <div key={member._id} className="flex flex-col items-center">
-                <Avatar className="h-10 w-10">
+                <Avatar className="h-12 w-12 shadow-md">
                   <AvatarImage
                     src={member.avatar || getAvatarForUser(member.email)}
                     alt={member.name}
                   />
-                  <AvatarFallback className="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
+                  <AvatarFallback
+                    className={`flex items-center justify-center ${getMemberIconColor(member.email)} text-white`}
+                  >
                     {member.name ? member.name.charAt(0) : member.email ? member.email.charAt(0) : "?"}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-xs text-gray-700 dark:text-gray-300">
+                <span className="mt-1 text-xs font-medium text-gray-800 dark:text-gray-100">
                   {getUserDisplayName(member)}
                 </span>
               </div>
@@ -455,10 +484,8 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                     duration: 0.3,
                     ease: "easeOut",
                   }}
-                  // Suppression des classes hover : on retire "group" et "group-hover:..."
                   className={cn("relative overflow-hidden rounded-xl transition-all duration-300", getCardBackground(task.status))}
                 >
-                  {/* Retiré l'élément de fond avec hover */}
                   <div className="relative p-4 space-y-4">
                     <div className="flex items-start justify-between">
                       <h3 className="font-semibold text-sm text-gray-800 dark:text-gray-100 line-clamp-2">
@@ -807,10 +834,4 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
       </Dialog>
     </div>
   );
-}
-
-// Fonction utilitaire pour obtenir le nom à afficher d'un utilisateur
-function getUserDisplayName(user) {
-  if (!user) return "";
-  return user.name || user.username || (user.email ? user.email.split("@")[0] : "");
 }

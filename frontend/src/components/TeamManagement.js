@@ -10,7 +10,21 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Briefcase, Building2, ChevronRight, Layout, MessageSquare, Plus, Search, Users, Edit, Clock, Target, Trophy, Trash2 } from "lucide-react";
+import {
+  Briefcase,
+  Building2,
+  ChevronRight,
+  Layout,
+  MessageSquare,
+  Plus,
+  Search,
+  Users,
+  Edit,
+  Clock,
+  PieChart, // Remplacement de Target par PieChart
+  CheckSquare,
+  Trash2,
+} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -170,13 +184,17 @@ function TeamCard({ team, index, onViewDetails, onEdit, onDelete, t }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-full bg-primary/10">
-                  <Target className="h-3.5 w-3.5 text-primary" />
+                  {/* Remplacement de l'icône Target par PieChart */}
+                  <PieChart className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <span className="text-xs text-muted-foreground">{t("completion")}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium">{team.stats.completion}%</span>
-                <Trophy
+                {/* Affichage du pourcentage et du nombre de tâches terminées */}
+                <span className="text-xs font-medium">
+                  {team.stats.completion}% ({team.stats.tasks.completed}/{team.stats.tasks.total})
+                </span>
+                <CheckSquare
                   className={cn(
                     "h-3.5 w-3.5",
                     team.stats.completion >= 80
@@ -267,19 +285,17 @@ export default function TeamManagement() {
     team.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const { showToast } = useToast();
-
   // Fonction pour supprimer une équipe
   const handleDeleteTeam = async (teamId) => {
     try {
       await deleteTeam(teamId);
       setTeams((prevTeams) => prevTeams.filter((team) => team._id !== teamId));
-      showToast({
+      toast({
         title: t("success"),
         description: t("teamDeleted"),
       });
     } catch (error) {
-      showToast({
+      toast({
         title: t("error"),
         description: t("errorDeletingTeam"),
         variant: "destructive",
