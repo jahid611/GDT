@@ -2,35 +2,187 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { fetchTasks } from "../utils/api"
-import { format, isBefore, startOfMonth, endOfMonth, differenceInDays } from "date-fns"
+import { format, isBefore, differenceInDays, parseISO } from "date-fns"
 import {
-  CheckCircle2,
   Clock,
-  AlertCircle,
   Activity,
   Calendar,
-  TrendingUp,
+  RefreshCw,
+  PieChart,
+  Trophy,
+  Star,
+  CheckCircle2,
   Users,
   Timer,
-  BarChart2,
-  RefreshCw,
+  TrendingUp,
+  AlertCircle,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { motion, AnimatePresence } from "framer-motion"
 import { useTranslation } from "../hooks/useTranslation"
 import { Badge } from "@/components/ui/badge"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
+import {
+  BarChart,
+  Bar,
+  PieChart as RechartsePie,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  AreaChart,
+  Area,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+} from "recharts"
+
+// Couleurs du thème avec dégradés
+const CHART_COLORS = {
+  primary: {
+    main: "hsl(var(--primary))",
+    light: "hsl(var(--primary) / 0.2)",
+    dark: "hsl(var(--primary) / 0.8)",
+    gradient: ["hsl(var(--primary) / 0.8)", "hsl(var(--primary) / 0.2)"],
+  },
+  todo: {
+    main: "#ef4444",
+    light: "#fee2e2",
+    dark: "#b91c1c",
+    gradient: ["#ef4444", "#fee2e2"],
+  },
+  inProgress: {
+    main: "#3b82f6",
+    light: "#dbeafe",
+    dark: "#1d4ed8",
+    gradient: ["#3b82f6", "#dbeafe"],
+  },
+  review: {
+    main: "#f59e0b",
+    light: "#fef3c7",
+    dark: "#b45309",
+    gradient: ["#f59e0b", "#fef3c7"],
+  },
+  done: {
+    main: "#10b981",
+    light: "#d1fae5",
+    dark: "#047857",
+    gradient: ["#10b981", "#d1fae5"],
+  },
+  high: {
+    main: "#dc2626",
+    light: "#fee2e2",
+    dark: "#991b1b",
+    gradient: ["#dc2626", "#fee2e2"],
+  },
+  medium: {
+    main: "#f59e0b",
+    light: "#fef3c7",
+    dark: "#b45309",
+    gradient: ["#f59e0b", "#fef3c7"],
+  },
+  low: {
+    main: "#10b981",
+    light: "#d1fae5",
+    dark: "#047857",
+    gradient: ["#10b981", "#d1fae5"],
+  },
+}
+
+const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgroundColor=52,53,65,255"
+
+function StatCard({ icon: Icon, label, value, trend, description, color, progress }) {
+  return (
+    <Card className="relative overflow-hidden transition-transform transform rounded-lg hover:shadow-xl hover:scale-105 group">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <CardHeader className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-gray-700">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <div className="p-2 rounded-lg bg-primary/10">
+            <Icon className={cn("h-5 w-5", color)} />
+          </div>
+          {label}
+        </CardTitle>
+        {trend !== undefined && (
+          <Badge
+            variant={trend > 0 ? "success" : trend < 0 ? "destructive" : "outline"}
+            className="transition-all duration-300"
+          >
+            {trend > 0 && "+"}
+            {trend}%
+          </Badge>
+        )}
+      </CardHeader>
+      <CardContent className="pt-4">
+        <div className="space-y-2">
+          <div className="text-3xl font-bold">{value}</div>
+          <p className="text-xs text-muted-foreground">{description}</p>
+          {progress !== undefined && (
+            <div className="space-y-1">
+              <Progress
+                value={progress}
+                className="h-2 rounded"
+                indicatorClassName={cn(
+                  "transition-all duration-500",
+                  progress >= 66 ? "bg-success" : progress >= 33 ? "bg-warning" : "bg-destructive",
+                )}
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function CustomTooltip({ active, payload, label }) {
+  if (!active || !payload?.length) return null
+
+  return (
+    <div className="rounded-lg border bg-background p-3 shadow-lg animate-in fade-in-50 zoom-in-95">
+      {label && <div className="mb-2 font-medium">{label}</div>}
+      <div className="space-y-1">
+        {payload.map((entry, index) => (
+          <div key={index} className="flex items-center justify-between gap-8">
+            <div className="flex items-center gap-2">
+              <div
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: entry.color || entry.fill || entry.stroke }}
+              />
+              <span className="text-sm text-muted-foreground">{entry.name}</span>
+            </div>
+            <span className="font-medium tabular-nums">
+              {entry.value}
+              {entry.unit && entry.unit}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function TaskStats() {
   const [tasks, setTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [timeRange, setTimeRange] = useState("month")
-  const [selectedMetric, setSelectedMetric] = useState("completion")
+  const [selectedView, setSelectedView] = useState("overview")
   const { t } = useTranslation()
 
   useEffect(() => {
@@ -57,8 +209,9 @@ export default function TaskStats() {
     const inProgress = tasks.filter((t) => t.status === "in_progress")
     const review = tasks.filter((t) => t.status === "review")
     const todo = tasks.filter((t) => t.status === "todo")
-    const overdue = tasks.filter((t) => t.deadline && t.status !== "done" && isBefore(new Date(t.deadline), now))
+    const overdue = tasks.filter((t) => t.deadline && t.status !== "done" && isBefore(parseISO(t.deadline), now))
 
+    // Temps de complétion
     const completionTimes = completed
       .filter((t) => t.completedAt && t.createdAt)
       .map((t) => differenceInDays(new Date(t.completedAt), new Date(t.createdAt)))
@@ -68,41 +221,85 @@ export default function TaskStats() {
         ? Math.round(completionTimes.reduce((acc, curr) => acc + curr, 0) / completionTimes.length)
         : 0
 
+    // Répartition des priorités
     const priorityDistribution = {
       high: tasks.filter((t) => t.priority === "high").length,
       medium: tasks.filter((t) => t.priority === "medium").length,
       low: tasks.filter((t) => t.priority === "low").length,
     }
 
-    const startDate = startOfMonth(now)
-    const endDate = endOfMonth(now)
-    const timelineData = {
-      labels: [],
-      completed: [],
-      created: [],
-    }
-
+    // Performance par assigné
     const assigneePerformance = Object.values(
       tasks.reduce((acc, task) => {
         if (task.assignedTo) {
-          const { _id, name } = task.assignedTo
+          const { _id, name, email, avatar } = task.assignedTo
           if (!acc[_id]) {
             acc[_id] = {
-              name,
+              id: _id,
+              name: name || email?.split("@")[0] || "Unknown",
+              avatar: avatar || DEFAULT_AVATAR,
               completed: 0,
               inProgress: 0,
+              review: 0,
+              todo: 0,
+              total: 0,
               efficiency: 0,
+              onTime: 0,
+              overdue: 0,
+              avgCompletionTime: 0,
+              completedTasks: [],
             }
           }
-          if (task.status === "done") acc[_id].completed++
+          acc[_id].total++
+
+          if (task.status === "done") {
+            acc[_id].completed++
+            acc[_id].completedTasks.push(task)
+            if (task.deadline && new Date(task.completedAt) <= new Date(task.deadline)) {
+              acc[_id].onTime++
+            }
+          }
           if (task.status === "in_progress") acc[_id].inProgress++
+          if (task.status === "review") acc[_id].review++
+          if (task.status === "todo") acc[_id].todo++
+          if (task.deadline && task.status !== "done" && isBefore(new Date(task.deadline), now)) {
+            acc[_id].overdue++
+          }
         }
         return acc
       }, {}),
-    ).map((assignee) => ({
-      ...assignee,
-      efficiency: Math.round((assignee.completed / (assignee.completed + assignee.inProgress)) * 100) || 0,
-    }))
+    )
+      .map((assignee) => {
+        // Temps moyen de complétion par assigné
+        const completionTimes = assignee.completedTasks
+          .filter((t) => t.completedAt && t.createdAt)
+          .map((t) => differenceInDays(new Date(t.completedAt), new Date(t.createdAt)))
+
+        const avgCompletionTime =
+          completionTimes.length > 0
+            ? Math.round(completionTimes.reduce((acc, curr) => acc + curr, 0) / completionTimes.length)
+            : 0
+
+        return {
+          ...assignee,
+          efficiency: Math.round((assignee.completed / assignee.total) * 100) || 0,
+          onTimeRate: Math.round((assignee.onTime / assignee.completed) * 100) || 0,
+          overdueRate: Math.round((assignee.overdue / assignee.total) * 100) || 0,
+          avgCompletionTime,
+        }
+      })
+      .sort((a, b) => b.completed - a.completed)
+
+    // Tendance de complétion
+    const previousCompleted = completed.filter(
+      (t) => t.completedAt && differenceInDays(now, new Date(t.completedAt)) <= 14,
+    ).length
+    const currentCompleted = completed.filter(
+      (t) => t.completedAt && differenceInDays(now, new Date(t.completedAt)) <= 7,
+    ).length
+    const completionTrend = previousCompleted
+      ? Math.round(((currentCompleted - previousCompleted) / previousCompleted) * 100)
+      : 0
 
     return {
       total: tasks.length,
@@ -111,10 +308,10 @@ export default function TaskStats() {
       review: review.length,
       todo: todo.length,
       overdue: overdue.length,
-      completionRate: Math.round((completed.length / tasks.length) * 100) || 0,
+      completionRate: Math.round((completed.length / (tasks.length || 1)) * 100),
       averageCompletionTime,
+      completionTrend,
       priorityDistribution,
-      timelineData,
       assigneePerformance,
     }
   }, [tasks])
@@ -138,272 +335,172 @@ export default function TaskStats() {
 
       const completed = dayTasks.filter((task) => task.status === "done").length
       const created = dayTasks.length
+      const todo = dayTasks.filter((task) => task.status === "todo").length
+      const inProgress = dayTasks.filter((task) => task.status === "in_progress").length
+      const review = dayTasks.filter((task) => task.status === "review").length
 
       data.push({
         date: format(date, "dd/MM"),
         completed,
         created,
-        active: created - completed,
+        todo,
+        inProgress,
+        review,
+        trend:
+          i > 0
+            ? ((completed - data[data.length - 1]?.completed) / (data[data.length - 1]?.completed || 1)) * 100
+            : 0,
       })
     }
 
     return data
   }, [tasks])
 
-  const renderCompletionMetrics = () => (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-      <Card className="relative overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
-            {t("completedTasks")}
-          </CardTitle>
-          <Badge variant="success">{metrics.completionRate}%</Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold mb-2">{metrics.completed}</div>
-          <Progress value={metrics.completionRate} className="h-2 bg-green-200" />
-          <p className="text-xs text-muted-foreground mt-2">{t("completedTasksDesc")}</p>
-        </CardContent>
-      </Card>
+  const renderOverviewSection = () => (
+    <div className="space-y-6">
+      {/* Statistiques clés */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          icon={CheckCircle2}
+          label={t("completedTasks")}
+          value={metrics.completed}
+          trend={metrics.completionTrend}
+          description={t("tasksCompleted")}
+          color="text-emerald-500"
+          progress={metrics.completionRate}
+        />
+        <StatCard
+          icon={Activity}
+          label={t("activeProjects")}
+          value={metrics.inProgress + metrics.review}
+          trend={0}
+          description={t("tasksInProgress")}
+          color="text-blue-500"
+          progress={((metrics.inProgress + metrics.review) / metrics.total) * 100}
+        />
+        <StatCard
+          icon={AlertCircle}
+          label={t("overdueTasks")}
+          value={metrics.overdue}
+          trend={-Math.round((metrics.overdue / metrics.total) * 100)}
+          description={t("needsAttention")}
+          color="text-red-500"
+          progress={(metrics.overdue / metrics.total) * 100}
+        />
+        <StatCard
+          icon={Clock}
+          label={t("avgCompletionTime")}
+          value={`${metrics.averageCompletionTime} ${t("days")}`}
+          description={t("timeToComplete")}
+          color="text-amber-500"
+          progress={Math.min((metrics.averageCompletionTime / 14) * 100, 100)}
+        />
+      </div>
 
-      <Card className="relative overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <Activity className="h-4 w-4 text-blue-500" />
-            {t("tasksInProgress")}
-          </CardTitle>
-          <Badge variant="secondary">{Math.round((metrics.inProgress / metrics.total) * 100)}%</Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold mb-2">{metrics.inProgress}</div>
-          <Progress value={(metrics.inProgress / metrics.total) * 100} className="h-2 bg-blue-200" />
-          <p className="text-xs text-muted-foreground mt-2">{t("tasksInProgressDesc")}</p>
-        </CardContent>
-      </Card>
-
-      <Card className="relative overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <AlertCircle className="h-4 w-4 text-red-500" />
-            {t("overdueTasks")}
-          </CardTitle>
-          <Badge variant="destructive">{Math.round((metrics.overdue / metrics.total) * 100)}%</Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold mb-2">{metrics.overdue}</div>
-          <Progress value={(metrics.overdue / metrics.total) * 100} className="h-2 bg-red-200" />
-          <p className="text-xs text-muted-foreground mt-2">{t("overdueTasksDesc")}</p>
-        </CardContent>
-      </Card>
-
-      <Card className="relative overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
-            <Clock className="h-4 w-4 text-orange-500" />
-            {t("averageTime")}
-          </CardTitle>
-          <Badge variant="outline">
-            {metrics.averageCompletionTime} {t("days")}
-          </Badge>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold mb-2">{metrics.averageCompletionTime}</div>
-          <Progress value={Math.min(100, (metrics.averageCompletionTime / 14) * 100)} className="h-2 bg-orange-200" />
-          <p className="text-xs text-muted-foreground mt-2">{t("averageCompletionTimeDesc")}</p>
-        </CardContent>
-      </Card>
-    </div>
-  )
-
-  const renderPriorityMetrics = () => (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+      {/* Timeline d'activité */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            {t("priorityDistribution")}
+            <Activity className="h-5 w-5 text-primary" />
+            {t("taskProgress")}
           </CardTitle>
-          <CardDescription>{t("tasksByPriority")}</CardDescription>
+          <CardDescription>{t("last7Days")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Badge variant="destructive">{t("high")}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {metrics.priorityDistribution.high} {t("tasks")}
-                  </span>
-                </span>
-                <span className="text-sm font-medium">
-                  {Math.round((metrics.priorityDistribution.high / metrics.total) * 100)}%
-                </span>
-              </div>
-              <Progress value={(metrics.priorityDistribution.high / metrics.total) * 100} className="h-2 bg-red-200" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Badge variant="warning">{t("medium")}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {metrics.priorityDistribution.medium} {t("tasks")}
-                  </span>
-                </span>
-                <span className="text-sm font-medium">
-                  {Math.round((metrics.priorityDistribution.medium / metrics.total) * 100)}%
-                </span>
-              </div>
-              <Progress
-                value={(metrics.priorityDistribution.medium / metrics.total) * 100}
-                className="h-2 bg-yellow-200"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Badge variant="success">{t("low")}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {metrics.priorityDistribution.low} {t("tasks")}
-                  </span>
-                </span>
-                <span className="text-sm font-medium">
-                  {Math.round((metrics.priorityDistribution.low / metrics.total) * 100)}%
-                </span>
-              </div>
-              <Progress value={(metrics.priorityDistribution.low / metrics.total) * 100} className="h-2 bg-green-200" />
-            </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={timelineData}>
+                <defs>
+                  {Object.entries(CHART_COLORS).map(([key, color]) => (
+                    <linearGradient key={key} id={`color${key}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={color.main} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={color.main} stopOpacity={0} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" stroke="currentColor" />
+                <YAxis stroke="currentColor" />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="todo"
+                  name={t("todo")}
+                  stroke={CHART_COLORS.todo.main}
+                  fill={`url(#colortodo)`}
+                  stackId="1"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="inProgress"
+                  name={t("inProgress")}
+                  stroke={CHART_COLORS.inProgress.main}
+                  fill={`url(#colorinProgress)`}
+                  stackId="1"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="review"
+                  name={t("review")}
+                  stroke={CHART_COLORS.review.main}
+                  fill={`url(#colorreview)`}
+                  stackId="1"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="completed"
+                  name={t("completed")}
+                  stroke={CHART_COLORS.done.main}
+                  fill={`url(#colordone)`}
+                  stackId="1"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart2 className="h-5 w-5 text-primary" />
-            {t("statusBreakdown")}
-          </CardTitle>
-          <CardDescription>{t("currentStatus")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Badge variant="outline">{t("todo")}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {metrics.todo} {t("tasks")}
-                  </span>
-                </span>
-                <span className="text-sm font-medium">{Math.round((metrics.todo / metrics.total) * 100)}%</span>
-              </div>
-              <Progress value={(metrics.todo / metrics.total) * 100} className="h-2 bg-gray-200" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Badge variant="secondary">{t("inProgress")}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {metrics.inProgress} {t("tasks")}
-                  </span>
-                </span>
-                <span className="text-sm font-medium">{Math.round((metrics.inProgress / metrics.total) * 100)}%</span>
-              </div>
-              <Progress value={(metrics.inProgress / metrics.total) * 100} className="h-2 bg-blue-200" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Badge variant="warning">{t("review")}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {metrics.review} {t("tasks")}
-                  </span>
-                </span>
-                <span className="text-sm font-medium">{Math.round((metrics.review / metrics.total) * 100)}%</span>
-              </div>
-              <Progress value={(metrics.review / metrics.total) * 100} className="h-2 bg-yellow-200" />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Badge variant="success">{t("done")}</Badge>
-                  <span className="text-sm text-muted-foreground">
-                    {metrics.completed} {t("tasks")}
-                  </span>
-                </span>
-                <span className="text-sm font-medium">{Math.round((metrics.completed / metrics.total) * 100)}%</span>
-              </div>
-              <Progress value={(metrics.completed / metrics.total) * 100} className="h-2 bg-green-200" />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-
-  const renderTimelineMetrics = () => {
-    return (
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-        <Card className="col-span-2">
+      {/* Répartition des tâches et performance de l'équipe */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Timer className="h-5 w-5 text-primary" />
-              {t("taskTimeline")}
+              <PieChart className="h-5 w-5 text-primary" />
+              {t("taskDistribution")}
             </CardTitle>
-            <CardDescription>{t("last7Days")}</CardDescription>
+            <CardDescription>{t("tasksByStatus")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] mt-4">
+            <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={timelineData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="date" stroke="currentColor" className="text-xs" />
-                  <YAxis stroke="currentColor" className="text-xs" />
-                  <Tooltip
-                    content={({ active, payload, label }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="rounded-lg border bg-background p-2 shadow-sm">
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="flex flex-col">
-                                <span className="text-[0.70rem] uppercase text-muted-foreground">{label}</span>
-                                <span className="font-bold text-muted-foreground">
-                                  {t("created")}: {payload[0].value}
-                                </span>
-                                <span className="font-bold text-muted-foreground">
-                                  {t("completed")}: {payload[1].value}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      }
-                      return null
-                    }}
-                  />
+                <RechartsePie>
+                  <Pie
+                    data={[
+                      { name: t("todo"), value: metrics.todo },
+                      { name: t("inProgress"), value: metrics.inProgress },
+                      { name: t("review"), value: metrics.review },
+                      { name: t("completed"), value: metrics.completed },
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {[
+                      { color: CHART_COLORS.todo.main },
+                      { color: CHART_COLORS.inProgress.main },
+                      { color: CHART_COLORS.review.main },
+                      { color: CHART_COLORS.done.main },
+                    ].map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
                   <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="created"
-                    stroke="#2563eb"
-                    strokeWidth={2}
-                    dot={{ strokeWidth: 2 }}
-                    name={t("created")}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="completed"
-                    stroke="#16a34a"
-                    strokeWidth={2}
-                    dot={{ strokeWidth: 2 }}
-                    name={t("completed")}
-                  />
-                </LineChart>
+                </RechartsePie>
               </ResponsiveContainer>
             </div>
           </CardContent>
@@ -412,34 +509,187 @@ export default function TaskStats() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" />
-              {t("weeklyProgress")}
+              <Trophy className="h-5 w-5 text-primary" />
+              {t("topPerformers")}
             </CardTitle>
-            <CardDescription>{t("weeklyProgressDesc")}</CardDescription>
+            <CardDescription>{t("mostProductiveMembers")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">{t("tasksCreated")}</p>
-                  <p className="text-2xl font-bold">{timelineData.reduce((acc, day) => acc + day.created, 0)}</p>
+              {metrics.assigneePerformance.slice(0, 5).map((assignee, index) => (
+                <div key={assignee.id} className="flex items-center gap-4 p-2 rounded hover:bg-muted transition-colors">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <Avatar className="h-10 w-10 border-2 border-background shadow-md">
+                      <AvatarImage src={assignee.avatar} alt={assignee.name} />
+                      <AvatarFallback>{assignee.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{assignee.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {assignee.completed} {t("tasksCompleted")}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <p className="font-medium">{assignee.efficiency}%</p>
+                      <p className="text-xs text-muted-foreground">{t("efficiency")}</p>
+                    </div>
+                    {index === 0 && <Star className="h-5 w-5 text-amber-500 fill-amber-500 animate-pulse" />}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium">{t("tasksCompleted")}</p>
-                  <p className="text-2xl font-bold">{timelineData.reduce((acc, day) => acc + day.completed, 0)}</p>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+
+  const renderTeamSection = () => (
+    <div className="space-y-6">
+      {/* Performance de l'équipe */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              {t("teamPerformance")}
+            </CardTitle>
+            <CardDescription>{t("memberStats")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              {metrics.assigneePerformance.map((member) => (
+                <div key={member.id} className="space-y-2 p-3 rounded hover:bg-muted transition-colors">
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={member.avatar} alt={member.name} />
+                      <AvatarFallback>{member.name[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="font-medium truncate">{member.name}</p>
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400"
+                          >
+                            {member.completed} {t("completed")}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400"
+                          >
+                            {member.inProgress} {t("active")}
+                          </Badge>
+                          {member.overdue > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400"
+                            >
+                              {member.overdue} {t("overdue")}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">{t("efficiency")}</p>
+                          <p className="font-medium">{member.efficiency}%</p>
+                          <Progress
+                            value={member.efficiency}
+                            className="h-1 mt-1 rounded"
+                            indicatorClassName={cn(
+                              "transition-all duration-500",
+                              member.efficiency >= 75
+                                ? "bg-emerald-500"
+                                : member.efficiency >= 50
+                                  ? "bg-amber-500"
+                                  : "bg-red-500",
+                            )}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">{t("onTime")}</p>
+                          <p className="font-medium">{member.onTimeRate}%</p>
+                          <Progress
+                            value={member.onTimeRate}
+                            className="h-1 mt-1 rounded"
+                            indicatorClassName={cn(
+                              "transition-all duration-500",
+                              member.onTimeRate >= 75
+                                ? "bg-emerald-500"
+                                : member.onTimeRate >= 50
+                                  ? "bg-amber-500"
+                                  : "bg-red-500",
+                            )}
+                          />
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">{t("avgTime")}</p>
+                          <p className="font-medium">
+                            {member.avgCompletionTime} {t("days")}
+                          </p>
+                          <Progress
+                            value={Math.max(0, 100 - (member.avgCompletionTime / 14) * 100)}
+                            className="h-1 mt-1 rounded"
+                            indicatorClassName={cn(
+                              "transition-all duration-500",
+                              member.avgCompletionTime <= 7
+                                ? "bg-emerald-500"
+                                : member.avgCompletionTime <= 14
+                                  ? "bg-amber-500"
+                                  : "bg-red-500",
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <p className="text-sm font-medium">{t("completionRate")}</p>
-                <Progress
-                  value={
-                    (timelineData.reduce((acc, day) => acc + day.completed, 0) /
-                      timelineData.reduce((acc, day) => acc + day.created, 0)) *
-                    100
-                  }
-                  className="h-2 bg-green-200"
-                />
-              </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Timer className="h-5 w-5 text-primary" />
+              {t("completionTimes")}
+            </CardTitle>
+            <CardDescription>{t("avgTimePerMember")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={metrics.assigneePerformance}
+                  layout="vertical"
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis type="number" stroke="currentColor" />
+                  <YAxis dataKey="name" type="category" stroke="currentColor" width={100} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                  <Bar dataKey="avgCompletionTime" name={t("avgDays")} fill={CHART_COLORS.primary.main}>
+                    {metrics.assigneePerformance.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={
+                          entry.avgCompletionTime <= 7
+                            ? CHART_COLORS.done.main
+                            : entry.avgCompletionTime <= 14
+                              ? CHART_COLORS.review.main
+                              : CHART_COLORS.todo.main
+                        }
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -448,51 +698,41 @@ export default function TaskStats() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              {t("productivity")}
+              {t("completionRates")}
             </CardTitle>
-            <CardDescription>{t("productivityDesc")}</CardDescription>
+            <CardDescription>{t("successRateByMember")}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">{t("averageTasksPerDay")}</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-lg">
-                    {(timelineData.reduce((acc, day) => acc + day.created, 0) / 7).toFixed(1)}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">{t("created")}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Badge variant="outline" className="text-lg">
-                    {(timelineData.reduce((acc, day) => acc + day.completed, 0) / 7).toFixed(1)}
-                  </Badge>
-                  <span className="text-sm text-muted-foreground">{t("completed")}</span>
-                </div>
-              </div>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={metrics.assigneePerformance}>
+                  <PolarGrid stroke={CHART_COLORS.muted} />
+                  <PolarAngleAxis dataKey="name" stroke="currentColor" />
+                  <PolarRadiusAxis stroke="currentColor" />
+                  <Radar
+                    name={t("efficiency")}
+                    dataKey="efficiency"
+                    stroke={CHART_COLORS.primary.main}
+                    fill={CHART_COLORS.primary.main}
+                    fillOpacity={0.6}
+                  />
+                  <Radar
+                    name={t("onTimeRate")}
+                    dataKey="onTimeRate"
+                    stroke={CHART_COLORS.done.main}
+                    fill={CHART_COLORS.done.main}
+                    fillOpacity={0.6}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend />
+                </RadarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
-    )
-  }
-
-  const renderPerformanceMetrics = () => {
-    return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {metrics.assigneePerformance.map((assignee) => (
-          <StatsCard
-            key={assignee._id}
-            title={assignee.name}
-            value={`${assignee.efficiency}%`}
-            description={t("efficiency")}
-            icon={Users}
-            color="text-blue-500"
-            trend={0}
-          />
-        ))}
-      </div>
-    )
-  }
+    </div>
+  )
 
   if (loading) {
     return (
@@ -510,7 +750,7 @@ export default function TaskStats() {
 
   if (error) {
     return (
-      <Card className="border-destructive">
+      <Card className="border-destructive shadow-lg">
         <CardHeader>
           <CardTitle className="text-destructive">{t("error")}</CardTitle>
           <CardDescription>{error}</CardDescription>
@@ -526,7 +766,7 @@ export default function TaskStats() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto px-4 py-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">{t("taskAnalytics")}</h2>
@@ -550,21 +790,13 @@ export default function TaskStats() {
         </div>
       </div>
 
-      <Tabs value={selectedMetric} onValueChange={(value) => setSelectedMetric(value)}>
-        <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
-          <TabsTrigger value="completion">
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            {t("completion")}
+      <Tabs value={selectedView} onValueChange={setSelectedView} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">
+            <Activity className="w-4 h-4 mr-2" />
+            {t("overview")}
           </TabsTrigger>
-          <TabsTrigger value="priority">
-            <TrendingUp className="w-4 h-4 mr-2" />
-            {t("priority")}
-          </TabsTrigger>
-          <TabsTrigger value="timeline">
-            <Clock className="w-4 h-4 mr-2" />
-            {t("timeline")}
-          </TabsTrigger>
-          <TabsTrigger value="performance">
+          <TabsTrigger value="team">
             <Users className="w-4 h-4 mr-2" />
             {t("team")}
           </TabsTrigger>
@@ -572,84 +804,16 @@ export default function TaskStats() {
 
         <AnimatePresence mode="wait">
           <motion.div
-            key={selectedMetric}
+            key={selectedView}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.2 }}
-            className="mt-6"
           >
-            <TabsContent value="completion" className="m-0">
-              {renderCompletionMetrics()}
-            </TabsContent>
-            <TabsContent value="priority" className="m-0">
-              {renderPriorityMetrics()}
-            </TabsContent>
-            <TabsContent value="timeline" className="m-0">
-              {renderTimelineMetrics()}
-            </TabsContent>
-            <TabsContent value="performance" className="m-0">
-              {renderPerformanceMetrics()}
-            </TabsContent>
+            {selectedView === "overview" ? renderOverviewSection() : renderTeamSection()}
           </motion.div>
         </AnimatePresence>
       </Tabs>
     </div>
   )
 }
-
-function StatsCard({ title, value, description, icon: Icon, color, trend }) {
-  const { t } = useTranslation()
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className={`h-4 w-4 ${color}`} />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-muted-foreground mt-1">{description}</p>
-        {trend !== 0 && (
-          <div className={`text-xs mt-2 ${trend > 0 ? "text-green-500" : "text-red-500"}`}>
-            {trend > 0 ? "+" : ""}
-            {trend}% {t("fromLastPeriod")}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
-function PriorityBar({ label, value, color }) {
-  const { t } = useTranslation()
-
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <span>{label}</span>
-        <span className="text-muted-foreground">
-          {value} {t("tasks")}
-        </span>
-      </div>
-      <div className="h-2 rounded-full bg-muted overflow-hidden">
-        <div className={`h-full ${color}`} style={{ width: `${value * 10}%` }} />
-      </div>
-    </div>
-  )
-}
-
-function StatusBar({ label, value, total, color }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between text-sm">
-        <span>{label}</span>
-        <span className="text-muted-foreground">
-          {value} ({Math.round((value / total) * 100)}%)
-        </span>
-      </div>
-      <Progress value={(value / total) * 100} className={`h-2 ${color}`} />
-    </div>
-  )
-}
-

@@ -27,7 +27,7 @@ const DEFAULT_PREFIX = "Maintenance | "
 
 export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode = "create", initialData = null }) {
   // État pour activer/désactiver le préfixe maintenance.
-  const [maintenanceEnabled, setMaintenanceEnabled] = useState(true)
+  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false)
 
   // Pour le titre, nous gérons uniquement la partie modifiable (le suffixe)
   const [titleSuffix, setTitleSuffix] = useState("")
@@ -592,25 +592,32 @@ export default function TaskCreationFormMaintenance({ onSuccess, onCancel, mode 
       </form>
 
       <Dialog open={viewerOpen} onOpenChange={setViewerOpen}>
-        <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0 gap-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b">
-            <DialogTitle className="text-sm sm:text-base truncate pr-8">{selectedFile?.file.name}</DialogTitle>
-          </DialogHeader>
-          <div className="flex-1 overflow-auto p-2 sm:p-4">
-            {selectedFile?.file.type.startsWith("image/") ? (
-              <div className="w-full h-full flex items-center justify-center">
-                <img
-                  src={selectedFile.dataUrl || "/placeholder.svg"}
-                  alt="Preview"
-                  className="max-w-full max-h-full object-contain"
-                />
-              </div>
-            ) : (
-              <iframe src={selectedFile?.dataUrl} className="w-full h-full" title="PDF Preview" />
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+  <DialogContent className="w-full max-w-[95vw] sm:max-w-[600px] h-full sm:h-[90vh] p-0 gap-0 overflow-hidden rounded-lg shadow-lg">
+    <DialogHeader className="p-3 sm:p-4 border-b">
+      <DialogTitle className="text-sm sm:text-base truncate pr-8">
+        {selectedFile?.file.name}
+      </DialogTitle>
+    </DialogHeader>
+    <div className="flex-1 overflow-auto p-2 sm:p-4">
+      {selectedFile?.file.type.startsWith("image/") ? (
+        <div className="w-full h-full flex items-center justify-center">
+          <img
+            src={selectedFile.dataUrl || "/placeholder.svg"}
+            alt="Preview"
+            className="max-w-full max-h-full object-contain"
+          />
+        </div>
+      ) : (
+        <iframe
+          src={selectedFile?.dataUrl}
+          className="w-full h-full"
+          title="PDF Preview"
+        />
+      )}
+    </div>
+  </DialogContent>
+</Dialog>
+
     </div>
   )
 }

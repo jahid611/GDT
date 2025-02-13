@@ -1,75 +1,62 @@
 "use client"
+
 import { motion } from "framer-motion"
 import { Wrench, X, Check, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 const MaintenanceAccessModal = ({ open, onConfirm, onReject }) => {
-  // Animation variants pour le contenu
+  // Variants d'animation pour le contenu
   const contentVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: {
       opacity: 1,
       scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-      },
+      transition: { type: "spring", stiffness: 300, damping: 30 },
     },
     exit: {
       opacity: 0,
       scale: 0.95,
-      transition: {
-        duration: 0.2,
-      },
+      transition: { duration: 0.2 },
     },
   }
 
-  // Animation variants pour l'icône
+  // Variants d'animation pour l'icône
   const iconVariants = {
     hidden: { rotate: -180, opacity: 0 },
     visible: {
       rotate: 0,
       opacity: 1,
-      transition: {
-        type: "spring",
-        stiffness: 200,
-        damping: 20,
-      },
+      transition: { type: "spring", stiffness: 200, damping: 20 },
     },
   }
 
-  // Animation variants pour les boutons
+  // Variants d'animation pour les boutons
   const buttonVariants = {
-    hover: {
-      scale: 1.05,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 10,
-      },
-    },
+    hover: { scale: 1.05, transition: { type: "spring", stiffness: 400, damping: 10 } },
     tap: { scale: 0.95 },
   }
 
   return (
     <Dialog open={open} onOpenChange={onReject}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex justify-center mb-4">
+      <DialogContent className="w-full max-w-md p-8 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-3xl shadow-3xl">
+        <DialogHeader className="mb-6">
+          <div className="flex justify-center mb-6">
             <motion.div variants={iconVariants} initial="hidden" animate="visible" className="relative">
-              <div className="absolute -inset-1 bg-primary/20 rounded-full blur-md" />
-              <div className="relative bg-background p-4 rounded-full border shadow-lg">
-                <Wrench className="h-8 w-8 text-primary" />
+              {/* Halo animé autour de l'icône */}
+              <div className="absolute -inset-2 bg-gradient-to-r from-blue-400 to-indigo-500 rounded-full blur-2xl opacity-75 animate-pulse" />
+              <div className="relative bg-white dark:bg-gray-900 p-5 rounded-full border border-gray-300 dark:border-gray-700 shadow-xl">
+                <Wrench className="h-12 w-12 text-blue-500" />
               </div>
             </motion.div>
           </div>
-          <DialogTitle className="text-center text-xl font-bold">Accès à la Maintenance</DialogTitle>
-          <DialogDescription className="text-center pt-2">
-            Cette section est réservée aux membres de l'équipe de maintenance.
+          <DialogTitle className="text-center text-3xl font-extrabold text-gray-800 dark:text-gray-100">
+            Accès à la Maintenance
+          </DialogTitle>
+          <DialogDescription className="text-center pt-3 text-lg text-gray-600 dark:text-gray-300">
+            Cette section est strictement réservée aux membres de l'équipe de maintenance.
             <br />
-            <span className="font-medium text-primary">Confirmez-vous en faire partie ?</span>
+            <span className="font-semibold text-blue-500">Confirmez votre identité</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -80,32 +67,37 @@ const MaintenanceAccessModal = ({ open, onConfirm, onReject }) => {
           exit="exit"
           className="flex flex-col gap-6"
         >
-          <div className="bg-muted/50 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-muted-foreground">
-                L'accès non autorisé à cette section peut entraîner des conséquences sur le système. Veuillez confirmer
-                votre appartenance à l'équipe de maintenance.
+          <div className="bg-blue-50 dark:bg-gray-700 rounded-xl p-5 border border-blue-200 dark:border-gray-600 shadow-inner">
+            <div className="flex items-start gap-4">
+              <AlertTriangle className="h-7 w-7 text-yellow-500 mt-1 flex-shrink-0" />
+              <p className="text-base text-gray-700 dark:text-gray-300">
+                Un accès non autorisé pourrait compromettre la stabilité du système. Veuillez confirmer que vous
+                faites partie de l'équipe de maintenance.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-              <Button variant="outline" size="lg" onClick={onReject} className="w-full sm:w-auto">
-                <X className="mr-2 h-4 w-4" />
+          <div className="flex flex-col sm:flex-row justify-center gap-6">
+            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={onReject}
+                className="w-full border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
+              >
+                <X className="mr-2 h-6 w-6" />
                 Non autorisé
               </Button>
             </motion.div>
 
-            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap" className="w-full sm:w-auto">
               <Button
                 variant="default"
                 size="lg"
                 onClick={onConfirm}
-                className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-md"
               >
-                <Check className="mr-2 h-4 w-4" />
+                <Check className="mr-2 h-6 w-6" />
                 Je suis membre
               </Button>
             </motion.div>
@@ -117,4 +109,3 @@ const MaintenanceAccessModal = ({ open, onConfirm, onReject }) => {
 }
 
 export default MaintenanceAccessModal
-

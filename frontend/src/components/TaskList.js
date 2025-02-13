@@ -15,6 +15,8 @@ import {
   Edit,
   ImageIcon,
   FileText,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -28,7 +30,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { format } from "date-fns"
 import { enUS, fr, ro } from "date-fns/locale"
-import { Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -44,6 +45,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 const DEFAULT_AVATARS = {
   user1: "https://api.dicebear.com/7.x/initials/svg?seed=JD&backgroundColor=52,53,65,255",
@@ -74,6 +77,7 @@ export default function TaskList({ newTask, user }) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false)
+  const [showCompletedTasks, setShowCompletedTasks] = useState(false)
 
   const getLocale = () => {
     switch (language) {
@@ -140,7 +144,9 @@ export default function TaskList({ newTask, user }) {
     const newStatus = getNextStatus(currentStatus)
     try {
       await updateTask(taskId, { status: newStatus })
-      setTasks((prevTasks) => prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task)))
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task))
+      )
       showToast("success", t("statusUpdated"))
     } catch (error) {
       console.error("Error updating task status:", error)
@@ -208,12 +214,33 @@ export default function TaskList({ newTask, user }) {
     }
   }
 
-  // Filtrer : exclure les tâches dont le titre commence par "Maintenance | "
+  // Pour la liste principale, on exclut systématiquement :
+  // - les tâches dont le titre contient "|" 
+  // - les tâches terminées
   const filteredTasks = tasks.filter((task) => {
     if (task.title && task.title.includes("|")) return false
+    if (task.status === "done") return false
     if (filterStatus !== "all" && task.status !== filterStatus) return false
     if (filterPriority !== "all" && task.priority !== filterPriority) return false
     return true
+  })
+
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    if (sortBy === "deadline") {
+      return new Date(a.deadline) - new Date(b.deadline)
+    } else if (sortBy === "priority") {
+      return getPriorityOrder(b.priority) - getPriorityOrder(a.priority)
+    } else if (sortBy === "status") {
+      return getStatusOrder(a.status) - getStatusOrder(b.status)
+    }
+    return 0
+  })
+
+  // Les tâches terminées n'apparaissent que dans la boîte dédiée,
+  // et on exclut les tâches dont le titre contient "|"
+  const completedTasks = tasks.filter((task) => {
+    if (task.title && task.title.includes("|")) return false
+    return task.status === "done"
   })
 
   const getPriorityOrder = (priority) => {
@@ -244,19 +271,10 @@ export default function TaskList({ newTask, user }) {
     }
   }
 
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    if (sortBy === "deadline") {
-      return new Date(a.deadline) - new Date(b.deadline)
-    } else if (sortBy === "priority") {
-      return getPriorityOrder(b.priority) - getPriorityOrder(a.priority)
-    } else if (sortBy === "status") {
-      return getStatusOrder(a.status) - getStatusOrder(b.status)
-    }
-    return 0
-  })
-
   const handleTaskUpdated = (updatedTask) => {
-    setTasks((prevTasks) => prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task)))
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => (task._id === updatedTask._id ? updatedTask : task))
+    )
     setIsEditDialogOpen(false)
   }
 
@@ -275,7 +293,7 @@ export default function TaskList({ newTask, user }) {
   const handleViewPDF = (task) => {
     if (task.attachments && Array.isArray(task.attachments)) {
       const pdfAttachment = task.attachments.find(
-        (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf"),
+        (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
       )
       if (pdfAttachment) {
         window.open(pdfAttachment.dataUrl, "_blank")
@@ -287,10 +305,11 @@ export default function TaskList({ newTask, user }) {
     }
   }
 
-  console.log("Current user:", user) // Pour déboguer
+  console.log("Current user:", user)
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* En-tête */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -309,21 +328,34 @@ export default function TaskList({ newTask, user }) {
                 onClick={loadTasks}
                 variant="outline"
                 size="sm"
-                className="flex-1 sm:flex-none bg-[#B7B949] hover:bg-[#B7B949]/90 text-white border-0"
+                className="flex-1 sm:flex-none bg-[#B7B949] hover:bg-[#B7B949]/90 text-white border-0 transition-colors duration-300"
                 disabled={loading}
               >
-                <RefreshCw className={`h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2 ${loading ? "animate-spin" : ""}`} />
+                <RefreshCw
+                  className={`h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2 ${loading ? "animate-spin" : ""}`}
+                />
                 <span className="text-xs sm:text-sm">{t("refresh")}</span>
+              </Button>
+              <Button
+                onClick={() => setShowCompletedTasks((prev) => !prev)}
+                variant="outline"
+                size="sm"
+                className="flex-1 sm:flex-none bg-[#B7B949] hover:bg-[#B7B949]/90 text-white border-0 transition-colors duration-300"
+              >
+                <CheckCircle2 className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2" />
+                <span className="text-xs sm:text-sm">
+                  {showCompletedTasks ? t("hideCompletedTasks") : t("Completed Tasks")}
+                </span>
               </Button>
               <Button
                 onClick={() => setIsDeleteAllDialogOpen(true)}
                 variant="destructive"
                 size="sm"
                 disabled={tasks.length === 0 || loading || user?.role !== "admin"}
-                className="flex-1 sm:flex-none bg-[#B7B949] hover:bg-[#B7B949]/90 text-white border-0"
+                className="flex-1 sm:flex-none bg-[#B7B949] hover:bg-[#B7B949]/90 text-white border-0 transition-colors duration-300"
               >
-                <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-4 mr-1.5 sm:mr-2" />
-                <span className="text-xs sm:text-sm">{t("deleteAll")}</span>
+                <Trash2 className="h-3.5 sm:h-4 w-3.5 sm:w-3.5 mr-1.5 sm:mr-2" />
+                <span className="text-xs sm:text-sm">{t("Delete All")}</span>
               </Button>
             </div>
           </div>
@@ -340,7 +372,6 @@ export default function TaskList({ newTask, user }) {
                 <SelectItem value="status">{t("status")}</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
                 <Filter className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
@@ -354,7 +385,6 @@ export default function TaskList({ newTask, user }) {
                 <SelectItem value="done">{t("done")}</SelectItem>
               </SelectContent>
             </Select>
-
             <Select value={filterPriority} onValueChange={setFilterPriority}>
               <SelectTrigger className="h-8 sm:h-10 text-xs sm:text-sm bg-background">
                 <AlertCircle className="w-3.5 sm:w-4 h-3.5 sm:h-4 mr-1.5 sm:mr-2 text-muted-foreground" />
@@ -418,80 +448,44 @@ export default function TaskList({ newTask, user }) {
                       "group relative overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300",
                       "backdrop-blur-sm dark:backdrop-blur-md",
                       "border border-white/10 dark:border-white/5",
-                      getCardBackground(task.status),
+                      getCardBackground(task.status)
                     )}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
                     <div className="relative p-3 sm:p-4 space-y-3 sm:space-y-4">
                       <div className="flex items-start justify-between gap-3">
                         <h3 className="font-semibold text-sm sm:text-base tracking-tight line-clamp-2 dark:text-white">
                           {task.title}
                         </h3>
-                        <div className="flex items-center gap-2">
-                          {task.imageUrl && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewImage(task)}
-                              className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
-                            >
-                              <ImageIcon className="h-4 w-4" />
-                              <span className="text-xs">{t("viewImage")}</span>
+                        {/* Menu à 3 points */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
+                              <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </Button>
-                          )}
-                          {task.attachments &&
-                            Array.isArray(task.attachments) &&
-                            task.attachments.some(
-                              (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf"),
-                            ) && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewPDF(task)}
-                                className="h-8 flex items-center gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90"
-                              >
-                                <FileText className="h-4 w-4" />
-                                <span className="text-xs">{t("viewPDF")}</span>
-                              </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44 sm:w-48">
+                            <DropdownMenuItem onClick={() => handleEditTask(task)} className="text-xs sm:text-sm">
+                              <Edit className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                              {t("edit")}
+                            </DropdownMenuItem>
+                            {task.status !== "done" && (
+                              <DropdownMenuItem onClick={() => handleStatusUpdate(task._id, task.status)} className="text-xs sm:text-sm">
+                                <CheckCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                                {t("advanceStatus")}
+                              </DropdownMenuItem>
                             )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 sm:h-8 sm:w-8 p-0">
-                                <MoreVertical className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44 sm:w-48">
-                              <DropdownMenuItem onClick={() => handleEditTask(task)} className="text-xs sm:text-sm">
-                                <Edit className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                {t("edit")}
-                              </DropdownMenuItem>
-                              {task.status !== "done" && (
-                                <DropdownMenuItem
-                                  onClick={() => handleStatusUpdate(task._id, task.status)}
-                                  className="text-xs sm:text-sm"
-                                >
-                                  <CheckCircle className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                  {t("advanceStatus")}
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteTask(task._id)}
-                                className="text-destructive text-xs sm:text-sm"
-                              >
-                                <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-3.5" />
-                                {t("delete")}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => handleDeleteTask(task._id)} className="text-destructive text-xs sm:text-sm">
+                              <Trash2 className="mr-2 h-3.5 w-3.5 sm:h-4 sm:w-3.5" />
+                              {t("delete")}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-
                       <p className="text-xs sm:text-sm text-muted-foreground dark:text-white/70 line-clamp-2 sm:line-clamp-3">
                         {task.description}
                       </p>
-
                       <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                         <Badge variant="outline" className={cn("text-xs", getStatusColor(task.status))}>
                           {getStatusLabel(task.status)}
@@ -500,95 +494,45 @@ export default function TaskList({ newTask, user }) {
                           {getPriorityLabel(task.priority)}
                         </Badge>
                       </div>
-
                       <div className="grid gap-2 mt-3">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">{t("status")}:</span>
-                          <span className="font-medium">{getStatusLabel(task.status)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-muted-foreground">{t("priority")}:</span>
-                          <span className="font-medium">{getPriorityLabel(task.priority)}</span>
-                        </div>
                         {task.deadline && (
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-muted-foreground">{t("deadline")}:</span>
-                            <span
-                              className={cn(
-                                "font-medium",
-                                new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400",
-                              )}
-                            >
+                            <span className={cn("font-medium", new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400")}>
                               {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
                             </span>
                           </div>
                         )}
-                        {task.estimatedTime && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-muted-foreground">{t("estimatedTime")}:</span>
-                            <span className="font-medium">
-                              {task.estimatedTime}h {t("estimated")}
-                            </span>
-                          </div>
-                        )}
                       </div>
-
-                      <div className="pt-3 sm:pt-4 border-t dark:border-white/10 space-y-3 sm:space-y-4">
-                        <div className="grid gap-2 sm:gap-3">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                              <AvatarImage
-                                src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
-                                alt={`${t("avatarOf")} ${task.createdBy?.email || t("user")}`}
-                              />
-                              <AvatarFallback className="text-xs sm:text-sm bg-primary/10 dark:bg-primary/20">
-                                {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
-                                {t("createdBy")}
-                              </span>
-                              <span className="text-xs sm:text-sm font-medium dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
-                                {task.createdBy?.email}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <Avatar className="h-6 w-6 sm:h-8 sm:w-8">
-                              <AvatarImage
-                                src={task.assignedTo?.avatar || getAvatarForUser(task.assignedTo?.email)}
-                                alt={`${t("avatarOf")} ${task.assignedTo?.email || t("user")}`}
-                              />
-                              <AvatarFallback className="text-xs sm:text-sm bg-secondary/10 dark:bg-secondary/20">
-                                {task.assignedTo?.email?.charAt(0).toUpperCase() || "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="text-[10px] sm:text-xs text-muted-foreground dark:text-white/60">
-                                {t("assignedTo")}
-                              </span>
-                              <span className="text-xs sm:text-sm font-medium dark:text-white truncate max-w-[150px] sm:max-w-[200px]">
-                                {task.assignedTo?.email}
-                              </span>
-                            </div>
-                          </div>
+                      {/* Section Assigned To et Created By */}
+                      <div className="flex flex-col gap-1 mt-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage
+                              src={task.assignedTo?.avatar || getAvatarForUser(task.assignedTo?.email)}
+                              alt={task.assignedTo?.email || t("unassigned")}
+                            />
+                            <AvatarFallback>
+                              {task.assignedTo?.email ? task.assignedTo?.email.charAt(0).toUpperCase() : "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            {t("assigné à")}: {task.assignedTo?.email || t("unassigned")}
+                          </span>
                         </div>
-
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-3.5 w-3.5" />
-                            <span>{format(new Date(task.createdAt || new Date()), "Pp", { locale: getLocale() })}</span>
-                          </div>
-                          {task.updatedAt && task.updatedAt !== task.createdAt && (
-                            <div className="flex items-center gap-2">
-                              <Edit className="h-3.5 w-3.5" />
-                              <span>
-                                {t("lastUpdated")}: {format(new Date(task.updatedAt), "Pp", { locale: getLocale() })}
-                              </span>
-                            </div>
-                          )}
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage
+                              src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
+                              alt={task.createdBy?.email || t("unknown")}
+                            />
+                            <AvatarFallback>
+                              {task.createdBy?.email ? task.createdBy?.email.charAt(0).toUpperCase() : "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            {t("créé par")}: {task.createdBy?.email || t("unknown")}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -599,6 +543,107 @@ export default function TaskList({ newTask, user }) {
           )}
         </AnimatePresence>
       </div>
+
+      <Sheet open={showCompletedTasks} onOpenChange={setShowCompletedTasks}>
+        <SheetContent side="right" className="w-full sm:w-[600px]">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-green-500" />
+              {t("completedTasks")} ({completedTasks.length})
+            </SheetTitle>
+          </SheetHeader>
+          <ScrollArea className="h-[calc(100vh-5rem)] mt-4">
+            <div className="grid gap-4">
+              {completedTasks.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="col-span-full p-8 text-center"
+                >
+                  <p className="text-muted-foreground">{t("noCompletedTasks")}</p>
+                </motion.div>
+              ) : (
+                completedTasks.map((task, index) => (
+                  <motion.div
+                    key={task._id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className={cn(
+                      "group relative overflow-hidden rounded-xl shadow-sm hover:shadow-lg transition-all duration-300",
+                      "backdrop-blur-sm dark:backdrop-blur-md",
+                      "border border-white/10 dark:border-white/5",
+                      getCardBackground(task.status)
+                    )}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative p-3 sm:p-4 space-y-3 sm:space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="font-semibold text-sm sm:text-base tracking-tight line-clamp-2 dark:text-white">
+                          {task.title}
+                        </h3>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground dark:text-white/70 line-clamp-2 sm:line-clamp-3">
+                        {task.description}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <Badge variant="outline" className={cn("text-xs", getStatusColor(task.status))}>
+                          {getStatusLabel(task.status)}
+                        </Badge>
+                        <Badge variant="outline" className={cn("text-xs", getPriorityColor(task.priority))}>
+                          {getPriorityLabel(task.priority)}
+                        </Badge>
+                      </div>
+                      <div className="grid gap-2 mt-3">
+                        {task.deadline && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground">{t("deadline")}:</span>
+                            <span className={cn("font-medium", new Date(task.deadline) < new Date() && "text-destructive dark:text-red-400")}>
+                              {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      {/* Section Assigned To et Created By */}
+                      <div className="flex flex-col gap-1 mt-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage
+                              src={task.assignedTo?.avatar || getAvatarForUser(task.assignedTo?.email)}
+                              alt={task.assignedTo?.email || t("unassigned")}
+                            />
+                            <AvatarFallback>
+                              {task.assignedTo?.email ? task.assignedTo?.email.charAt(0).toUpperCase() : "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            {t("assigné à")}: {task.assignedTo?.email || t("unassigned")}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage
+                              src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
+                              alt={task.createdBy?.email || t("unknown")}
+                            />
+                            <AvatarFallback>
+                              {task.createdBy?.email ? task.createdBy?.email.charAt(0).toUpperCase() : "?"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="text-xs text-muted-foreground">
+                            {t("créé par")}: {task.createdBy?.email || t("unknown")}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
 
       <TaskEditDialog
         task={selectedTask}
@@ -627,4 +672,3 @@ export default function TaskList({ newTask, user }) {
     </div>
   )
 }
-

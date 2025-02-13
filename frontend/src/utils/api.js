@@ -176,6 +176,15 @@ export const updateTeam = async (teamId, teamData) => {
   });
 };
 
+export const deleteTeam = async (teamId) => {
+  const res = await fetch(`/api/teams/${teamId}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    throw new Error("Failed to delete team");
+  }
+  return res.json();
+};
 
 export const register = async (userData) => {
   return withRetry(async () => {
