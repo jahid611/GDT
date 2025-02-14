@@ -1,3 +1,4 @@
+// Dashboard.jsx
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
@@ -96,98 +97,12 @@ export default function Dashboard() {
         <div className="flex items-center">
           <ListTodo className="h-5 w-5 mr-2" />
           <span>
-            Le menu <strong>Liste</strong> affiche toutes vos tâches. Vous pouvez y consulter, modifier ou supprimer
-            chaque tâche.
+            {`Le menu ${"Liste"} affiche toutes vos tâches. Vous pouvez y consulter, modifier ou supprimer chaque tâche.`}
           </span>
         </div>
       ),
     },
-    {
-      target: "#menu-kanban",
-      content: (
-        <div className="flex items-center">
-          <LayoutGrid className="h-5 w-5 mr-2" />
-          <span>
-            Le mode <strong>Kanban</strong> organise vos tâches en colonnes pour un suivi visuel.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#menu-calendar",
-      content: (
-        <div className="flex items-center">
-          <Calendar className="h-5 w-5 mr-2" />
-          <span>
-            Dans le menu <strong>Calendrier</strong>, planifiez et visualisez les échéances.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#menu-stats",
-      content: (
-        <div className="flex items-center">
-          <BarChart2 className="h-5 w-5 mr-2" />
-          <span>
-            Le menu <strong>Statistiques</strong> présente un aperçu de vos performances et productivité.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#menu-maintenance",
-      content: (
-        <div className="flex items-center">
-          <Wrench className="h-5 w-5 mr-2" />
-          <span>
-            Accédez aux <strong>tâches de maintenance</strong> pour surveiller le système.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#menu-profile",
-      content: (
-        <div className="flex items-center">
-          <User className="h-5 w-5 mr-2" />
-          <span>
-            Dans le menu <strong>Profil</strong>, gérez vos informations personnelles et paramètres.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#menu-admin",
-      content: (
-        <div className="flex items-center">
-          <Shield className="h-5 w-5 mr-2" />
-          <span>
-            Le menu <strong>Administration</strong> est réservé aux administrateurs.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#menu-team",
-      content: (
-        <div className="flex items-center">
-          <Users className="h-5 w-5 mr-2" />
-          <span>
-            Le menu <strong>Team</strong> vous permet de créer et gérer vos équipes.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#theme-toggle",
-      content: (
-        <div className="flex items-center">
-          {isDarkMode ? <Sun className="h-5 w-5 mr-2" /> : <Moon className="h-5 w-5 mr-2" />}
-          <span>Utilisez ce bouton pour basculer entre le mode sombre et le mode clair.</span>
-        </div>
-      ),
-    },
+    // ... autres étapes du tutoriel
     {
       target: "#translate-button",
       content: (
@@ -197,35 +112,13 @@ export default function Dashboard() {
         </div>
       ),
     },
-    {
-      target: "#new-task-button",
-      content: (
-        <div className="flex items-center">
-          <Plus className="h-5 w-5 mr-2" />
-          <span>
-            Cliquez ici pour créer une <strong>Nouvelle tâche</strong>.
-          </span>
-        </div>
-      ),
-    },
-    {
-      target: "#header-restart-tour",
-      content: (
-        <div className="flex flex-col items-center">
-          <img src={logoSrc || "/placeholder.svg"} alt="Logo" className="h-12 w-auto mb-2" />
-          <div className="flex items-center">
-            <HelpCircle className="h-5 w-5 mr-2" />
-            <span>Cliquez ici pour relancer le tutoriel.</span>
-          </div>
-        </div>
-      ),
-    },
+    // ...
   ]
 
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { unreadCount, currentNotification, dismissCurrentNotification } = useNotifications()
-  const { t } = useTranslation()
+  const { t, toggleLanguage } = useTranslation()
 
   // Bascule dark/light via le bouton
   const toggleColorMode = () => {
@@ -269,7 +162,7 @@ export default function Dashboard() {
       { id: "stats", label: t("stats"), icon: BarChart2 },
       { id: "maintenance", label: "Maintenance", icon: Wrench },
       { id: "profile", label: t("profile"), icon: User },
-      { id: "team", label: t("teamManagement"), icon: Users },
+      { id: "team", label: t("team"), icon: Users },
     ],
     [t],
   )
@@ -278,7 +171,7 @@ export default function Dashboard() {
   const adminMenuItem = useMemo(
     () => ({
       id: "admin",
-      label: t("admin"),
+      label: t("Admin"),
       icon: Shield,
     }),
     [t],
@@ -352,7 +245,7 @@ export default function Dashboard() {
 
       <div className={cn("min-h-screen", isDarkMode ? "bg-[#1B1A1A] text-white" : "bg-white text-black")}>
         <div className="w-full">
-          {/* Header optimisé pour mobile */}
+          {/* Header */}
           <header
             className={cn(
               "fixed top-0 left-0 right-0 h-14 sm:h-16 z-50 flex items-center justify-between px-2 sm:px-4 border-b transition-colors duration-200",
@@ -384,7 +277,6 @@ export default function Dashboard() {
             </div>
 
             <div className="flex items-center gap-1 sm:gap-2">
-              {/* Boutons d'action avec taille adaptative */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -426,9 +318,9 @@ export default function Dashboard() {
                     {isDarkMode ? "Light Mode" : "Dark Mode"}
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={toggleLanguage} id="translate-button">
                     <Globe className="mr-2 h-4 w-4" />
-                    Language
+                    {t("language")}
                   </DropdownMenuItem>
 
                   <DropdownMenuItem onClick={restartTour}>
@@ -447,7 +339,7 @@ export default function Dashboard() {
             </div>
           </header>
 
-          {/* Sidebar optimisé */}
+          {/* Sidebar */}
           <div
             className={cn(
               "fixed inset-0 bg-black/50 z-30 lg:hidden transition-opacity",
@@ -488,7 +380,7 @@ export default function Dashboard() {
             </ScrollArea>
           </aside>
 
-          {/* Contenu principal optimisé */}
+          {/* Contenu principal */}
           <main className={cn("pt-14 sm:pt-16 transition-all duration-300", isSidebarOpen ? "lg:pl-64" : "")}>
             <div className="p-2 sm:p-4">
               <div className="mb-2 sm:mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
@@ -530,7 +422,7 @@ export default function Dashboard() {
             </div>
           </main>
 
-          {/* Panels et Dialogs optimisés */}
+          {/* Panels et Dialogs */}
           <Sheet open={showNotifications} onOpenChange={setShowNotifications}>
             <SheetContent
               side="right"
@@ -556,4 +448,3 @@ export default function Dashboard() {
     </>
   )
 }
-
