@@ -54,25 +54,29 @@ const getAvatarForUser = (email) => {
 const getColumns = (t) => ({
   todo: {
     id: "todo",
-    title: t("todo"),
+      title: t("To Do"),
+
     className: "border-t-2 border-t-[#666666]",
     color: "#666666",
   },
   in_progress: {
     id: "in_progress",
-    title: t("inProgress"),
+      title: t("In Progress"),
+
     className: "border-t-2 border-t-[#2F7FE6]",
     color: "#2F7FE6",
   },
   review: {
     id: "review",
-    title: t("review"),
+      title: t("Review"),
+
     className: "border-t-2 border-t-[#FDB40A]",
     color: "#FDB40A",
   },
   done: {
     id: "done",
-    title: t("done"),
+      title: t("Done"),
+
     className: "border-t-2 border-t-[#0AB924]",
     color: "#0AB924",
   },
@@ -148,7 +152,8 @@ function DroppableColumn({ id, column, tasks, activeId }) {
         <div className="h-full p-2 space-y-2">
           {tasks.length === 0 ? (
             <div className="h-full flex items-center justify-center">
-              <p className="text-xs text-gray-500 dark:text-white/40">{t("noTasks")}</p>
+                <p className="text-xs text-gray-500 dark:text-white/40">{t("No tasks")}</p>
+
             </div>
           ) : (
             <SortableContext items={tasks.map((task) => task._id)} strategy={verticalListSortingStrategy}>
@@ -257,7 +262,8 @@ function DraggableTask({ task, isDragging }) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-gray-500 dark:text-gray-400">{t("createdBy")}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("Created by")}</span>
+
                   <span className="text-gray-700 dark:text-gray-200">{task.createdBy?.email}</span>
                 </div>
                 <div className="ml-auto flex items-center gap-1 text-gray-500 dark:text-gray-400">
@@ -279,7 +285,8 @@ function DraggableTask({ task, isDragging }) {
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="text-gray-500 dark:text-gray-400">{t("assignedTo")}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("Assigned to")}</span>
+
                     <span className="text-gray-700 dark:text-gray-200">{task.assignedTo?.email}</span>
                   </div>
                   {task.deadline && (
@@ -463,8 +470,9 @@ export default function TaskKanban() {
               </motion.div>
             </div>
             <div>
-              <p className="font-medium text-white/90">{t("dragToChangeStatus")}</p>
-              <p className="text-white/40 text-xs mt-1">{t("dragToChangeStatusHint")}</p>
+                <p className="font-medium text-white/90">{t("Drag to change status")}</p>
+                <p className="text-white/40 text-xs mt-1">{t("Drag and drop tasks to change their status")}</p>
+
             </div>
             <Button
               size="icon"
@@ -507,4 +515,3 @@ export default function TaskKanban() {
     </div>
   )
 }
-

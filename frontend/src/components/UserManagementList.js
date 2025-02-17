@@ -106,8 +106,9 @@ export default function UserManagementList() {
   return (
     <div className="space-y-4 sm:space-y-6 p-2 sm:p-4">
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
-        <StatCard icon={Users} label="Membres inscrits" value={stats.total} />
-        <StatCard icon={Shield} label="Équipe administrative" value={stats.admins} />
+        <StatCard icon={Users} label="Registered Members" value={stats.total} />
+        <StatCard icon={Shield} label="Admin Team" value={stats.admins} />
+
       </div>
 
       <Card className="border-none shadow-lg shadow-primary/5">
@@ -116,10 +117,11 @@ export default function UserManagementList() {
             <div className="space-y-1">
               <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
                 <UserCog className="h-5 w-5 sm:h-6 sm:w-6 text-primary shrink-0" />
-                <span className="truncate">Gestion des membres</span>
+                <span className="truncate">Member Management</span>
               </CardTitle>
               <CardDescription className="text-sm sm:text-base">
-                {filteredUsers.length} {filteredUsers.length > 1 ? "membres" : "membre"} au total
+                {filteredUsers.length} total {filteredUsers.length > 1 ? "members" : "member"}
+
               </CardDescription>
             </div>
             <TooltipProvider>
@@ -135,11 +137,13 @@ export default function UserManagementList() {
                     <RefreshCcw
                       className={cn("h-4 w-4 mr-2 transition-all duration-300", isRefreshing && "animate-spin")}
                     />
-                    Actualiser
+                    Refresh
+
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Rafraîchir la liste des membres</p>
+                  <p>Refresh member list</p>
+
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -147,7 +151,8 @@ export default function UserManagementList() {
           <div className="relative">
             <Search className="absolute left-2.5 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             <Input
-              placeholder="Rechercher un membre..."
+              placeholder="Search for a member..."
+
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 sm:pl-10 text-sm sm:text-base transition-all duration-300 focus-visible:ring-primary"
@@ -202,14 +207,16 @@ export default function UserManagementList() {
                                   : "bg-muted text-muted-foreground hover:ring-muted hover:bg-muted/70"
                               )}
                             >
-                              {user.role === "admin" ? "Administrateur" : "Membre"}
+                              {user.role === "admin" ? "Admin" : "Member"}
+
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="left">
                             <p className="text-xs sm:text-sm">
                               {user.role === "admin"
-                                ? "Accès complet à toutes les fonctionnalités"
-                                : "Accès standard aux fonctionnalités de base"}
+                                ? "Full access to all features"
+                                : "Standard access to basic features"}
+
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -227,10 +234,11 @@ export default function UserManagementList() {
                 >
                   <Users className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground/30 mb-3 sm:mb-4" />
                   <p className="text-base sm:text-lg font-medium text-muted-foreground">
-                    {searchTerm ? "Aucun membre trouvé" : "Aucun membre"}
+                    {searchTerm ? "No members found" : "No members"}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground/60 mt-1 max-w-[250px] sm:max-w-sm text-center px-4">
-                    {searchTerm ? "Essayez une autre recherche" : "Invitez des membres pour commencer"}
+                    {searchTerm ? "Try another search" : "Invite members to get started"}
+
                   </p>
                 </motion.div>
               )}

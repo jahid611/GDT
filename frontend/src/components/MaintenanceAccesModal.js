@@ -51,13 +51,15 @@ const MaintenanceAccessModal = ({ open, onConfirm, onReject }) => {
             </motion.div>
           </div>
           <DialogTitle className="text-center text-3xl font-extrabold text-gray-800 dark:text-gray-100">
-            Accès à la Maintenance
+            Maintenance Access
           </DialogTitle>
+
           <DialogDescription className="text-center pt-3 text-lg text-gray-600 dark:text-gray-300">
-            Cette section est strictement réservée aux membres de l'équipe de maintenance.
+            This section is strictly reserved for maintenance team members.
             <br />
-            <span className="font-semibold text-blue-500">Confirmez votre identité</span>
+            <span className="font-semibold text-blue-500">Confirm your identity</span>
           </DialogDescription>
+
         </DialogHeader>
 
         <motion.div
@@ -71,9 +73,9 @@ const MaintenanceAccessModal = ({ open, onConfirm, onReject }) => {
             <div className="flex items-start gap-4">
               <AlertTriangle className="h-7 w-7 text-yellow-500 mt-1 flex-shrink-0" />
               <p className="text-base text-gray-700 dark:text-gray-300">
-                Un accès non autorisé pourrait compromettre la stabilité du système. Veuillez confirmer que vous
-                faites partie de l'équipe de maintenance.
+                Unauthorized access could compromise system stability. Please confirm you are part of the maintenance team.
               </p>
+
             </div>
           </div>
 
@@ -86,7 +88,8 @@ const MaintenanceAccessModal = ({ open, onConfirm, onReject }) => {
                 className="w-full border-red-500 text-red-500 hover:bg-red-50 dark:hover:bg-red-900"
               >
                 <X className="mr-2 h-6 w-6" />
-                Non autorisé
+                Not Authorized
+
               </Button>
             </motion.div>
 
@@ -98,7 +101,8 @@ const MaintenanceAccessModal = ({ open, onConfirm, onReject }) => {
                 className="w-full bg-blue-500 hover:bg-blue-600 text-white shadow-md"
               >
                 <Check className="mr-2 h-6 w-6" />
-                Je suis membre
+                I am a member
+
               </Button>
             </motion.div>
           </div>
