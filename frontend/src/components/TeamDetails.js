@@ -63,7 +63,7 @@ import { useToast } from "@/hooks/useToast";
 import TaskEditDialog from "./TaskEditDialog";
 import CreateTaskModal from "./CreateTaskModal";
 
-// Définition des avatars par défaut
+// Default avatars
 const DEFAULT_AVATARS = {
   user1: "https://api.dicebear.com/7.x/initials/svg?seed=JD&backgroundColor=52,53,65,255",
   user2: "https://api.dicebear.com/7.x/initials/svg?seed=AB&backgroundColor=52,53,65,255",
@@ -72,7 +72,7 @@ const DEFAULT_AVATARS = {
 };
 const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/initials/svg?seed=??&backgroundColor=52,53,65,255";
 
-// Fonction pour obtenir l'avatar d'un utilisateur
+// Function to get a user's avatar from their email
 const getAvatarForUser = (email) => {
   if (!email) return DEFAULT_AVATAR;
   const hash = email.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
@@ -81,7 +81,7 @@ const getAvatarForUser = (email) => {
   return avatarSet[index];
 };
 
-// Tableau de couleurs pour les icônes des membres
+// Array of colors for member icons
 const MEMBER_COLORS = [
   "bg-blue-500",
   "bg-green-500",
@@ -93,7 +93,7 @@ const MEMBER_COLORS = [
   "bg-teal-500",
 ];
 
-// Fonction pour attribuer une couleur à partir de l'email du membre
+// Function to assign a color based on the member's email
 const getMemberIconColor = (email) => {
   if (!email) return "bg-gray-500";
   const hash = email.split("").reduce((acc, char) => char.charCodeAt(0) + ((acc << 5) - acc), 0);
@@ -101,14 +101,14 @@ const getMemberIconColor = (email) => {
   return MEMBER_COLORS[index];
 };
 
-// Fonction utilitaire pour obtenir le nom à afficher d'un utilisateur
+// Utility function to get a display name for a user
 function getUserDisplayName(user) {
   if (!user) return "";
   return user.name || user.username || (user.email ? user.email.split("@")[0] : "");
 }
 
 export default function TeamDetails({ team, onBack, currentUser, newTask }) {
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const { showToast } = useToast();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,25 +120,16 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
   const [selectedTask, setSelectedTask] = useState(null);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  // État pour la boîte latérale des tâches complétées
+  // State for the completed tasks panel
   const [isCompletedPanelOpen, setIsCompletedPanelOpen] = useState(false);
 
-  // Préfixe des tâches de l'équipe
+  // Team tasks prefix
   const teamPrefix = `${team.name} | `;
 
   const filterTeamTasks = (allTasks) =>
     allTasks.filter((task) => task.title && task.title.startsWith(teamPrefix));
 
-  const getLocale = () => {
-    switch (language) {
-      case "fr":
-        return fr;
-      case "ro":
-        return ro;
-      default:
-        return enUS;
-    }
-  };
+  const getLocale = () => enUS;
 
   const loadTasks = async () => {
     setLoading(true);
@@ -150,7 +141,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
     } catch (error) {
       console.error("Error loading tasks:", error);
       setError(error.message);
-      showToast("error", t("errorLoadingTasks"));
+      showToast("error", "Error loading tasks");
     } finally {
       setLoading(false);
     }
@@ -158,9 +149,9 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
 
   useEffect(() => {
     loadTasks();
-  }, [newTask, sortBy, filterStatus, filterPriority, language]);
+  }, [newTask, sortBy, filterStatus, filterPriority]);
 
-  // Filtrer la liste principale pour n'afficher que les tâches non complétées
+  // Filter main list to show only non-completed tasks
   const filteredTasks = tasks.filter((task) => {
     if (task.status === "done") return false;
     if (filterStatus !== "all" && task.status !== filterStatus) return false;
@@ -168,7 +159,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
     return true;
   });
 
-  // Tâches complétées et répartition par utilisateur
+  // Completed tasks and grouping by user
   const completedTasks = tasks.filter((task) => task.status === "done");
   const completedTasksByUser = completedTasks.reduce((acc, task) => {
     const key = task.assignedTo?.email || "Unknown";
@@ -200,10 +191,10 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
     try {
       await deleteTask(taskId);
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
-      showToast("success", t("taskDeleted"));
+      showToast("success", "Task deleted");
     } catch (error) {
       console.error("Error deleting task:", error);
-      showToast("error", t("taskDeleteError"));
+      showToast("error", "Error deleting task");
     }
   };
 
@@ -212,10 +203,10 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
       setLoading(true);
       await Promise.all(tasks.map((task) => deleteTask(task._id)));
       setTasks([]);
-      showToast("success", t("allTasksDeleted"));
+      showToast("success", "All tasks deleted");
     } catch (error) {
       console.error("Error deleting all tasks:", error);
-      showToast("error", t("errorDeletingAllTasks"));
+      showToast("error", "Error deleting all tasks");
     } finally {
       setLoading(false);
       setIsDeleteAllDialogOpen(false);
@@ -240,10 +231,10 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
       setTasks((prev) =>
         prev.map((task) => (task._id === taskId ? { ...task, status: newStatus } : task))
       );
-      showToast("success", t("statusUpdated"));
+      showToast("success", "Status updated");
     } catch (error) {
       console.error("Error updating task status:", error);
-      showToast("error", t("statusUpdateError"));
+      showToast("error", "Error updating status");
     }
   };
 
@@ -293,13 +284,13 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
   const getStatusLabel = (status) => {
     switch (status) {
       case "todo":
-        return t("todo");
+        return "To Do";
       case "in_progress":
-        return t("inProgress");
+        return "In Progress";
       case "review":
-        return t("review");
+        return "In Review";
       case "done":
-        return t("done");
+        return "Done";
       default:
         return "";
     }
@@ -308,11 +299,11 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
   const getPriorityLabel = (priority) => {
     switch (priority) {
       case "high":
-        return t("high");
+        return "High";
       case "medium":
-        return t("medium");
+        return "Medium";
       case "low":
-        return t("low");
+        return "Low";
       default:
         return "";
     }
@@ -340,7 +331,8 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
   const handleViewPDF = (task) => {
     if (task.attachments && Array.isArray(task.attachments)) {
       const pdfAttachment = task.attachments.find(
-        (att) => att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
+        (att) =>
+          att.dataUrl && att.dataUrl.startsWith("data:application/pdf")
       );
       if (pdfAttachment) {
         window.open(pdfAttachment.dataUrl, "_blank");
@@ -355,7 +347,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
 
   return (
     <div className="space-y-6 relative">
-      {/* En-tête avec bouton de retour et titre */}
+      {/* Header with back button and title */}
       <div className="flex items-center gap-2 px-4 sm:px-6 pt-4">
         <Button variant="ghost" size="icon" onClick={onBack}>
           <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -363,9 +355,9 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
         <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">{team.name}</h1>
       </div>
 
-      {/* Section Membres de l'équipe avec icônes colorées */}
+      {/* Team Members Section */}
       <div className="px-4 sm:px-6">
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Membres de l'équipe</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Team Members</h2>
         <div className="flex items-center gap-4 mt-2">
           {team.members && team.members.length > 0 ? (
             team.members.map((member) => (
@@ -387,21 +379,21 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
               </div>
             ))
           ) : (
-            <p className="text-sm text-gray-500">Aucun membre trouvé.</p>
+            <p className="text-sm text-gray-500">No members found.</p>
           )}
         </div>
       </div>
 
-      {/* Barre d'outils des tâches */}
+      {/* Tasks Toolbar */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="sticky top-0 z-30 bg-white dark:bg-[#323131] border-b border-gray-200 dark:border-[#323131] px-4 sm:px-6 py-4 shadow-sm dark:shadow-md flex flex-col sm:flex-row items-center justify-between gap-4"
       >
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">{t("teamTasks")}</h2>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Team Tasks</h2>
           <p className="text-sm text-gray-500 dark:text-gray-300">
-            {sortedTasks.length} {t("tasks")}
+            {sortedTasks.length} Tasks
           </p>
         </div>
         <div className="flex gap-2">
@@ -412,7 +404,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
             className="bg-[#b7b949] hover:bg-[#b7b949] text-white shadow-sm"
           >
             <Plus className="mr-2 h-4 w-4" />
-            {t("newTask")}
+            New Task
           </Button>
           <Button
             onClick={loadTasks}
@@ -422,7 +414,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
             disabled={loading}
           >
             <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-            <span className="text-sm">{t("refresh")}</span>
+            <span className="text-sm">Refresh</span>
           </Button>
           <Button
             onClick={() => setIsDeleteAllDialogOpen(true)}
@@ -432,9 +424,9 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
             disabled={tasks.length === 0 || loading}
           >
             <Trash2 className="mr-2 h-4 w-4" />
-            <span className="text-sm">{t("deleteAll")}</span>
+            <span className="text-sm">Delete All</span>
           </Button>
-          {/* Bouton "Task Completed" */}
+          {/* Completed Tasks Button */}
           <Button
             onClick={() => setIsCompletedPanelOpen(true)}
             variant="outline"
@@ -442,12 +434,12 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
             className="bg-[#b7b949] hover:bg-[#b7b949] text-white shadow-sm flex items-center gap-1"
           >
             <CheckCircle className="h-4 w-4" />
-            <span className="text-sm">{t("completedTasks")}</span>
+            <span className="text-sm">Completed Tasks</span>
           </Button>
         </div>
       </motion.div>
 
-      {/* Liste principale des tâches (sans les tâches complétées) */}
+      {/* Main tasks list (excluding completed tasks) */}
       <div className="pt-6">
         <AnimatePresence>
           {loading ? (
@@ -468,7 +460,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
             >
               {error}
               <Button variant="outline" className="ml-2" onClick={loadTasks}>
-                {t("retry")}
+                Retry
               </Button>
             </motion.div>
           ) : sortedTasks.length > 0 ? (
@@ -500,7 +492,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                             className="bg-gray-100 dark:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
                           >
                             <ImageIcon className="h-4 w-4" />
-                            <span className="text-xs">{t("viewImage")}</span>
+                            <span className="text-xs">View Image</span>
                           </Button>
                         )}
                         {task.attachments &&
@@ -517,7 +509,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                               className="bg-gray-100 dark:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
                             >
                               <FileText className="h-4 w-4" />
-                              <span className="text-xs">{t("viewPDF")}</span>
+                              <span className="text-xs">View PDF</span>
                             </Button>
                           )}
                         <DropdownMenu>
@@ -532,7 +524,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                               className="text-sm text-gray-700 dark:text-gray-300"
                             >
                               <Edit className="mr-2 h-4 w-4" />
-                              {t("edit")}
+                              Edit
                             </DropdownMenuItem>
                             {task.status !== "done" && (
                               <DropdownMenuItem
@@ -540,7 +532,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                                 className="text-sm text-gray-700 dark:text-gray-300"
                               >
                                 <CheckCircle className="mr-2 h-4 w-4" />
-                                {t("advanceStatus")}
+                                Advance Status
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
@@ -549,7 +541,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                               className="text-sm text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
-                              {t("delete")}
+                              Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -568,16 +560,16 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       <div className="flex justify-between">
-                        <span>{t("status")}:</span>
+                        <span>Status:</span>
                         <span className="font-medium">{getStatusLabel(task.status)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>{t("priority")}:</span>
+                        <span>Priority:</span>
                         <span className="font-medium">{getPriorityLabel(task.priority)}</span>
                       </div>
                       {task.deadline && (
                         <div className="flex justify-between">
-                          <span>{t("deadline")}:</span>
+                          <span>Deadline:</span>
                           <span className="font-medium text-red-500">
                             {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
                           </span>
@@ -585,9 +577,9 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                       )}
                       {task.estimatedTime && (
                         <div className="flex justify-between">
-                          <span>{t("estimatedTime")}:</span>
+                          <span>Estimated Time:</span>
                           <span className="font-medium">
-                            {task.estimatedTime}h {t("estimated")}
+                            {task.estimatedTime}h estimated
                           </span>
                         </div>
                       )}
@@ -596,7 +588,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                       <Avatar className="h-8 w-8">
                         <AvatarImage
                           src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
-                          alt={`${t("avatarOf")} ${task.createdBy?.email || t("user")}`}
+                          alt={`Avatar of ${task.createdBy?.email || "user"}`}
                         />
                         <AvatarFallback className="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
                           {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
@@ -615,13 +607,13 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
               exit={{ opacity: 0 }}
               className="text-center p-8"
             >
-              <p className="text-gray-500 dark:text-gray-400">{t("noTasksFound")}</p>
+              <p className="text-gray-500 dark:text-gray-400">No tasks found.</p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Boîte latérale pour les tâches complétées */}
+      {/* Completed Tasks Panel */}
       <AnimatePresence>
         {isCompletedPanelOpen && (
           <motion.div
@@ -633,23 +625,23 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
           >
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold">
-                {t("completedTasks")} ({completedTasks.length})
+                Completed Tasks ({completedTasks.length})
               </h3>
               <Button variant="ghost" size="sm" onClick={() => setIsCompletedPanelOpen(false)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </div>
-            {/* Résumé par utilisateur */}
+            {/* Summary by user */}
             <div className="mb-4">
-              <h4 className="text-sm font-semibold">{t("completedBy")}:</h4>
+              <h4 className="text-sm font-semibold">Completed By:</h4>
               {Object.entries(completedTasksByUser).map(([email, count]) => (
                 <p key={email} className="text-xs text-gray-600 dark:text-gray-300">
-                  {email}: {count} {t("tasks")}
+                  {email}: {count} tasks
                 </p>
               ))}
             </div>
             {completedTasks.length === 0 ? (
-              <p className="text-gray-500">{t("noCompletedTasks")}</p>
+              <p className="text-gray-500">No completed tasks.</p>
             ) : (
               <div className="space-y-4">
                 {completedTasks.map((task, index) => (
@@ -667,34 +659,6 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                           {task.title}
                         </h3>
                         <div className="flex items-center gap-2">
-                          {task.imageUrl && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewImage(task)}
-                              className="bg-gray-100 dark:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-                            >
-                              <ImageIcon className="h-4 w-4" />
-                              <span className="text-xs">{t("viewImage")}</span>
-                            </Button>
-                          )}
-                          {task.attachments &&
-                            Array.isArray(task.attachments) &&
-                            task.attachments.some(
-                              (att) =>
-                                att.dataUrl &&
-                                att.dataUrl.startsWith("data:application/pdf")
-                            ) && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewPDF(task)}
-                                className="bg-gray-100 dark:bg-gray-700 transition-colors text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
-                              >
-                                <FileText className="h-4 w-4" />
-                                <span className="text-xs">{t("viewPDF")}</span>
-                              </Button>
-                            )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="p-0">
@@ -707,7 +671,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                                 className="text-sm text-gray-700 dark:text-gray-300"
                               >
                                 <Edit className="mr-2 h-4 w-4" />
-                                {t("edit")}
+                                Edit
                               </DropdownMenuItem>
                               {task.status !== "done" && (
                                 <DropdownMenuItem
@@ -715,7 +679,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                                   className="text-sm text-gray-700 dark:text-gray-300"
                                 >
                                   <CheckCircle className="mr-2 h-4 w-4" />
-                                  {t("advanceStatus")}
+                                  Advance Status
                                 </DropdownMenuItem>
                               )}
                               <DropdownMenuSeparator />
@@ -724,7 +688,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                                 className="text-sm text-red-600"
                               >
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                {t("delete")}
+                                Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -743,16 +707,16 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         <div className="flex justify-between">
-                          <span>{t("status")}:</span>
+                          <span>Status:</span>
                           <span className="font-medium">{getStatusLabel(task.status)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>{t("priority")}:</span>
+                          <span>Priority:</span>
                           <span className="font-medium">{getPriorityLabel(task.priority)}</span>
                         </div>
                         {task.deadline && (
                           <div className="flex justify-between">
-                            <span>{t("deadline")}:</span>
+                            <span>Deadline:</span>
                             <span className="font-medium text-red-500">
                               {format(new Date(task.deadline), "Pp", { locale: getLocale() })}
                             </span>
@@ -760,9 +724,9 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                         )}
                         {task.estimatedTime && (
                           <div className="flex justify-between">
-                            <span>{t("estimatedTime")}:</span>
+                            <span>Estimated Time:</span>
                             <span className="font-medium">
-                              {task.estimatedTime}h {t("estimated")}
+                              {task.estimatedTime}h estimated
                             </span>
                           </div>
                         )}
@@ -771,7 +735,7 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
                         <Avatar className="h-8 w-8">
                           <AvatarImage
                             src={task.createdBy?.avatar || getAvatarForUser(task.createdBy?.email)}
-                            alt={`${t("avatarOf")} ${task.createdBy?.email || t("user")}`}
+                            alt={`Avatar of ${task.createdBy?.email || "user"}`}
                           />
                           <AvatarFallback className="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300">
                             {task.createdBy?.email?.charAt(0).toUpperCase() || "?"}
@@ -801,27 +765,34 @@ export default function TeamDetails({ team, onBack, currentUser, newTask }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("deleteAllTasks")}</AlertDialogTitle>
+            <AlertDialogTitle>Delete All Tasks</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("deleteAllTasksConfirmation")}
+              Are you sure you want to delete all tasks?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAllTasks}
               className="bg-red-600 text-white hover:bg-red-700"
             >
-              {t("delete")}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
+      <TaskEditDialog
+        task={selectedTask}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onTaskUpdated={handleTaskUpdated}
+      />
+
       <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{t("createTask")}</DialogTitle>
+            <DialogTitle>Create Task</DialogTitle>
           </DialogHeader>
           <CreateTaskModal
             open={isCreateTaskOpen}

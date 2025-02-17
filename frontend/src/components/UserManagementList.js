@@ -1,18 +1,38 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { getUsers } from "../utils/api"
-import { useTranslation } from "../hooks/useTranslation"
-import { Button } from "@/components/ui/button"
-import { User2, Search, Loader2, AlertCircle, Users, Shield, RefreshCcw, UserCog } from 'lucide-react'
-import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useNotifications } from "../contexts/NotificationContext"
-import { motion, AnimatePresence } from "framer-motion"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { cn } from "@/lib/utils"
+import { useState, useEffect } from "react";
+import { getUsers } from "../utils/api";
+import { useTranslation } from "../hooks/useTranslation";
+import { Button } from "@/components/ui/button";
+import {
+  User2,
+  Search,
+  Loader2,
+  AlertCircle,
+  Users,
+  Shield,
+  RefreshCcw, 
+  UserCog,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useNotifications } from "../contexts/NotificationContext";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const StatCard = ({ icon: Icon, label, value, className }) => (
   <Card className={cn("overflow-hidden group", className)}>
@@ -29,51 +49,51 @@ const StatCard = ({ icon: Icon, label, value, className }) => (
       </div>
     </div>
   </Card>
-)
+);
 
 export default function UserManagementList() {
-  const [users, setUsers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const { t } = useTranslation()
-  const { showToast } = useNotifications()
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { t } = useTranslation();
+  const { showToast } = useNotifications();
 
   useEffect(() => {
-    loadUsers()
-  }, [])
+    loadUsers();
+  }, []);
 
   const loadUsers = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      const data = await getUsers()
-      setUsers(data)
+      setLoading(true);
+      setError(null);
+      const data = await getUsers();
+      setUsers(data);
     } catch (err) {
-      console.error("Error loading users:", err)
-      setError(err.message || t("cannotLoadUsers"))
+      console.error("Error loading users:", err);
+      setError(err.message || t("cannotLoadUsers"));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    await loadUsers()
-    setIsRefreshing(false)
-  }
+    setIsRefreshing(true);
+    await loadUsers();
+    setIsRefreshing(false);
+  };
 
   const filteredUsers = users.filter(
     (user) =>
       user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
   const stats = {
     total: users.length,
     admins: users.filter((u) => u.role === "admin").length,
-  }
+  };
 
   if (loading) {
     return (
@@ -83,10 +103,12 @@ export default function UserManagementList() {
             <Loader2 className="h-8 w-8 sm:h-12 sm:w-12 animate-spin text-primary" />
             <div className="absolute inset-0 h-8 w-8 sm:h-12 sm:w-12 rounded-full border-t-2 border-primary/20" />
           </div>
-          <p className="text-sm sm:text-base text-muted-foreground animate-pulse">{t("loadingUsers")}</p>
+          <p className="text-sm sm:text-base text-muted-foreground animate-pulse">
+            {t("loadingUsers")}
+          </p>
         </div>
       </Card>
-    )
+    );
   }
 
   if (error) {
@@ -100,7 +122,7 @@ export default function UserManagementList() {
           </Button>
         </AlertDescription>
       </Alert>
-    )
+    );
   }
 
   return (
@@ -108,7 +130,6 @@ export default function UserManagementList() {
       <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
         <StatCard icon={Users} label="Registered Members" value={stats.total} />
         <StatCard icon={Shield} label="Admin Team" value={stats.admins} />
-
       </div>
 
       <Card className="border-none shadow-lg shadow-primary/5">
@@ -121,7 +142,6 @@ export default function UserManagementList() {
               </CardTitle>
               <CardDescription className="text-sm sm:text-base">
                 {filteredUsers.length} total {filteredUsers.length > 1 ? "members" : "member"}
-
               </CardDescription>
             </div>
             <TooltipProvider>
@@ -138,12 +158,10 @@ export default function UserManagementList() {
                       className={cn("h-4 w-4 mr-2 transition-all duration-300", isRefreshing && "animate-spin")}
                     />
                     Refresh
-
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Refresh member list</p>
-
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -152,7 +170,6 @@ export default function UserManagementList() {
             <Search className="absolute left-2.5 sm:left-3 top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
             <Input
               placeholder="Search for a member..."
-
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 sm:pl-10 text-sm sm:text-base transition-all duration-300 focus-visible:ring-primary"
@@ -173,7 +190,9 @@ export default function UserManagementList() {
                       duration: 0.2,
                       delay: index * 0.05,
                     }}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-background hover:bg-muted/50 transition-all duration-300 group gap-3 sm:gap-4"
+                    className={cn(
+                      "flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-background hover:bg-muted/50 transition-all duration-300 group gap-3 sm:gap-4"
+                    )}
                   >
                     <div className="flex items-center gap-3 sm:gap-4">
                       <div
@@ -208,7 +227,6 @@ export default function UserManagementList() {
                               )}
                             >
                               {user.role === "admin" ? "Admin" : "Member"}
-
                             </div>
                           </TooltipTrigger>
                           <TooltipContent side="left">
@@ -216,7 +234,6 @@ export default function UserManagementList() {
                               {user.role === "admin"
                                 ? "Full access to all features"
                                 : "Standard access to basic features"}
-
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -238,7 +255,6 @@ export default function UserManagementList() {
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground/60 mt-1 max-w-[250px] sm:max-w-sm text-center px-4">
                     {searchTerm ? "Try another search" : "Invite members to get started"}
-
                   </p>
                 </motion.div>
               )}
@@ -247,5 +263,5 @@ export default function UserManagementList() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

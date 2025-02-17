@@ -22,7 +22,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { useTranslation } from "../hooks/useTranslation"
 import { motion } from "framer-motion"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -41,16 +40,15 @@ function UserProfile() {
   const [error, setError] = useState(null)
   const [admins, setAdmins] = useState([])
   const [profileImage, setProfileImage] = useState(null)
-  const { t } = useTranslation()
   const { toast } = useToast()
 
-  // États pour le formulaire de contact
+  // States for the contact form
   const [subject, setSubject] = useState("")
   const [message, setMessage] = useState("")
   const [selectedAdmin, setSelectedAdmin] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // États pour le formatage du message
+  // States for message formatting
   const [messageFormat, setMessageFormat] = useState({
     bold: false,
     italic: false,
@@ -58,7 +56,7 @@ function UserProfile() {
     isList: false,
   })
 
-  // Fonction pour générer une image avec les initiales à partir de l'email
+  // Function to generate an image with initials from the email
   const generateInitialsImage = async (email) => {
     try {
       const [localPart] = email.split("@")
@@ -90,7 +88,7 @@ function UserProfile() {
           "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-AEcjwHjVlLNBd0ayFs7YNUVPQwreMy.png"
       })
     } catch (error) {
-      console.error("Erreur lors de la génération de l'image:", error)
+      console.error("Error generating initials image:", error)
       throw error
     }
   }
@@ -125,13 +123,13 @@ function UserProfile() {
       setLoading(true)
       setError(null)
       if (!authUser?.id) {
-        throw new Error(t("unauthenticatedUser"))
+        throw new Error("You are not authenticated.")
       }
       const data = await getUserProfile(authUser.id)
       setProfile(data)
     } catch (err) {
       console.error("Error loading profile:", err)
-      setError(err.message || t("cannotLoadProfile"))
+      setError(err.message || "Cannot load profile.")
     } finally {
       setLoading(false)
     }
@@ -152,36 +150,34 @@ function UserProfile() {
   }
 
   const handleContactAdmin = async (e) => {
-    if (e.nativeEvent.submitter?.type === "submit") {
-      e.preventDefault()
-      if (!subject.trim() || !message.trim() || !selectedAdmin) return
-      setIsSubmitting(true)
-      try {
-        const templateParams = {
-          to_email: selectedAdmin,
-          from_name: profile.email,
-          subject: subject,
-          message: getFormattedMessage(),
-        }
-        await emailjs.send("service_profile", "template_profile", templateParams)
-        setSubject("")
-        setMessage("")
-        setSelectedAdmin("")
-        toast({
-          title: t("success"),
-          description: t("messageSent"),
-          variant: "success",
-        })
-      } catch (error) {
-        console.error("Error sending message:", error)
-        toast({
-          title: t("error"),
-          description: t("cannotSendMessage"),
-          variant: "destructive",
-        })
-      } finally {
-        setIsSubmitting(false)
+    e.preventDefault()
+    if (!subject.trim() || !message.trim() || !selectedAdmin) return
+    setIsSubmitting(true)
+    try {
+      const templateParams = {
+        to_email: selectedAdmin,
+        from_name: profile.email,
+        subject: subject,
+        message: getFormattedMessage(),
       }
+      await emailjs.send("service_profile", "template_profile", templateParams)
+      setSubject("")
+      setMessage("")
+      setSelectedAdmin("")
+      toast({
+        title: "Success",
+        description: "Message sent successfully!",
+        variant: "success",
+      })
+    } catch (error) {
+      console.error("Error sending message:", error)
+      toast({
+        title: "Error",
+        description: "Cannot send message",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -220,9 +216,13 @@ function UserProfile() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#121212]">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="flex flex-col items-center justify-center p-8"
+        >
           <Loader2 className="h-10 w-10 animate-spin text-[#B7B949] mb-4" />
-          <p className="text-xl text-gray-600 dark:text-gray-300">{t("loadingProfile")}</p>
+          <p className="text-xl text-gray-600 dark:text-gray-300">Loading profile...</p>
         </motion.div>
       </div>
     )
@@ -237,7 +237,7 @@ function UserProfile() {
             {error}
             <Button variant="outline" size="sm" onClick={loadProfile}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              {t("retry")}
+              Retry
             </Button>
           </AlertDescription>
         </Alert>
@@ -250,7 +250,7 @@ function UserProfile() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#121212]">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-xl text-gray-600 dark:text-gray-300">{t("profileNotFound")}</p>
+          <p className="text-xl text-gray-600 dark:text-gray-300">Profile not found.</p>
         </div>
       </div>
     )
@@ -258,13 +258,13 @@ function UserProfile() {
 
   const displayName = profile.email
     ? profile.email.split("@")[0].replace(/[^a-zA-Z]/g, "")
-    : t("userProfile")
+    : "User Profile"
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
-          {/* Bannière avec dégradé utilisant #F9FAFB */}
+          {/* Banner with gradient using #F9FAFB */}
           <div
             className="relative h-64 bg-cover bg-left"
             style={{
@@ -273,15 +273,15 @@ function UserProfile() {
             }}
           ></div>
 
-          {/* Section du profil placée en dessous de la bannière */}
+          {/* Profile section below the banner */}
           <div className="flex flex-col items-center mt-4">
-            {/* Image de profil dans sa section dédiée */}
+            {/* Profile image */}
             <div className="w-32 h-32 overflow-hidden">
               <Avatar className="w-full h-full rounded-none">
                 {profileImage ? (
                   <AvatarImage
                     src={profileImage}
-                    alt={t("userProfile")}
+                    alt="User Profile"
                     className="object-contain w-full h-full rounded-none"
                     style={{ transform: "scale(0.9)" }}
                   />
@@ -292,13 +292,13 @@ function UserProfile() {
                 )}
               </Avatar>
             </div>
-            <h1 className="mt-4 text-3xl font-bold text-[#000] drop-shadow dark:text-[#B7B949]">
+            <h1 className="mt-4 text-3xl font-bold text-black drop-shadow dark:text-[#B7B949]">
               {displayName}
             </h1>
             <p className="text-gray-300">{profile.email}</p>
           </div>
 
-          {/* Informations complémentaires */}
+          {/* Additional info */}
           <div className="bg-white dark:bg-[#1A1A1A] rounded-xl shadow overflow-hidden mt-8">
             <div className="px-6 py-6">
               <Separator className="my-4 border-gray-300 dark:border-gray-600" />
@@ -306,65 +306,57 @@ function UserProfile() {
                 <div className="flex flex-col p-4 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all">
                   <div className="flex items-center gap-2 mb-2">
                     <User className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("name")}</Label>
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Name</Label>
                   </div>
                   <p className="text-gray-600 dark:text-gray-200 text-sm">{displayName}</p>
                 </div>
                 <div className="flex flex-col p-4 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all">
                   <div className="flex items-center gap-2 mb-2">
                     <Mail className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("email")}</Label>
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Email</Label>
                   </div>
                   <p className="text-gray-600 dark:text-gray-200 text-sm">{profile.email}</p>
                 </div>
                 <div className="flex flex-col p-4 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all">
                   <div className="flex items-center gap-2 mb-2">
                     <Building className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("department")}</Label>
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Department</Label>
                   </div>
                   <p className="text-gray-600 dark:text-gray-200 text-sm">Râmnicu Vâlcea</p>
                 </div>
                 <div className="flex flex-col p-4 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all">
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">{t("location")}</Label>
+                    <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Location</Label>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-200 text-sm">România</p>
+                  <p className="text-gray-600 dark:text-gray-200 text-sm">Romania</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Formulaire de contact */}
+          {/* Contact form */}
           <Card className="bg-white dark:bg-[#1A1A1A] rounded-xl shadow overflow-hidden mt-8">
             <CardHeader className="bg-[#F6F6C5] dark:bg-[#2D2D2D] border-b border-[#E6E67A] dark:border-gray-600 px-6 py-4">
               <CardTitle className="flex items-center gap-2 text-[#B7B949] dark:text-[#B7B949]">
                 <Mail className="h-5 w-5" />
-                {t("adminCreateUser")}
+                Contact an Admin
               </CardTitle>
               <CardDescription className="text-[#B7B949] dark:text-[#B7B949]">
-                {t("adminCreateUserDescription")}
+                You can send a message to an admin to request user creation or assistance.
               </CardDescription>
             </CardHeader>
             <CardContent className="px-6 py-6">
-              <form
-                onSubmit={handleContactAdmin}
-                className="space-y-6"
-                onClick={(e) => {
-                  if (e.target.type !== "submit") {
-                    e.preventDefault()
-                  }
-                }}
-              >
+              <form onSubmit={handleContactAdmin} className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("adminArea")}</Label>
+                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">Admin Area</Label>
                   <select
                     value={selectedAdmin}
                     onChange={(e) => setSelectedAdmin(e.target.value)}
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#2D2D2D] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#B7B949]"
                     required
                   >
-                    <option value="">{t("selectRole")}</option>
+                    <option value="">Select an Admin</option>
                     {admins.map((admin) => (
                       <option key={admin._id} value={admin.email}>
                         {admin.email}
@@ -374,9 +366,9 @@ function UserProfile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("title")}</Label>
+                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">Title</Label>
                   <Input
-                    placeholder={t("title")}
+                    placeholder="Title"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-[#2D2D2D] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#B7B949]"
@@ -388,10 +380,10 @@ function UserProfile() {
                   <div className="flex items-center justify-between mb-4">
                     <TabsList className="grid w-[200px] grid-cols-2">
                       <TabsTrigger value="edit" className="py-2">
-                        {t("edit")}
+                        Edit
                       </TabsTrigger>
                       <TabsTrigger value="preview" className="py-2">
-                        {t("preview")}
+                        Preview
                       </TabsTrigger>
                     </TabsList>
 
@@ -481,7 +473,7 @@ function UserProfile() {
                   <TabsContent value="edit" className="mt-0">
                     <div className="relative">
                       <Textarea
-                        placeholder={t("description")}
+                        placeholder="Description"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
                         className={cn(
@@ -493,7 +485,7 @@ function UserProfile() {
                         required
                       />
                       <div className="absolute bottom-2 right-2 text-xs text-gray-500">
-                        {message.length} {t("characters")}
+                        {message.length} characters
                       </div>
                     </div>
                   </TabsContent>
@@ -523,12 +515,12 @@ function UserProfile() {
                   {isSubmitting ? (
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      {t("creating")}
+                      Creating...
                     </div>
                   ) : (
                     <div className="flex items-center justify-center gap-2">
                       <Send className="mr-2 h-5 w-5" />
-                      {t("createTask")}
+                      Send Message
                     </div>
                   )}
                 </Button>
