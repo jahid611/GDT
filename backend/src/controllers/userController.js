@@ -1,24 +1,26 @@
 import User from "../models/User.js"
-import Team from "../models/Team.js" // Import the Team model
+import Team from "../models/Team.js" // Import the Team model if needed
 
-// Contrôleur pour obtenir tous les utilisateurs
+// Controller to get all users
 export const getUsers = async (req, res) => {
   try {
     console.log("Fetching all users from database...")
     const users = await User.find({})
-      .select("_id username email role teams") // Changé 'name' en 'username'
+      .select("_id username email role teams")
       .populate({
         path: "teams",
         select: "name description",
       })
-      .sort({ username: 1 }) // Changé 'name' en 'username'
+      .sort({ username: 1 })
+
     console.log(`Successfully found ${users.length} users`)
 
-    // Ajouter un avatar par défaut si non défini
+    // Add a default avatar if not defined
     const usersWithAvatars = users.map((user) => ({
       ...user.toObject(),
       avatar:
-        user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=52,53,65,255`,
+        user.avatar ||
+        `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=52,53,65,255`,
     }))
 
     if (!users || users.length === 0) {
@@ -34,13 +36,13 @@ export const getUsers = async (req, res) => {
   }
 }
 
-// Contrôleur pour obtenir le profil d'un utilisateur par ID
+// Controller to get a user's profile by ID
 export const getUserProfile = async (req, res) => {
   try {
     const { id } = req.params
     console.log(`Fetching user profile for ID: ${id}`)
     const user = await User.findById(id)
-      .select("_id username email role teams") // Changé 'name' en 'username'
+      .select("_id username email role teams")
       .populate({
         path: "teams",
         select: "name description",
@@ -50,11 +52,12 @@ export const getUserProfile = async (req, res) => {
       return res.status(404).json({ error: "Utilisateur non trouvé" })
     }
 
-    // Ajouter l'avatar par défaut si non défini
+    // Add a default avatar if not defined
     const userWithAvatar = {
       ...user.toObject(),
       avatar:
-        user.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=52,53,65,255`,
+        user.avatar ||
+        `https://api.dicebear.com/7.x/initials/svg?seed=${user.username}&backgroundColor=52,53,65,255`,
     }
 
     res.status(200).json(userWithAvatar)
@@ -67,7 +70,7 @@ export const getUserProfile = async (req, res) => {
   }
 }
 
-// Mise à jour du contrôleur pour créer une équipe
+// Controller to create a team using users
 export const createTeamUsingUsers = async (req, res) => {
   try {
     const { name, description, leader, members } = req.body
@@ -77,20 +80,23 @@ export const createTeamUsingUsers = async (req, res) => {
       return res.status(400).json({ error: "Le nom de l'équipe et le leader sont requis" })
     }
 
-    // Créer une nouvelle équipe
+    // Create a new team
     const team = new Team({
       name,
       description,
       leader,
-      members: [...new Set([leader, ...(members || [])])], // Assure que le leader est aussi membre
+      members: [...new Set([leader, ...(members || [])])], // Ensure leader is also a member
     })
 
     const savedTeam = await team.save()
 
-    // Mettre à jour les utilisateurs avec la nouvelle équipe
-    await User.updateMany({ _id: { $in: savedTeam.members } }, { $addToSet: { teams: savedTeam._id } })
+    // Update users with the new team
+    await User.updateMany(
+      { _id: { $in: savedTeam.members } },
+      { $addToSet: { teams: savedTeam._id } }
+    )
 
-    // Récupérer l'équipe avec les membres peuplés
+    // Populate the team with user info
     const populatedTeam = await Team.findById(savedTeam._id)
       .populate("leader", "username email")
       .populate("members", "username email")
@@ -106,3 +112,25 @@ export const createTeamUsingUsers = async (req, res) => {
   }
 }
 
+// ******* NEW: Controller to delete a user by ID *******
+export const deleteUserById = async (req, res) => {
+  try {
+    const { id } = req.params
+    console.log(`Deleting user with ID: ${id}`)
+
+    const deletedUser = await User.findByIdAndDelete(id)
+
+    if (!deletedUser) {
+      return res.status(404).json({ error: "Utilisateur non trouvé ou déjà supprimé" })
+    }
+
+    console.log("User deleted successfully:", deletedUser)
+    res.status(200).json({ message: "Utilisateur supprimé avec succès" })
+  } catch (error) {
+    console.error("Error in deleteUserById controller:", error)
+    res.status(500).json({
+      error: "Impossible de supprimer l'utilisateur",
+      details: error.message,
+    })
+  }
+}

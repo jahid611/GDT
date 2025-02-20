@@ -1,22 +1,22 @@
 // src/routes/userRoutes.js
-import express from "express";
-import { getUsers, getUserProfile } from "../controllers/userController.js";
-import auth from "../middleware/auth.js";
-import { getUserTeams, createTeamViaUserAPI } from "../controllers/teamController.js";
+import express from "express"
+import { getUsers, getUserProfile, deleteUserById } from "../controllers/userController.js"
+import auth from "../middleware/auth.js"
+import { getUserTeams, createTeamViaUserAPI } from "../controllers/teamController.js"
 
-const router = express.Router();
+const router = express.Router()
 
-// Routes existantes pour les utilisateurs
-router.get("/", auth, getUsers);
-router.get("/:id", auth, getUserProfile);
-// Ajoutez cette ligne dans src/routes/userRoutes.js
-router.get("/:id/profile", auth, getUserProfile);
+// Existing user routes
+router.get("/", auth, getUsers)
+router.get("/:id", auth, getUserProfile)
+// We also have a "profile" route, but it's the same logic
+router.get("/:id/profile", auth, getUserProfile)
 
+// Team management routes via user
+router.get("/:id/teams", auth, getUserTeams)
+router.post("/:id/teams", auth, createTeamViaUserAPI)
 
-// Routes pour la gestion des équipes via un utilisateur
-// Exemple : GET /api/users/:id/teams
-router.get("/:id/teams", auth, getUserTeams);
-// Exemple : POST /api/users/:id/teams
-router.post("/:id/teams", auth, createTeamViaUserAPI);
+// ****** NEW: DELETE route to remove a user by ID ******
+router.delete("/:id", auth, deleteUserById)
 
-export default router;
+export default router

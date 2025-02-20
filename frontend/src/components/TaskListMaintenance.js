@@ -100,12 +100,12 @@ function MaintenanceAccessModal({ open, onConfirm, onReject }) {
           </button>
         </div>
         <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-          🔧 Accès à la Maintenance
+          🔧 Maintenance Access
         </h2>
         <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
-          Seuls les membres de l'équipe maintenance peuvent accéder à cette section.
+          Only the Maintenance affilied can acces to this section.
           <br />
-          <span className="font-medium text-primary">Confirmez-vous en faire partie ?</span>
+          <span className="font-medium text-primary">Are you a Maintenance member ?</span>
         </p>
         <div className="flex justify-center gap-3 sm:gap-4">
           <Button
@@ -113,13 +113,13 @@ function MaintenanceAccessModal({ open, onConfirm, onReject }) {
             className="border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={onReject}
           >
-            ❌ Non, je ne suis pas membre
+            ❌ No, I am not a member 
           </Button>
           <Button
             className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg transition-all"
             onClick={onConfirm}
           >
-            ✅ Oui, je suis membre
+            ✅ yes, I am a member
           </Button>
         </div>
       </motion.div>
