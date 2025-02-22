@@ -8,7 +8,7 @@ const api = axios.create({
   baseURL:
     process.env.NODE_ENV === "development"
       ? "http://localhost:5000"
-      : "https://gdt-fjmj.onrender.com",
+      : "https://gdt-8kv0.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },
